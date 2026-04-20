@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generador de Códigos - Rasca y Gana</title>
+<style>
+body {
+  margin:0; font-family:sans-serif; background:#0f1226; color:white; display:grid; place-items:center; height:100vh;
+}
+.wrap {width:min(95vw,520px); text-align:center}
+input, button {padding:10px; border-radius:8px; border:none; width:70%; margin-bottom:10px;}
+button {cursor:pointer; font-weight:600; background:#7c8cff; color:#0b0d22;}
+.codeList {margin-top:20px;}
+.codeItem {padding:6px 10px; border-radius:6px; background:#232654; margin:4px 0; display:inline-block;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h2>🗝️ Generador de Códigos - Rasca y Gana</h2>
+  <input type="password" id="passInput" placeholder="Introduce contraseña" />
+  <button onclick="generateCode()">Generar Código</button>
+  <div class="codeList" id="codeList"></div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAsAVsv0iwnv4cdDNkSyo1jBIYvCyn_pCY",
+  authDomain: "rascay-d6d3d.firebaseapp.com",
+  databaseURL: "https://rascay-d6d3d-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "rascay-d6d3d",
+  storageBucket: "rascay-d6d3d.firebasestorage.app",
+  messagingSenderId: "991120220829",
+  appId: "1:991120220829:web:15c8dfa4677f701e582a74",
+  measurementId: "G-6KBSRPP6PC"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const MASTER_PASS = "135792468"; // contraseña inicial
+
+window.generateCode = async function() {
+  const pass = document.getElementById('passInput').value.trim();
+  if(pass !== MASTER_PASS){
+    alert('Contraseña incorrecta');
+    return;
+  }
+  const code = Math.random().toString(36).substring(2,8).toUpperCase();
+  try {
+    await set(ref(db, 'codes/' + code), { created: Date.now() });
+    const codeEl = document.createElement('div');
+    codeEl.className = 'codeItem';
+    codeEl.textContent = code;
+    document.getElementById('codeList').appendChild(codeEl);
+    copyToClipboard(code);
+    alert('Código generado, guardado y copiado: ' + code);
+  } catch (err) {
+    alert('Error al guardar en Firebase: ' + err);
+  }
+}
+
+function copyToClipboard(text){
+  const temp = document.createElement('input');
+  document.body.appendChild(temp);
+  temp.value = text;
+  temp.select();
+  document.execCommand('copy');
+  document.body.removeChild(temp);
+}
+</script>
+</body>
+</html>

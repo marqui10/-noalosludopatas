@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>Money Scratch - Final Pro</title>
+    <style>
+        :root {
+            --bg: #0f1226;
+            --card: #15183a;
+            --accent: #7c8cff;
+            --text: #e9ecff;
+            --win-bg: #19c37d;    /* Verde */
+            --opened-bg: #ffd166; /* Amarillo */
+            --closed-bg: #ef476f; /* Rojo */
+        }
+
+        body {
+            margin: 0;
+            font-family: system-ui, -apple-system, sans-serif;
+            color: var(--text);
+            background: radial-gradient(1200px 800px at 10% -10%, #1b1f49 0%, transparent 60%), var(--bg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            touch-action: manipulation;
+        }
+
+        .wrap { width: min(95vw, 500px); }
+        .title { text-align: center; margin-bottom: 20px; letter-spacing: 1px; }
+
+        /* SECCIÓN ACCESO */
+        #codeGate {
+            background: var(--card);
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .inputBox { display: flex; flex-direction: column; gap: 12px; margin-top: 15px; }
+        input { padding: 14px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); background: #0b0d22; color: white; text-align: center; font-size: 1rem; }
+        button { padding: 14px; border-radius: 10px; border: none; font-weight: 600; cursor: pointer; background: var(--accent); color: #0b0d22; }
+
+        /* TABLERO DE JUEGO */
+        #gameBoard { display: none; width: 100%; }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            background: var(--card);
+            padding: 15px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .cell {
+            position: relative;
+            aspect-ratio: 1/1;
+            background: #0b0d22;
+            border-radius: 12px;
+            overflow: hidden;
+            display: grid;
+            place-items: center;
+            border: 2px solid rgba(255,255,255,0.05);
+            transition: background 0.4s, border 0.4s, transform 0.3s;
+        }
+
+        .symbol { font-size: 1.2rem; font-weight: 800; color: #fff; z-index: 1; text-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        canvas.scratch-layer { position: absolute; inset: 0; cursor: crosshair; touch-action: none; width: 100%; height: 100%; z-index: 5; }
+
+        .status-info { text-align: center; margin-bottom: 15px; font-size: 1.1rem; color: var(--accent); font-weight: bold; }
+        .prize-banner {
+            margin-top: 20px;
+            text-align: center;
+            padding: 20px;
+            background: var(--card);
+            border: 2px solid var(--accent);
+            border-radius: 15px;
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        /* COLORES FINALES (SEMÁFORO) */
+        .cell.win-match { background: var(--win-bg) !important; border-color: #fff; transform: scale(1.05); z-index: 2; }
+        .cell.opened-no-win { background: var(--opened-bg) !important; border-color: #ff9f1c; }
+        .cell.opened-no-win .symbol { color: #000; text-shadow: none; }
+        .cell.not-opened { background: var(--closed-bg) !important; border-color: #b91d47; opacity: 0.6; }
+
+        /* TICKET / COMPROBANTE */
+        .ticket {
+            background: #fff;
+            color: #000;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            border-left: 6px solid var(--win-bg);
+            text-align: left;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        .ticket-code { font-family: monospace; font-size: 1.4rem; font-weight: 800; display: block; color: #d63031; margin: 5px 0; }
+        .btn-reset { background: var(--accent); color: #0b0d22; margin-top: 12px; width: 100%; border-radius: 8px; padding: 12px; font-weight: bold; cursor: pointer; border: none; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+<div class="wrap">
+    <h2 class="title">💰 Money Scratch</h2>
+
+    <div id="codeGate">
+        <div class="inputBox">
+            <input type="password" id="codeInput" placeholder="Introduce Código">
+            <button id="codeBtn">ENTRAR A JUGAR</button>
+        </div>
+        <p id="codeMsg" style="margin-top:15px; font-size:0.85rem; color: #9aa3c7;"></p>
+    </div>
+
+    <div id="gameBoard">
+        <div id="adminTag" style="display:none; text-align:center; margin-bottom:10px;">
+            <span style="background:var(--win-bg); color:black; padding:2px 10px; border-radius:5px; font-size:0.7rem; font-weight:bold;">MODO DUEÑO</span>
+        </div>
+        <div class="status-info" id="scratchesLeft">Intentos: 5</div>
+        <div class="grid" id="grid"></div>
+
+        <div class="prize-banner" id="resultBanner">
+            <h2 id="resultTitle"></h2>
+            <div id="ticketContainer"></div>
+            <p id="resultDesc" style="font-size: 0.9rem; margin-top: 10px;"></p>
+            <button id="nextGameBtn" class="btn-reset" style="display:none;">NUEVA PARTIDA</button>
+            <button onclick="location.reload()" style="background:transparent; color:white; margin-top:10px; border:none; cursor:pointer; font-size:0.8rem; opacity:0.5;">Cerrar Sesión</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
+    // --- CONFIGURACIÓN FIREBASE ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyAsAVsv0iwnv4cdDNkSyo1jBIYvCyn_pCY",
+        authDomain: "rascay-d6d3d.firebaseapp.com",
+        databaseURL: "https://rascay-d6d3d-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "rascay-d6d3d",
+        storageBucket: "rascay-d6d3d.appspot.com",
+        messagingSenderId: "991120220829",
+        appId: "1:991120220829:web:15c8dfa4677f701e582a74"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const MAX_SCRATCHES = 5;
+    const OWNER_PASS = "TINGUI"; 
+    let isOwnerSession = false;
+    let scratchedIndices = new Set();
+    let gameSymbols = [];
+    const BASE_POOL = ['5€','10€','20€','50€','100€','200€','500€'];
+
+    // --- ACCESO ---
+    document.getElementById('codeBtn').addEventListener('click', async () => {
+        const code = document.getElementById('codeInput').value.trim();
+        if(code === OWNER_PASS) {
+            isOwnerSession = true;
+            document.getElementById('adminTag').style.display = 'block';
+            setupGame();
+        } else {
+            const snap = await db.ref('codes/' + code.toUpperCase()).get();
+            if(snap.exists()){
+                await db.ref('codes/' + code.toUpperCase()).remove();
+                setupGame();
+            } else {
+                document.getElementById('codeMsg').textContent = "Código inválido o ya usado.";
+                document.getElementById('codeMsg').style.color = "#ef476f";
+            }
+        }
+    });
+
+    // --- SETUP JUEGO ---
+    function setupGame() {
+        scratchedIndices.clear();
+        document.getElementById('grid').innerHTML = '';
+        document.getElementById('ticketContainer').innerHTML = '';
+        document.getElementById('resultBanner').style.display = 'none';
+        document.getElementById('codeGate').style.display = 'none';
+        document.getElementById('gameBoard').style.display = 'block';
+        document.getElementById('scratchesLeft').textContent = `Intentos: ${MAX_SCRATCHES}`;
+        document.getElementById('nextGameBtn').style.display = isOwnerSession ? 'block' : 'none';
+
+        gameSymbols = [];
+        for(let i=0; i<2; i++) gameSymbols.push({val: 'NADA'});
+        while(gameSymbols.length < 12) {
+            gameSymbols.push({val: BASE_POOL[Math.floor(Math.random() * BASE_POOL.length)]});
+        }
+        gameSymbols.sort(() => Math.random() - 0.5);
+
+        gameSymbols.forEach((s, i) => {
+            const div = document.createElement('div');
+            div.className = 'cell';
+            div.id = `cell-${i}`;
+            div.innerHTML = `<div class="symbol">${s.val}</div><canvas class="scratch-layer" id="canv-${i}"></canvas>`;
+            document.getElementById('grid').appendChild(div);
+            initScratch(`canv-${i}`, i);
+        });
+    }
+
+    // --- LÓGICA DE RASCADO ---
+    function initScratch(canvasId, index) {
+        const canvas = document.getElementById(canvasId);
+        const ctx = canvas.getContext('2d');
+        const rect = canvas.parentElement.getBoundingClientRect();
+        canvas.width = rect.width; canvas.height = rect.height;
+
+        ctx.fillStyle = '#cfd4db';
+        ctx.fillRect(0,0,canvas.width,canvas.height);
+
+        let drawing = false;
+
+        const startAction = () => {
+            if(scratchedIndices.size >= MAX_SCRATCHES && !scratchedIndices.has(index)) return;
+            drawing = true;
+            // GASTAR INTENTO AL TOCAR
+            if(!scratchedIndices.has(index)) {
+                scratchedIndices.add(index);
+                document.getElementById('scratchesLeft').textContent = `Intentos: ${MAX_SCRATCHES - scratchedIndices.size}`;
+            }
+        };
+
+        const moveAction = (e) => {
+            if(!drawing) return;
+            const r = canvas.getBoundingClientRect();
+            const cx = e.touches ? e.touches[0].clientX : e.clientX;
+            const cy = e.touches ? e.touches[0].clientY : e.clientY;
+            ctx.globalCompositeOperation = 'destination-out';
+            ctx.beginPath(); ctx.arc(cx-r.left, cy-r.top, 25, 0, Math.PI * 2); ctx.fill();
+            
+            checkThreshold(canvas, ctx, index);
+        };
+
+        canvas.addEventListener('mousedown', startAction);
+        canvas.addEventListener('touchstart', (e) => { e.preventDefault(); startAction(); });
+        window.addEventListener('mouseup', () => drawing = false);
+        canvas.addEventListener('mousemove', moveAction);
+        canvas.addEventListener('touchmove', (e) => { e.preventDefault(); moveAction(e); });
+    }
+
+    function checkThreshold(canvas, ctx, index) {
+        const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+        let cleared = 0;
+        for (let i = 3; i < data.length; i += 40) { if (data[i] === 0) cleared++; }
+
+        if (cleared > (data.length / 40) * 0.60) {
+            canvas.style.opacity = "0";
+            canvas.style.pointerEvents = "none";
+            if(scratchedIndices.size >= MAX_SCRATCHES) setTimeout(finishGame, 600);
+        }
+    }
+
+    // --- FINAL Y COMPROBANTE ---
+    async function finishGame() {
+        const picked = Array.from(scratchedIndices).map(idx => gameSymbols[idx]);
+        const counts = {};
+        picked.forEach(s => counts[s.val] = (counts[s.val] || 0) + 1);
+        const winVal = Object.keys(counts).find(v => counts[v] >= 3 && v !== 'NADA');
+
+        gameSymbols.forEach((s, i) => {
+            const canv = document.getElementById(`canv-${i}`);
+            if(canv) canv.style.opacity = "0";
+            const cell = document.getElementById(`cell-${i}`);
+            if (scratchedIndices.has(i)) {
+                if (winVal && s.val === winVal) cell.classList.add('win-match');
+                else cell.classList.add('opened-no-win');
+            } else {
+                cell.classList.add('not-opened');
+            }
+        });
+
+        const banner = document.getElementById('resultBanner');
+        banner.style.display = 'block';
+
+        if(winVal) {
+            const winCode = "WIN-" + Math.random().toString(36).substring(2,9).toUpperCase();
+            try {
+                await db.ref('prizes/' + winCode).set({ amount: winVal, date: new Date().toISOString(), status: "pendiente" });
+            } catch(e) { console.error("Error DB:", e); }
+
+            document.getElementById('resultTitle').textContent = "¡GANASTE! 🤑";
+            document.getElementById('ticketContainer').innerHTML = `
+                <div class="ticket">
+                    <small>CÓDIGO GANADOR</small>
+                    <span class="ticket-code">${winCode}</span>
+                    <strong>VALOR: ${winVal}</strong>
+                </div>`;
+            document.getElementById('resultDesc').textContent = "Guarda tu código y hazle captura para cobrar el premio.";
+        } else {
+            document.getElementById('resultTitle').textContent = "SIN SUERTE";
+            document.getElementById('resultDesc').textContent = "No encontraste 3 iguales.";
+        }
+    }
+
+    document.getElementById('nextGameBtn').addEventListener('click', setupGame);
+</script>
+</body>
+</html>
