@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-    <title>Money Scratch - Final Pro</title>
+    <title>Money Scratch - MegaJackpot Pro</title>
     <style>
         :root {
             --bg: #0f1226;
@@ -13,6 +13,11 @@
             --win-bg: #19c37d;    /* Verde */
             --opened-bg: #ffd166; /* Amarillo */
             --closed-bg: #ef476f; /* Rojo */
+            
+            /* Colores Oro Megajackpot */
+            --gold-1: #bf953f;
+            --gold-2: #fcf6ba;
+            --gold-3: #b38728;
         }
 
         body {
@@ -26,10 +31,18 @@
             min-height: 100vh;
             padding: 20px;
             touch-action: manipulation;
+            overflow-x: hidden; /* Para el confeti */
+            transition: background 0.5s;
         }
 
-        .wrap { width: min(95vw, 500px); }
-        .title { text-align: center; margin-bottom: 20px; letter-spacing: 1px; }
+        /* ESTADO DE EMERGENCIA DE ORO (Para todo el body) */
+        body.megajackpot-active {
+            background: radial-gradient(circle at center, #aa771c 0%, #0f1226 70%), #000 !important;
+            animation: bodyShake 0.1s infinite;
+        }
+
+        .wrap { width: min(95vw, 500px); z-index: 10; position: relative;}
+        .title { text-align: center; margin-bottom: 20px; letter-spacing: 1px; transition: opacity 0.3s; }
 
         /* SECCIÓN ACCESO */
         #codeGate {
@@ -54,6 +67,7 @@
             padding: 15px;
             border-radius: 20px;
             border: 1px solid rgba(255,255,255,0.05);
+            transition: transform 0.3s;
         }
         .cell {
             position: relative;
@@ -64,51 +78,109 @@
             display: grid;
             place-items: center;
             border: 2px solid rgba(255,255,255,0.05);
-            transition: background 0.4s, border 0.4s, transform 0.3s;
+            transition: all 0.4s;
         }
 
         .symbol { font-size: 1.2rem; font-weight: 800; color: #fff; z-index: 1; text-shadow: 0 1px 3px rgba(0,0,0,0.3); }
         canvas.scratch-layer { position: absolute; inset: 0; cursor: crosshair; touch-action: none; width: 100%; height: 100%; z-index: 5; }
 
-        .status-info { text-align: center; margin-bottom: 15px; font-size: 1.1rem; color: var(--accent); font-weight: bold; }
+        .status-info { text-align: center; margin-bottom: 15px; font-size: 1.1rem; color: var(--accent); font-weight: bold; transition: opacity 0.3s;}
+        
+        /* CARTEL DE PREMIO (BANNER) RESEÑADO */
         .prize-banner {
             margin-top: 20px;
             text-align: center;
-            padding: 20px;
+            padding: 25px;
             background: var(--card);
             border: 2px solid var(--accent);
             border-radius: 15px;
             display: none;
-            animation: fadeIn 0.5s ease;
+            position: relative;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
         }
 
-        /* COLORES FINALES (SEMÁFORO) */
+        /* COLORES SEMÁFORO ESTÁNDAR */
         .cell.win-match { background: var(--win-bg) !important; border-color: #fff; transform: scale(1.05); z-index: 2; }
         .cell.opened-no-win { background: var(--opened-bg) !important; border-color: #ff9f1c; }
         .cell.opened-no-win .symbol { color: #000; text-shadow: none; }
         .cell.not-opened { background: var(--closed-bg) !important; border-color: #b91d47; opacity: 0.6; }
 
-        /* TICKET / COMPROBANTE */
-        .ticket {
-            background: #fff;
-            color: #000;
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 15px;
-            border-left: 6px solid var(--win-bg);
-            text-align: left;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        /* ========================================= */
+        /* --- MEGAJACKPOT: EXPERIENCIA TOTAL --- */
+        /* ========================================= */
+
+        /* 1. Animaciones Base */
+        @keyframes goldFlow { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        @keyframes luxuryShake { 0%, 100% { transform: scale(1.15) rotate(0deg); } 25% { transform: scale(1.15) rotate(2deg); } 75% { transform: scale(1.15) rotate(-2deg); } }
+        @keyframes goldGlow { 0%, 100% { box-shadow: 0 0 20px #ffcc00; } 50% { box-shadow: 0 0 50px #ffae00, 0 0 20px #fff; } }
+        @keyframes bodyShake { 0%, 100% { transform: translate(0, 0); } 25% { transform: translate(2px, 2px); } 50% { transform: translate(-2px, -2px); } 75% { transform: translate(2px, -2px); } }
+        @keyframes flashVictory { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+        /* 2. Estilo de Casilla Ganadora Lujuriosa */
+        .cell.megajackpot {
+            background: linear-gradient(45deg, var(--gold-1), var(--gold-2), var(--gold-3), var(--gold-2), var(--gold-1)) !important;
+            background-size: 400% 400% !important;
+            animation: goldFlow 3s ease infinite, luxuryShake 0.1s infinite linear, goldGlow 1s infinite !important;
+            border: 4px solid #fff !important;
+            z-index: 15;
         }
-        .ticket-code { font-family: monospace; font-size: 1.4rem; font-weight: 800; display: block; color: #d63031; margin: 5px 0; }
-        .btn-reset { background: var(--accent); color: #0b0d22; margin-top: 12px; width: 100%; border-radius: 8px; padding: 12px; font-weight: bold; cursor: pointer; border: none; }
+        .cell.megajackpot .symbol { color: #000 !important; font-size: 1.5rem; text-shadow: 0 0 10px #fff; transform: scale(1.2); }
+
+        /* 3. Banner de Premio Megajackpot */
+        .prize-banner.megajackpot-banner {
+            background: linear-gradient(135deg, #000 0%, #aa771c 50%, #000 100%) !important;
+            border: 5px solid #fff !important;
+            animation: goldGlow 1s infiniteflashVictory 0.5s infinite !important;
+            box-shadow: 0 0 100px rgba(255, 204, 0, 0.8) !important;
+        }
+        .prize-banner.megajackpot-banner h2 {
+            color: #fff !important;
+            font-size: 2.2rem;
+            text-transform: uppercase;
+            text-shadow: 0 0 20px #ffcc00, 0 0 10px #fff;
+            margin: 0 0 15px 0;
+        }
+
+        /* 4. Ticket Megajackpot */
+        .ticket.megajackpot-ticket {
+            background: #000 !important;
+            color: #fff !important;
+            border: 3px solid #ffcc00 !important;
+            border-left: 10px solid #ffcc00 !important;
+            animation: flashVictory 0.8s infinite;
+        }
+        .ticket.megajackpot-ticket .ticket-code { color: #ffcc00 !important; font-size: 1.6rem; }
+        .ticket.megajackpot-ticket strong { font-size: 1.8rem; color: #fff; text-shadow: 0 0 10px #ffcc00;}
+
+        /* 5. Confeti Canvas */
+        #confettiCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 5;
+            pointer-events: none;
+            display: none;
+        }
+
+        /* Resto de estilos */
+        .ticket {
+            background: #fff; color: #000; padding: 15px; border-radius: 8px; margin-top: 15px;
+            border-left: 6px solid var(--win-bg); text-align: left; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        .ticket-code { font-family: monospace; font-size: 1.4rem; font-weight: 800; display: block; color: #d63031; }
+        .btn-reset { background: var(--accent); color: #0b0d22; margin-top: 12px; width: 100%; border-radius: 8px; padding: 12px; font-weight: bold; cursor: pointer; border: none; z-index: 20; position: relative;}
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
+<canvas id="confettiCanvas"></canvas>
+
 <div class="wrap">
-    <h2 class="title">💰 Money Scratch</h2>
+    <h2 class="title" id="gameTitle">💰 Money Scratch</h2>
 
     <div id="codeGate">
         <div class="inputBox">
@@ -130,7 +202,7 @@
             <div id="ticketContainer"></div>
             <p id="resultDesc" style="font-size: 0.9rem; margin-top: 10px;"></p>
             <button id="nextGameBtn" class="btn-reset" style="display:none;">NUEVA PARTIDA</button>
-            <button onclick="location.reload()" style="background:transparent; color:white; margin-top:10px; border:none; cursor:pointer; font-size:0.8rem; opacity:0.5;">Cerrar Sesión</button>
+            <button onclick="location.reload()" style="background:transparent; color:white; margin-top:10px; border:none; cursor:pointer; font-size:0.8rem; opacity:0.5; z-index:20; position:relative;">Cerrar Sesión</button>
         </div>
     </div>
 </div>
@@ -138,7 +210,6 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script>
-    // --- CONFIGURACIÓN FIREBASE ---
     const firebaseConfig = {
         apiKey: "AIzaSyAsAVsv0iwnv4cdDNkSyo1jBIYvCyn_pCY",
         authDomain: "rascay-d6d3d.firebaseapp.com",
@@ -152,13 +223,12 @@
     const db = firebase.database();
 
     const MAX_SCRATCHES = 5;
-    const OWNER_PASS = "tyomu3"; 
+    const OWNER_PASS = "TINGUI"; 
     let isOwnerSession = false;
     let scratchedIndices = new Set();
     let gameSymbols = [];
     const BASE_POOL = ['5€','10€','20€','50€','100€','200€','500€'];
 
-    // --- ACCESO ---
     document.getElementById('codeBtn').addEventListener('click', async () => {
         const code = document.getElementById('codeInput').value.trim();
         if(code === OWNER_PASS) {
@@ -171,22 +241,27 @@
                 await db.ref('codes/' + code.toUpperCase()).remove();
                 setupGame();
             } else {
-                document.getElementById('codeMsg').textContent = "Código inválido o ya usado.";
+                document.getElementById('codeMsg').textContent = "Código inválido.";
                 document.getElementById('codeMsg').style.color = "#ef476f";
             }
         }
     });
 
-    // --- SETUP JUEGO ---
     function setupGame() {
         scratchedIndices.clear();
         document.getElementById('grid').innerHTML = '';
         document.getElementById('ticketContainer').innerHTML = '';
         document.getElementById('resultBanner').style.display = 'none';
+        document.getElementById('resultBanner').className = 'prize-banner'; // Reset clases
         document.getElementById('codeGate').style.display = 'none';
         document.getElementById('gameBoard').style.display = 'block';
         document.getElementById('scratchesLeft').textContent = `Intentos: ${MAX_SCRATCHES}`;
         document.getElementById('nextGameBtn').style.display = isOwnerSession ? 'block' : 'none';
+        
+        // Reset Body y Título
+        document.body.className = '';
+        document.getElementById('gameTitle').style.opacity = '1';
+        document.getElementById('scratchesLeft').style.opacity = '1';
 
         gameSymbols = [];
         for(let i=0; i<2; i++) gameSymbols.push({val: 'NADA'});
@@ -205,22 +280,18 @@
         });
     }
 
-    // --- LÓGICA DE RASCADO ---
     function initScratch(canvasId, index) {
         const canvas = document.getElementById(canvasId);
         const ctx = canvas.getContext('2d');
         const rect = canvas.parentElement.getBoundingClientRect();
         canvas.width = rect.width; canvas.height = rect.height;
-
         ctx.fillStyle = '#cfd4db';
         ctx.fillRect(0,0,canvas.width,canvas.height);
 
         let drawing = false;
-
         const startAction = () => {
             if(scratchedIndices.size >= MAX_SCRATCHES && !scratchedIndices.has(index)) return;
             drawing = true;
-            // GASTAR INTENTO AL TOCAR
             if(!scratchedIndices.has(index)) {
                 scratchedIndices.add(index);
                 document.getElementById('scratchesLeft').textContent = `Intentos: ${MAX_SCRATCHES - scratchedIndices.size}`;
@@ -234,7 +305,6 @@
             const cy = e.touches ? e.touches[0].clientY : e.clientY;
             ctx.globalCompositeOperation = 'destination-out';
             ctx.beginPath(); ctx.arc(cx-r.left, cy-r.top, 25, 0, Math.PI * 2); ctx.fill();
-            
             checkThreshold(canvas, ctx, index);
         };
 
@@ -249,57 +319,144 @@
         const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
         let cleared = 0;
         for (let i = 3; i < data.length; i += 40) { if (data[i] === 0) cleared++; }
-
         if (cleared > (data.length / 40) * 0.60) {
-            canvas.style.opacity = "0";
-            canvas.style.pointerEvents = "none";
+            canvas.style.opacity = "0"; canvas.style.pointerEvents = "none";
             if(scratchedIndices.size >= MAX_SCRATCHES) setTimeout(finishGame, 600);
         }
     }
 
-    // --- FINAL Y COMPROBANTE ---
+    // --- LÓGICA DE CONFETI (Simple Canvas) ---
+    let confettiInterval;
+    function startConfetti() {
+        const canvas = document.getElementById('confettiCanvas');
+        canvas.style.display = 'block';
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let pieces = [];
+        const colors = ['#bf953f', '#fcf6ba', '#b38728', '#ffffff'];
+
+        for (let i = 0; i < 150; i++) {
+            pieces.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height - canvas.height,
+                rotation: Math.random() * 360,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                size: Math.random() * 10 + 5,
+                ySpeed: Math.random() * 7 + 3,
+                rSpeed: Math.random() * 4 - 2
+            });
+        }
+
+        function update() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            pieces.forEach(p => {
+                p.y += p.ySpeed;
+                p.rotation += p.rSpeed;
+                if (p.y > canvas.height) p.y = -10;
+
+                ctx.save();
+                ctx.translate(p.x, p.y);
+                ctx.rotate(p.rotation * Math.PI / 180);
+                ctx.fillStyle = p.color;
+                ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+                ctx.restore();
+            });
+            confettiInterval = requestAnimationFrame(update);
+        }
+        update();
+    }
+
+    function stopConfetti() {
+        cancelAnimationFrame(confettiInterval);
+        document.getElementById('confettiCanvas').style.display = 'none';
+    }
+
+    // --- FINAL GAME CON EXPERIENCIA MEGAJACKPOT ---
     async function finishGame() {
         const picked = Array.from(scratchedIndices).map(idx => gameSymbols[idx]);
         const counts = {};
         picked.forEach(s => counts[s.val] = (counts[s.val] || 0) + 1);
-        const winVal = Object.keys(counts).find(v => counts[v] >= 3 && v !== 'NADA');
+
+        let winVal = null;
+        let multiplier = 1;
+        let isMega = false;
+
+        for (let v in counts) {
+            if (v !== 'NADA') {
+                if (counts[v] === 5) { winVal = v; isMega = true; break; }
+                else if (counts[v] === 4) { winVal = v; multiplier = 2; break; }
+                else if (counts[v] === 3) { winVal = v; multiplier = 1; break; }
+            }
+        }
+
+        // --- EFECTOS VISUALES DEL TABLERO ---
+        if(isMega) {
+            document.body.classList.add('megajackpot-active');
+            document.getElementById('gameTitle').style.opacity = '0';
+            document.getElementById('scratchesLeft').style.opacity = '0';
+            startConfetti();
+        }
 
         gameSymbols.forEach((s, i) => {
             const canv = document.getElementById(`canv-${i}`);
             if(canv) canv.style.opacity = "0";
             const cell = document.getElementById(`cell-${i}`);
+            
             if (scratchedIndices.has(i)) {
-                if (winVal && s.val === winVal) cell.classList.add('win-match');
-                else cell.classList.add('opened-no-win');
+                if (winVal && s.val === winVal) {
+                    if (isMega) cell.classList.add('megajackpot');
+                    else cell.classList.add('win-match');
+                } else cell.classList.add('opened-no-win');
             } else {
                 cell.classList.add('not-opened');
+                if(isMega) cell.style.transform = 'scale(0.8)'; // Achicar las no rascadas
             }
         });
 
+        // --- MOSTRAR RESULTADO ---
         const banner = document.getElementById('resultBanner');
         banner.style.display = 'block';
 
         if(winVal) {
+            let finalPrize = isMega ? "10.000€" : (parseInt(winVal) * multiplier) + "€";
             const winCode = "WIN-" + Math.random().toString(36).substring(2,9).toUpperCase();
-            try {
-                await db.ref('prizes/' + winCode).set({ amount: winVal, date: new Date().toISOString(), status: "pendiente" });
-            } catch(e) { console.error("Error DB:", e); }
+            
+            if(isMega) {
+                banner.classList.add('megajackpot-banner');
+                document.getElementById('resultTitle').innerHTML = "⚡ ¡EL GRAN JACKPOT DE ORO! ⚡";
+                document.getElementById('ticketContainer').innerHTML = `
+                    <div class="ticket megajackpot-ticket">
+                        <small>CÓDIGO LEGENDARIO DE COBRO</small>
+                        <span class="ticket-code">${winCode}</span>
+                        <strong>PREMIO: ${finalPrize}</strong>
+                        <br><br><em style="font-size:0.8rem;">¡HAS CAMBIADO TU VIDA!</em>
+                    </div>`;
+                document.getElementById('resultDesc').textContent = "HAZ UNA CAPTURA AHORA MISMO. ¡ES LA SUERTE DE TU VIDA!";
+            } else {
+                document.getElementById('resultTitle').textContent = "¡GANASTE! 🤑";
+                document.getElementById('ticketContainer').innerHTML = `
+                    <div class="ticket">
+                        <small>CÓDIGO GANADOR</small>
+                        <span class="ticket-code">${winCode}</span>
+                        <strong>VALOR: ${finalPrize}</strong>
+                        ${multiplier === 2 ? '<br><small>¡MULTIPLICADOR X2 APLICADO!</small>' : ''}
+                    </div>`;
+                document.getElementById('resultDesc').textContent = "Haz captura del código para cobrar tu premio.";
+            }
 
-            document.getElementById('resultTitle').textContent = "¡GANASTE! 🤑";
-            document.getElementById('ticketContainer').innerHTML = `
-                <div class="ticket">
-                    <small>CÓDIGO GANADOR</small>
-                    <span class="ticket-code">${winCode}</span>
-                    <strong>VALOR: ${winVal}</strong>
-                </div>`;
-            document.getElementById('resultDesc').textContent = "Guarda tu código y hazle captura para cobrar el premio.";
+            try { await db.ref('prizes/' + winCode).set({ amount: finalPrize, date: new Date().toISOString(), status: "pendiente" }); } catch(e){}
         } else {
             document.getElementById('resultTitle').textContent = "SIN SUERTE";
-            document.getElementById('resultDesc').textContent = "No encontraste 3 iguales.";
+            if(isMega) stopConfetti(); // Seguridad
         }
     }
 
-    document.getElementById('nextGameBtn').addEventListener('click', setupGame);
+    document.getElementById('nextGameBtn').addEventListener('click', () => {
+        stopConfetti();
+        setupGame();
+    });
 </script>
 </body>
 </html>
