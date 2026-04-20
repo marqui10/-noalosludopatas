@@ -1,0 +1,23 @@
+(function() {
+    const premioForzado = '500€'; // El valor que quieras que salga
+    const misCasillas = [0, 1, 2, 3, 4]; // Elige aquí los 5 números de casilla (del 0 al 11)
+
+    misCasillas.forEach(i => {
+        if (gameSymbols[i]) {
+            gameSymbols[i].val = premioForzado;
+            // Actualizamos el texto visual por si ya habías rascado un poco
+            const symbolDiv = document.querySelector(`#cell-${i} .symbol`);
+            if (symbolDiv) {
+                symbolDiv.textContent = premioForzado;
+                symbolDiv.style.color = "#FFFFF"; // Se pondrá verde para que las identifiques
+            }
+        }
+    });
+
+    console.log("%c🚀 MEGAJACKPOT CONFIGURADO", "color: #ffd166; font-size: 20px; font-weight: bold;");
+    console.log("Has elegido las casillas: " + misCasillas.join(", "));
+    console.log("¡Ráscalas para activar el premio de " + premioForzado + "!");
+})();
+
+
+console.table(gameSymbols.map((s, i) => ({ Posicion: i+1, Premio: s.val })));
