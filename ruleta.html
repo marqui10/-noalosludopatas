@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Roulette Pro - DB Master Edition</title>
+    <style>
+        :root {
+            --bg: #0d1117;
+            --gold: #d4af37;
+            --gold-light: #f9e29c;
+            --casino-green: #0a5c2e;
+            --felt-border: #084422;
+            --red: #be1931;
+            --black: #1a1a1a;
+            --text: #ffffff;
+        }
+
+        body {
+            margin: 0; font-family: 'Trebuchet MS', sans-serif;
+            background: var(--bg); color: var(--text);
+            display: flex; flex-direction: column; align-items: center; min-height: 100vh;
+        }
+
+        /* --- PANTALLA DE BANEO --- */
+        #banScreen {
+            position: fixed; inset: 0; background: #000;
+            display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 10000;
+            color: white; text-align: center;
+        }
+        .ban-card {
+            border: 3px solid var(--red); padding: 50px; border-radius: 20px;
+            background: #111; box-shadow: 0 0 50px rgba(190, 25, 49, 0.5);
+            max-width: 450px; width: 90%;
+        }
+
+        /* --- ACCESO --- */
+        #unlockScreen {
+            position: fixed; inset: 0; background: var(--bg);
+            display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999;
+        }
+        
+        .login-card {
+            background: #1c2128; padding: 40px; border-radius: 15px;
+            border: 2px solid var(--gold); text-align: center; width: 300px;
+        }
+        input.key-input {
+            width: 100%; padding: 12px; margin: 20px 0; border-radius: 5px;
+            border: 1px solid var(--gold); font-size: 1.1rem; text-align: center;
+            background: #000; color: var(--gold-light); box-sizing: border-box;
+        }
+
+        /* --- INTERFAZ JUEGO --- */
+        #gameArea { display: none; width: 100%; max-width: 1100px; padding: 20px; flex-direction: column; align-items: center; }
+        
+        .stats-bar {
+            width: 100%; display: flex; justify-content: space-between; 
+            padding: 15px 30px; background: #1c2128; border-radius: 10px;
+            border-bottom: 3px solid var(--gold); margin-bottom: 15px; box-sizing: border-box;
+        }
+
+        /* --- SELECTOR DE FICHAS --- */
+        .chip-selector {
+            display: flex; gap: 10px; margin-bottom: 25px; flex-wrap: wrap; justify-content: center; align-items: center;
+        }
+        .chip-val {
+            width: 50px; height: 50px; border-radius: 50%; border: 3px dashed rgba(255,255,255,0.4);
+            display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold;
+            cursor: pointer; transition: 0.2s; background: #333;
+        }
+        .chip-val.active {
+            border-color: var(--gold-light); transform: scale(1.15); box-shadow: 0 0 15px var(--gold);
+            background: var(--gold); color: black;
+        }
+        
+        .btn-all-in {
+            background: var(--red); color: white; border: 2px solid white;
+            padding: 10px 20px; border-radius: 5px; font-weight: bold;
+            cursor: pointer; margin-left: 10px; transition: 0.3s;
+        }
+        .btn-all-in.active { background: white; color: var(--red); box-shadow: 0 0 20px white; }
+
+        .wheel-container { 
+            position: relative; width: 300px; height: 300px; margin-bottom: 40px; 
+            background: #333; border-radius: 50%; padding: 10px; border: 4px solid #111;
+        }
+        canvas#rouletteWheel { 
+            width: 100%; height: 100%; border-radius: 50%; 
+            transition: transform 8s cubic-bezier(0.15, 0, 0.15, 1);
+        }
+        
+        .pointer {
+            position: absolute; top: -20px; left: 50%; transform: translateX(-50%);
+            width: 4px; height: 40px; background: var(--gold-light); z-index: 100;
+        }
+        .pointer::after {
+            content: ''; position: absolute; bottom: -10px; left: -8px;
+            border-left: 10px solid transparent; border-right: 10px solid transparent;
+            border-top: 15px solid var(--gold-light);
+        }
+
+        .board-scroll { width: 100%; overflow-x: auto; padding: 10px 0; }
+        .roulette-board {
+            display: grid; grid-template-columns: 80px auto; 
+            background: var(--casino-green); padding: 25px; border: 8px solid var(--felt-border);
+            border-radius: 20px; min-width: 1000px; margin: 0 auto;
+        }
+
+        .zero-area {
+            display: flex; align-items: center; justify-content: center;
+            background: #0a8444; color: white; font-size: 2.2rem;
+            border: 2px solid rgba(255,255,255,0.3); border-radius: 15px 0 0 15px; cursor: pointer; position: relative;
+        }
+
+        .numbers-grid { display: grid; grid-template-columns: repeat(12, 75px); grid-template-rows: repeat(3, 75px); gap: 5px; }
+
+        .cell {
+            position: relative; display: flex; align-items: center; justify-content: center;
+            font-size: 1.6rem; font-weight: bold; cursor: pointer; border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 4px;
+        }
+
+        .outside-wrapper { grid-column: 2; display: flex; flex-direction: column; gap: 5px; margin-top: 10px; }
+        .dozens-row, .options-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+        .options-row { grid-template-columns: repeat(6, 1fr); }
+
+        .outside-cell {
+            height: 60px; background: rgba(0,0,0,0.15); font-size: 1rem; font-weight: bold;
+            display: flex; align-items: center; justify-content: center; border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 8px; cursor: pointer; position: relative;
+        }
+        .disabled-bet { opacity: 0.3; cursor: not-allowed !important; filter: grayscale(1); }
+
+        .chip {
+            position: absolute; width: 35px; height: 35px; background: white; color: #000;
+            border-radius: 50%; display: none; align-items: center; justify-content: center;
+            font-size: 0.7rem; font-weight: 900; border: 3px dashed #000; z-index: 10;
+        }
+
+        .btns-container { display: flex; gap: 20px; margin-top: 30px; }
+        .btn { padding: 18px 50px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; text-transform: uppercase; font-size: 1.1rem; }
+        .btn-spin { background: var(--gold); color: #000; }
+        .btn-clear { background: #333; color: #fff; }
+
+        #resBanner {
+            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: white; color: black; padding: 40px; border-radius: 20px; z-index: 10000;
+            text-align: center; border: 6px solid var(--gold); width: 300px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="banScreen">
+    <div class="ban-card">
+        <h1 style="color: var(--red); font-size: 2.5rem; margin-bottom: 10px;">🚫 ACCESO DENEGADO</h1>
+        <p id="banReasonText" style="font-size: 1.2rem; font-weight: bold; color: white; margin: 0;">Cargando información...</p>
+        <button onclick="location.reload()" class="btn" style="background: #222; color: #fff; margin-top: 30px; width: 100%; border: 1px solid #444;">REINTENTAR</button>
+    </div>
+</div>
+
+<div id="unlockScreen">
+    <div class="login-card">
+        <h2 style="color: var(--gold);">SISTEMA DE ACCESO</h2>
+        <input type="password" id="keyInput" class="key-input" placeholder="LLAVE">
+        <button onclick="tryUnlock()" class="btn btn-spin" style="width:100%;">VALIDAR</button>
+        <p id="errorMsg" style="color: var(--red); margin-top: 10px;"></p>
+    </div>
+</div>
+
+<div id="gameArea">
+    <div class="stats-bar">
+        <div>SALDO: <span id="balDisplay" style="color: var(--gold-light); font-weight: 900;">0</span>€</div>
+        <div style="color: #58a6ff;">APUESTA: <span id="betDisplay" style="font-weight: 900;">0</span>€</div>
+    </div>
+
+    <div class="chip-selector">
+        <div class="chip-val active" onclick="selectChip(5, this)">5</div>
+        <div class="chip-val" onclick="selectChip(10, this)">10</div>
+        <div class="chip-val" onclick="selectChip(20, this)">20</div>
+        <div class="chip-val" onclick="selectChip(50, this)">50</div>
+        <div class="chip-val" onclick="selectChip(100, this)">100</div>
+        <div class="chip-val" onclick="selectChip(250, this)">250</div>
+        <div class="chip-val" onclick="selectChip(500, this)">500</div>
+        <div class="chip-val" onclick="selectChip(1000, this)">1k</div>
+        <div class="chip-val" onclick="selectChip(5000, this)">5k</div>
+        <div class="chip-val" onclick="selectChip(10000, this)">10k</div>
+        <button class="btn-all-in" id="allInBtn" onclick="toggleAllIn()">ALL IN</button>
+    </div>
+
+    <div class="wheel-container">
+        <div class="pointer"></div>
+        <canvas id="rouletteWheel"></canvas>
+    </div>
+
+    <div class="board-scroll">
+        <div class="roulette-board">
+            <div class="zero-area" id="bet-0" onclick="addBet(0, 'number', 36, this)">0<div class="chip"></div></div>
+            <div id="numbersGrid" class="numbers-grid"></div>
+
+            <div class="outside-wrapper">
+                <div class="dozens-row">
+                    <div class="outside-cell" onclick="addBet('1st 12', 'dozen', 3, this)">1st 12<div class="chip"></div></div>
+                    <div class="outside-cell" onclick="addBet('2nd 12', 'dozen', 3, this)">2nd 12<div class="chip"></div></div>
+                    <div class="outside-cell" onclick="addBet('3rd 12', 'dozen', 3, this)">3rd 12<div class="chip"></div></div>
+                </div>
+                <div class="options-row">
+                    <div class="outside-cell" id="bet-1-18" onclick="addBet('1-18', 'range', 2, this)">1-18<div class="chip"></div></div>
+                    <div class="outside-cell" id="bet-EVEN" onclick="addBet('EVEN', 'logic', 2, this)">PAR<div class="chip"></div></div>
+                    <div class="outside-cell" id="bet-RED" style="background: var(--red);" onclick="addBet('RED', 'color', 2, this)">ROJO<div class="chip"></div></div>
+                    <div class="outside-cell" id="bet-BLACK" style="background: var(--black);" onclick="addBet('BLACK', 'color', 2, this)">NEGRO<div class="chip"></div></div>
+                    <div class="outside-cell" id="bet-ODD" onclick="addBet('ODD', 'logic', 2, this)">IMPAR<div class="chip"></div></div>
+                    <div class="outside-cell" id="bet-19-36" onclick="addBet('19-36', 'range', 2, this)">19-36<div class="chip"></div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="btns-container">
+        <button class="btn btn-clear" onclick="clearBets()">LIMPIAR</button>
+        <button class="btn btn-spin" id="spinBtn" onclick="spinWheel()">GIRAR</button>
+    </div>
+</div>
+
+<div id="resBanner">
+    <h2 id="resTitle" style="margin:0;"></h2>
+    <div id="resBall" style="width:70px; height:70px; border-radius:50%; margin:20px auto; display:flex; align-items:center; justify-content:center; color:white; font-size:2rem; font-weight:bold;"></div>
+    <h1 id="resWin"></h1>
+    <button onclick="closeRes()" class="btn btn-spin" style="width:100%;">CERRAR</button>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyAsAVsv0iwnv4cdDNkSyo1jBIYvCyn_pCY",
+        authDomain: "rascay-d6d3d.firebaseapp.com",
+        databaseURL: "https://rascay-d6d3d-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "rascay-d6d3d"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    let balance = 0, currentKey = "", isInfinite = false, activeBets = [], spinning = false;
+    let selectedChipValue = 5;
+    let allInMode = false;
+    let currentRotation = 0; 
+    let numeroTrucado = null;
+    
+    window.trucar = function(n) {
+        if(n >= 0 && n <= 36) {
+            numeroTrucado = n;
+            console.log("Truco activado.");
+        }
+    };
+
+    const wheelOrder = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
+    const reds = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
+    const exclusions = { 'RED': 'BLACK', 'BLACK': 'RED', 'EVEN': 'ODD', 'ODD': 'EVEN', '1-18': '19-36', '19-36': '1-18' };
+
+    function selectChip(val, el) {
+        selectedChipValue = val;
+        document.querySelectorAll('.chip-val').forEach(c => c.classList.remove('active'));
+        el.classList.add('active');
+    }
+
+    function toggleAllIn() {
+        allInMode = !allInMode;
+        document.getElementById('allInBtn').classList.toggle('active', allInMode);
+    }
+
+    async function tryUnlock() {
+        const key = document.getElementById('keyInput').value.toUpperCase().trim();
+        const snap = await db.ref('codes/'+key).get();
+        if(snap.exists()){
+            const data = snap.val();
+            if(data.saldo === -1) { showBan(data.motivoBan); return; }
+            
+            // LOGICA NUEVA: SI EL CAMPO SALDO CONTIENE "@" ES INFINITO
+            // Usamos toString() por si en la DB hay un número en lugar de texto
+            isInfinite = (data.saldo.toString().includes("@"));
+            
+            balance = isInfinite ? 999999999 : data.saldo;
+            currentKey = key;
+            
+            startLiveSecurity(); startGame();
+        } else { document.getElementById('errorMsg').innerText = "LLAVE INCORRECTA"; }
+    }
+
+    function showBan(motivo) {
+        document.getElementById('unlockScreen').style.display = 'none';
+        document.getElementById('gameArea').style.display = 'none';
+        document.getElementById('banScreen').style.display = 'flex';
+        document.getElementById('banReasonText').innerText = motivo || "Cuenta suspendida";
+    }
+
+    function startLiveSecurity() {
+        db.ref('codes/'+currentKey).on('value', snap => {
+            if(!snap.exists()) return;
+            const data = snap.val();
+            if(data.saldo === -1) {
+                spinning = false;
+                showBan(data.motivoBan);
+            } else if(!spinning) { 
+                isInfinite = (data.saldo.toString().includes("@"));
+                balance = isInfinite ? 999999999 : data.saldo; 
+                updateUI(); 
+            }
+        });
+    }
+
+    function startGame() {
+        document.getElementById('unlockScreen').style.display='none';
+        document.getElementById('gameArea').style.display='flex';
+        drawWheel(); initGrid(); updateUI();
+    }
+
+    function initGrid() {
+        const grid = document.getElementById('numbersGrid');
+        grid.innerHTML = "";
+        for(let r=0; r<3; r++) {
+            for(let c=1; c<=12; c++) {
+                const n = (3-r) + (c-1)*3;
+                const cell = document.createElement('div');
+                cell.className = `cell ${reds.includes(n)?'red':'black'}`;
+                cell.id = `bet-${n}`;
+                cell.style.background = reds.includes(n) ? 'var(--red)' : 'var(--black)';
+                cell.innerHTML = `${n}<div class="chip"></div>`;
+                cell.onclick = () => addBet(n, 'number', 36, cell);
+                grid.appendChild(cell);
+            }
+        }
+    }
+
+    function drawWheel() {
+        const canvas = document.getElementById('rouletteWheel'), ctx = canvas.getContext('2d');
+        canvas.width = 600; canvas.height = 600;
+        const arc = (Math.PI*2)/37;
+        for(let i=0; i<37; i++){
+            const n = wheelOrder[i];
+            ctx.fillStyle = n===0?'#0a8444':(reds.includes(n)?'#be1931':'#1a1a1a');
+            ctx.beginPath(); ctx.moveTo(300,300); ctx.arc(300,300,290,i*arc,(i+1)*arc); ctx.fill();
+            ctx.save(); ctx.translate(300,300); ctx.rotate(i*arc+arc/2);
+            ctx.fillStyle="#fff"; ctx.font="bold 22px Arial"; ctx.fillText(n, 240, 10); ctx.restore();
+        }
+    }
+
+    function addBet(val, type, payout, el) {
+        if(spinning || el.classList.contains('disabled-bet')) return;
+        let amt = allInMode ? balance : selectedChipValue;
+        if(amt <= 0 || (!isInfinite && balance < amt)) return;
+        if(!isInfinite) { balance -= amt; db.ref('codes/'+currentKey+'/saldo').set(balance); }
+        let b = activeBets.find(x => x.val === val);
+        if(b) b.amount += amt; else activeBets.push({val, type, payout, amount: amt, el});
+        if(exclusions[val]) document.getElementById(`bet-${exclusions[val]}`).classList.add('disabled-bet');
+        if(allInMode) { allInMode = false; document.getElementById('allInBtn').classList.remove('active'); }
+        updateUI();
+    }
+
+    function spinWheel() {
+        if(spinning || activeBets.length === 0) return;
+        spinning = true;
+        let winNum = (numeroTrucado !== null) ? numeroTrucado : wheelOrder[Math.floor(Math.random()*37)];
+        numeroTrucado = null;
+        const winIdx = wheelOrder.indexOf(winNum);
+        const gradosPorNumero = 360 / 37;
+        const girosCompletos = 360 * 25; 
+        const ajustePremios = (winIdx * gradosPorNumero) + 90;
+        currentRotation += girosCompletos + (360 - (currentRotation % 360)) + ajustePremios;
+        document.getElementById('rouletteWheel').style.transform = `rotate(-${currentRotation}deg)`;
+        setTimeout(() => { if(spinning) showResult(winNum); }, 8200);
+    }
+
+    function showResult(winNum) {
+        let winSum = 0;
+        const isRed = reds.includes(winNum);
+        activeBets.forEach(b => {
+            let win = (b.type==='number' && b.val===winNum) || (b.val==='RED' && isRed) || (b.val==='BLACK' && !isRed && winNum!==0) || (b.val==='EVEN' && winNum%2===0 && winNum!==0) || (b.val==='ODD' && winNum%2!==0) || (b.val==='1st 12' && winNum>=1 && winNum<=12) || (b.val==='2nd 12' && winNum>=13 && winNum<=24) || (b.val==='3rd 12' && winNum>=25 && winNum<=36);
+            if(win) winSum += (b.amount * b.payout);
+        });
+        if(!isInfinite) { balance += winSum; db.ref('codes/'+currentKey+'/saldo').set(balance); }
+        document.getElementById('resBanner').style.display = 'block';
+        document.getElementById('resBall').innerText = winNum;
+        document.getElementById('resBall').style.background = winNum===0?'#0a8444':(isRed?'#be1931':'#1a1a1a');
+        document.getElementById('resWin').innerText = isInfinite ? "∞" : `+${winSum}€`;
+        document.getElementById('resTitle').innerText = (winSum > 0 || isInfinite) ? '¡HAS GANADO!' : 'MALA SUERTE';
+        activeBets = []; spinning = false;
+        document.querySelectorAll('.disabled-bet').forEach(e => e.classList.remove('disabled-bet'));
+        updateUI();
+    }
+
+    function updateUI() {
+        document.getElementById('balDisplay').innerText = isInfinite ? "∞" : Math.floor(balance);
+        document.getElementById('betDisplay').innerText = activeBets.reduce((s,b)=>s+b.amount,0);
+        document.querySelectorAll('.chip').forEach(c => c.style.display='none');
+        activeBets.forEach(b => { const chip = b.el.querySelector('.chip'); if(chip) { chip.style.display='flex'; chip.innerText=b.amount; } });
+    }
+
+    function clearBets() {
+        if(spinning) return;
+        activeBets.forEach(b => { if(!isInfinite) balance += b.amount; });
+        activeBets = [];
+        document.querySelectorAll('.disabled-bet').forEach(e => e.classList.remove('disabled-bet'));
+        if(!isInfinite) db.ref('codes/'+currentKey+'/saldo').set(balance);
+        updateUI();
+    }
+
+    function closeRes() { document.getElementById('resBanner').style.display='none'; }
+</script>
+</body>
+</html>

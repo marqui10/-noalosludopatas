@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Master Panel - Elite Management v3</title>
+    <style>
+        :root {
+            --gold: #bf953f;
+            --dark-bg: #0a0c1a;
+            --panel-bg: #15183a;
+            --red: #d63031;
+            --green: #4ade80;
+        }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--dark-bg); color: white; display: flex; flex-direction: column; align-items: center; padding: 30px; margin: 0; }
+        
+        #loginOverlay { position: fixed; inset: 0; background: var(--dark-bg); z-index: 10000; display: flex; align-items: center; justify-content: center; }
+        .login-box { background: var(--panel-bg); padding: 40px; border-radius: 15px; border: 2px solid var(--gold); text-align: center; }
+
+        .container { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; max-width: 1200px; width: 100%; }
+        .panel { background: var(--panel-bg); padding: 25px; border-radius: 15px; border: 2px solid var(--gold); width: 350px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .panel-large { width: 100%; max-width: 1100px; margin-top: 20px; }
+
+        h3 { color: var(--gold); text-align: center; margin-top: 0; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 5px; border: 1px solid #333; box-sizing: border-box; background: #000; color: #fff; font-weight: bold; }
+        
+        .btn { width: 100%; padding: 12px; border: none; font-weight: bold; cursor: pointer; border-radius: 5px; margin-top: 5px; transition: 0.3s; }
+        .btn-gold { background: var(--gold); color: black; }
+        .btn-outline { background: transparent; border: 1px solid var(--gold); color: var(--gold); }
+        .btn-danger { background: var(--red); color: white; }
+        .btn-warn { background: #e17055; color: white; }
+        .btn-add { background: var(--green); color: black; }
+
+        .code-display { font-size: 1.8rem; color: var(--green); text-align: center; margin: 10px 0; font-family: monospace; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th { background: rgba(191, 149, 63, 0.2); color: var(--gold); padding: 12px; text-align: left; }
+        td { padding: 10px; border-bottom: 1px solid #222; }
+        .ban-row { color: #ff4d4d; text-decoration: line-through; opacity: 0.6; }
+
+        .custom-section { margin-top: 20px; padding-top: 15px; border-top: 1px solid #333; }
+    </style>
+</head>
+<body>
+
+<div id="loginOverlay">
+    <div class="login-box">
+        <h2 style="color: var(--gold);">SISTEMA DE CONTROL</h2>
+        <input type="password" id="adminPass" placeholder="CONTRASEÑA MAESTRA">
+        <button class="btn btn-gold" onclick="checkPass()">ENTRAR</button>
+        <p id="loginError" style="color: var(--red); margin-top: 10px;"></p>
+    </div>
+</div>
+
+<h2 style="margin-bottom: 30px; letter-spacing: 2px;">PANEL DE ADMINISTRACIÓN Y CAJA</h2>
+
+<div class="container">
+    <div class="panel">
+        <h3>NUEVO TICKET</h3>
+        
+        <button class="btn btn-outline" onclick="generateRandomCode()">GENERAR CÓDIGO</button>
+        <div id="generatedCode" class="code-display">----</div>
+        <input type="number" id="monto" placeholder="SALDO INICIAL (€)">
+        <button class="btn btn-gold" onclick="crearTicket()">ACTIVAR TICKET</button>
+        
+        <div class="custom-section">
+            <h4 style="text-align: center; color: var(--gold); margin: 0 0 10px 0;">CREACIÓN MANUAL</h4>
+            <input type="text" id="customCode" placeholder="CÓDIGO PERSONALIZADO" style="text-transform: uppercase;">
+            <input type="text" id="customMonto" placeholder="SALDO (€)">
+            <button class="btn btn-add" onclick="crearTicketManual()">CREAR MANUALMENTE</button>
+        </div>
+
+        <div id="status" style="text-align:center; margin-top:10px; font-weight: bold;"></div>
+    </div>
+
+    <div class="panel">
+        <h3>GESTIONAR CÓDIGO</h3>
+        <input type="text" id="manageId" placeholder="BUSCAR CÓDIGO" style="text-transform: uppercase;">
+        <button class="btn btn-gold" onclick="consultarTicket()">CONSULTAR</button>
+        
+        <div id="infoTicket" style="margin: 15px 0; display: none; background: rgba(0,0,0,0.5); padding: 15px; border-radius: 10px; border-left: 4px solid var(--gold);">
+            <p>Saldo Actual: <b id="currentBal" style="font-size: 1.2rem;">0</b>€</p>
+            <p>Estado: <b id="currentState">---</b></p>
+            
+            <div id="addMoneySection" class="add-money-box" style="margin-top: 10px; border-top: 1px dashed #444; padding-top: 10px;">
+                <input type="number" id="extraMoney" placeholder="MONTO A RECARGAR (€)">
+                <button class="btn btn-add" onclick="añadirDinero()">+ SUMAR SALDO</button>
+            </div>
+
+            <div id="banData" style="display:none; color: #ff4d4d; font-size: 0.85rem; border-top: 1px solid #444; padding-top: 10px; margin-top: 10px;">
+                Motivo: <i id="currentReason">---</i><br>
+                Saldo Pre-Ban: <span id="preBanSal">0</span>€
+            </div>
+        </div>
+
+        <button class="btn btn-warn" onclick="retirarEfectivo()">CASH OUT (VACIAR)</button>
+        <button class="btn btn-danger" onclick="cashOutAndRemove()" style="background: #a01010;">CASH OUT & ELIMINAR</button>
+        
+        <button class="btn btn-danger" onclick="banearTicket()" style="margin-top: 10px; border: 1px solid #000;">BANEAR TICKET</button>
+        <button class="btn btn-outline" onclick="desbanearTicket()" style="margin-top: 5px; font-size: 0.8rem;">DESBANEAR (RESTAURAR)</button>
+        <div id="statusManage" style="text-align:center; margin-top:10px;"></div>
+    </div>
+
+    <div class="panel panel-large">
+        <h3>TOP TICKETS (MÁS SALDO)</h3>
+        <table id="topTable">
+            <thead>
+                <tr>
+                    <th>CÓDIGO</th>
+                    <th>SALDO ACTUAL</th>
+                    <th>FECHA CREACIÓN</th>
+                    <th>ESTADO</th>
+                </tr>
+            </thead>
+            <tbody id="topList"></tbody>
+        </table>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyAsAVsv0iwnv4cdDNkSyo1jBIYvCyn_pCY",
+        authDomain: "rascay-d6d3d.firebaseapp.com",
+        databaseURL: "https://rascay-d6d3d-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "rascay-d6d3d"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // --- SEGURIDAD: CONTRASEÑA DESDE FIREBASE ---
+    async function checkPass() {
+        const inputPass = document.getElementById('adminPass').value;
+        const errorField = document.getElementById('loginError');
+        
+        try {
+            // Busca la contraseña en la ruta admin/config/pass
+            const snap = await db.ref('admin/config/pass').get();
+            
+            if (snap.exists()) {
+                const masterPass = snap.val();
+                if (inputPass === masterPass) {
+                    document.getElementById('loginOverlay').style.display = 'none';
+                    loadTop();
+                } else {
+                    errorField.innerText = "ACCESO DENEGADO";
+                }
+            } else {
+                errorField.innerText = "ERROR: No hay pass en DB";
+            }
+        } catch (e) {
+            errorField.innerText = "ERROR DE CONEXIÓN";
+        }
+    }
+
+    function generateRandomCode() {
+        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        let res = '';
+        for (let i = 0; i < 6; i++) res += chars.charAt(Math.floor(Math.random() * chars.length));
+        db.ref('codes/' + res).once('value', s => {
+            if (s.exists()) generateRandomCode();
+            else document.getElementById('generatedCode').innerText = res;
+        });
+    }
+
+    function crearTicket() {
+        const id = document.getElementById('generatedCode').innerText;
+        const monto = parseFloat(document.getElementById('monto').value);
+        if(id === "----" || isNaN(monto)) return;
+        saveTicket(id, monto);
+        document.getElementById('monto').value = "";
+        document.getElementById('generatedCode').innerText = "----";
+    }
+
+    async function crearTicketManual() {
+        const id = document.getElementById('customCode').value.toUpperCase().trim();
+        const rawMonto = document.getElementById('customMonto').value.trim();
+        if(!id || rawMonto === "") return;
+        let montoFinal = rawMonto.includes("@") ? rawMonto : parseFloat(rawMonto);
+        const snap = await db.ref('codes/' + id).get();
+        if(snap.exists()){ if(!confirm("Sobrescribir?")) return; }
+        saveTicket(id, montoFinal);
+        document.getElementById('customCode').value = "";
+        document.getElementById('customMonto').value = "";
+    }
+
+    function saveTicket(id, monto) {
+        db.ref('codes/' + id).set({
+            saldo: monto,
+            fecha: new Date().toLocaleString('es-ES'),
+            saldoAnterior: (typeof monto === 'string' && monto.includes("@")) ? 999999999 : monto
+        }).then(() => {
+            document.getElementById('status').innerHTML = `<span style="color:var(--green)">✅ TICKET ${id} OK</span>`;
+            setTimeout(() => document.getElementById('status').innerHTML = "", 3000);
+        });
+    }
+
+    async function consultarTicket() {
+        const id = document.getElementById('manageId').value.toUpperCase().trim();
+        if(!id) return;
+        const snap = await db.ref('codes/' + id).get();
+        if(snap.exists()) {
+            const data = snap.val();
+            document.getElementById('infoTicket').style.display = 'block';
+            let disp = data.saldo.toString().includes("@") ? "∞" : (data.saldo === -1 ? "0" : data.saldo);
+            document.getElementById('currentBal').innerText = disp;
+            const isBan = data.saldo === -1;
+            document.getElementById('currentState').innerText = isBan ? "⛔ BANEADO" : "✅ ACTIVO";
+            document.getElementById('currentState').style.color = isBan ? "var(--red)" : "var(--green)";
+            document.getElementById('banData').style.display = isBan ? "block" : "none";
+            document.getElementById('addMoneySection').style.display = isBan ? "none" : "block";
+            if(isBan) {
+                document.getElementById('currentReason').innerText = data.motivoBan || "---";
+                document.getElementById('preBanSal').innerText = data.saldoAnterior || "0";
+            }
+        }
+    }
+
+    async function añadirDinero() {
+        const id = document.getElementById('manageId').value.toUpperCase().trim();
+        const extra = parseFloat(document.getElementById('extraMoney').value);
+        if(isNaN(extra)) return;
+        const snap = await db.ref('codes/' + id).get();
+        if(snap.exists() && !snap.val().saldo.toString().includes("@")) {
+            const nuevo = snap.val().saldo + extra;
+            await db.ref('codes/' + id).update({ saldo: nuevo, saldoAnterior: nuevo });
+            consultarTicket();
+        }
+    }
+
+    async function retirarEfectivo() {
+        const id = document.getElementById('manageId').value.toUpperCase().trim();
+        if(confirm("Vaciar saldo?")) {
+            await db.ref('codes/' + id).update({ saldo: 0, saldoAnterior: 0 });
+            consultarTicket();
+        }
+    }
+
+    async function cashOutAndRemove() {
+        const id = document.getElementById('manageId').value.toUpperCase().trim();
+        if(confirm("Borrar permanentemente?")) {
+            await db.ref('codes/' + id).remove();
+            document.getElementById('infoTicket').style.display = 'none';
+        }
+    }
+
+    async function banearTicket() {
+        const id = document.getElementById('manageId').value.toUpperCase().trim();
+        const snap = await db.ref('codes/' + id).get();
+        const motivo = prompt("Motivo:");
+        if(motivo) {
+            await db.ref('codes/' + id).update({
+                saldoAnterior: snap.val().saldo,
+                saldo: -1,
+                motivoBan: motivo
+            });
+            consultarTicket();
+        }
+    }
+
+    async function desbanearTicket() {
+        const id = document.getElementById('manageId').value.toUpperCase().trim();
+        const snap = await db.ref('codes/' + id).get();
+        if(snap.exists() && snap.val().saldo === -1) {
+            const res = snap.val().saldoAnterior || 0;
+            await db.ref('codes/' + id).update({ saldo: res, motivoBan: null });
+            consultarTicket();
+        }
+    }
+
+    function loadTop() {
+        db.ref('codes').on('value', snap => {
+            const list = document.getElementById('topList');
+            list.innerHTML = "";
+            let items = [];
+            snap.forEach(c => { items.push({ id: c.key, ...c.val() }); });
+            items.sort((a,b) => {
+                let vA = a.saldo.toString().includes("@") ? 9e9 : a.saldo;
+                let vB = b.saldo.toString().includes("@") ? 9e9 : b.saldo;
+                return vB - vA;
+            });
+            items.slice(0, 15).forEach(i => {
+                const isBan = i.saldo === -1;
+                const isInf = i.saldo.toString().includes("@");
+                list.innerHTML += `
+                    <tr class="${isBan?'ban-row':''}">
+                        <td style="color:var(--gold)">${i.id}</td>
+                        <td>${isBan?'---':(isInf?'∞':i.saldo+'€')}</td>
+                        <td>${i.fecha || '---'}</td>
+                        <td>${isBan?'🚫 BAN':(isInf?'⭐ MST':'✅ OK')}</td>
+                    </tr>`;
+            });
+        });
+    }
+</script>
+</body>
+</html>
