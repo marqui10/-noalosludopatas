@@ -383,7 +383,7 @@
             // LÓGICA DE AUTO-ELIMINACIÓN SI EL SALDO ES 0
             if (balance <= 0) {
                 db.ref('codes/' + currentKey).remove(); // Borramos el ticket de la DB
-                showBan("Sin saldo el ticket, se procede a borrar el ticket"); // Bloqueamos pantalla
+                showBan("Sin saldo, se procede a borrar el ticket"); // Bloqueamos pantalla
                 spinning = false;
                 return; // Cortamos ejecución
             } else {
