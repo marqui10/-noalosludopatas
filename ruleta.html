@@ -274,7 +274,7 @@
         const snap = await db.ref('codes/'+key).get();
         if(snap.exists()){
             const data = snap.val();
-            if(data.saldo === -1) { showBan(data.motivoBan); return; }
+            if(data.saldo === -1) "Motivo de Baneo:"{ showBan(data.motivoBan); return; }
             
             isInfinite = (data.saldo.toString().includes("@"));
             
