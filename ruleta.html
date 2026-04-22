@@ -17,33 +17,39 @@
         }
 
         body {
-            margin: 0; font-family: 'Trebuchet MS', sans-serif;
-            background: var(--bg); color: var(--text);
-            display: flex; flex-direction: column; align-items: center; min-height: 100vh;
+            margin: 0;
+            font-family: 'Trebuchet MS', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
         }
 
-        /* --- PANTALLA DE BANEO --- */
+        /* --- PANTALLAS DE ACCESO Y BANEO --- */
         #banScreen {
             position: fixed; inset: 0; background: #000;
             display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 10000;
             color: white; text-align: center;
         }
+
         .ban-card {
             border: 3px solid var(--red); padding: 50px; border-radius: 20px;
             background: #111; box-shadow: 0 0 50px rgba(190, 25, 49, 0.5);
             max-width: 450px; width: 90%;
         }
 
-        /* --- ACCESO --- */
         #unlockScreen {
             position: fixed; inset: 0; background: var(--bg);
             display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999;
         }
-        
+
         .login-card {
             background: #1c2128; padding: 40px; border-radius: 15px;
             border: 2px solid var(--gold); text-align: center; width: 300px;
         }
+
         input.key-input {
             width: 100%; padding: 12px; margin: 20px 0; border-radius: 5px;
             border: 1px solid var(--gold); font-size: 1.1rem; text-align: center;
@@ -51,95 +57,123 @@
         }
 
         /* --- INTERFAZ JUEGO --- */
-        #gameArea { display: none; width: 100%; max-width: 1100px; padding: 20px; flex-direction: column; align-items: center; }
-        
+        #gameArea {
+            display: none; width: 100%; max-width: 1400px; padding: 20px;
+            flex-direction: column; align-items: center;
+        }
+
         .stats-bar {
-            width: 100%; display: flex; justify-content: space-between; 
+            width: 100%; display: flex; justify-content: space-between;
             padding: 15px 30px; background: #1c2128; border-radius: 10px;
             border-bottom: 3px solid var(--gold); margin-bottom: 15px; box-sizing: border-box;
         }
 
-        /* --- SELECTOR DE FICHAS --- */
+        /* --- FICHAS Y RULETA --- */
         .chip-selector {
             display: flex; gap: 10px; margin-bottom: 25px; flex-wrap: wrap; justify-content: center; align-items: center;
         }
+
         .chip-val {
             width: 50px; height: 50px; border-radius: 50%; border: 3px dashed rgba(255,255,255,0.4);
             display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold;
             cursor: pointer; transition: 0.2s; background: #333;
         }
+
         .chip-val.active {
             border-color: var(--gold-light); transform: scale(1.15); box-shadow: 0 0 15px var(--gold);
             background: var(--gold); color: black;
         }
-        
+
         .btn-all-in {
             background: var(--red); color: white; border: 2px solid white;
             padding: 10px 20px; border-radius: 5px; font-weight: bold;
             cursor: pointer; margin-left: 10px; transition: 0.3s;
         }
+
         .btn-all-in.active { background: white; color: var(--red); box-shadow: 0 0 20px white; }
 
-        .wheel-container { 
-            position: relative; width: 300px; height: 300px; margin-bottom: 40px; 
+        .wheel-container {
+            position: relative; width: 300px; height: 300px; margin-bottom: 40px;
             background: #333; border-radius: 50%; padding: 10px; border: 4px solid #111;
         }
-        canvas#rouletteWheel { 
-            width: 100%; height: 100%; border-radius: 50%; 
+
+        canvas#rouletteWheel {
+            width: 100%; height: 100%; border-radius: 50%;
             transition: transform 8s cubic-bezier(0.15, 0, 0.15, 1);
         }
-        
+
         .pointer {
             position: absolute; top: -20px; left: 50%; transform: translateX(-50%);
             width: 4px; height: 40px; background: var(--gold-light); z-index: 100;
         }
+
         .pointer::after {
             content: ''; position: absolute; bottom: -10px; left: -8px;
             border-left: 10px solid transparent; border-right: 10px solid transparent;
             border-top: 15px solid var(--gold-light);
         }
 
+        /* --- TAPETE (LARGO AMPLIADO) --- */
         .board-scroll { width: 100%; overflow-x: auto; padding: 10px 0; }
+
         .roulette-board {
-            display: grid; grid-template-columns: 80px auto; 
+            display: grid; grid-template-columns: 110px auto 100px;
             background: var(--casino-green); padding: 25px; border: 8px solid var(--felt-border);
-            border-radius: 20px; min-width: 1000px; margin: 0 auto;
+            border-radius: 20px; min-width: 1250px; margin: 0 auto;
         }
 
         .zero-area {
             display: flex; align-items: center; justify-content: center;
-            background: #0a8444; color: white; font-size: 2.2rem;
+            background: #0a8444; color: white; font-size: 2.5rem;
             border: 2px solid rgba(255,255,255,0.3); border-radius: 15px 0 0 15px; cursor: pointer; position: relative;
         }
 
-        .numbers-grid { display: grid; grid-template-columns: repeat(12, 75px); grid-template-rows: repeat(3, 75px); gap: 5px; }
+        .numbers-grid {
+            display: grid; grid-template-columns: repeat(12, 90px); grid-template-rows: repeat(3, 85px); gap: 6px;
+        }
 
         .cell {
             position: relative; display: flex; align-items: center; justify-content: center;
-            font-size: 1.6rem; font-weight: bold; cursor: pointer; border: 2px solid rgba(255,255,255,0.2);
+            font-size: 1.8rem; font-weight: bold; cursor: pointer; border: 2px solid rgba(255,255,255,0.2);
             border-radius: 4px;
         }
 
-        .outside-wrapper { grid-column: 2; display: flex; flex-direction: column; gap: 5px; margin-top: 10px; }
-        .dozens-row, .options-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+        /* FILAS / COLUMNAS */
+        .columns-row { display: grid; grid-template-rows: repeat(3, 85px); gap: 6px; margin-left: 6px; }
+
+        .column-cell {
+            position: relative; display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem; font-weight: bold; cursor: pointer; border: 2px solid rgba(255,255,255,0.2);
+            background: rgba(0,0,0,0.2); border-radius: 0 15px 15px 0;
+        }
+
+        /* APUESTAS EXTERNAS */
+        .outside-wrapper { grid-column: 2; display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
+
+        .dozens-row, .options-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+
         .options-row { grid-template-columns: repeat(6, 1fr); }
 
         .outside-cell {
-            height: 60px; background: rgba(0,0,0,0.15); font-size: 1rem; font-weight: bold;
+            height: 70px; background: rgba(0,0,0,0.15); font-size: 1.2rem; font-weight: bold;
             display: flex; align-items: center; justify-content: center; border: 2px solid rgba(255,255,255,0.2);
             border-radius: 8px; cursor: pointer; position: relative;
         }
+
         .disabled-bet { opacity: 0.3; cursor: not-allowed !important; filter: grayscale(1); }
 
         .chip {
-            position: absolute; width: 35px; height: 35px; background: white; color: #000;
+            position: absolute; width: 38px; height: 38px; background: white; color: #000;
             border-radius: 50%; display: none; align-items: center; justify-content: center;
-            font-size: 0.7rem; font-weight: 900; border: 3px dashed #000; z-index: 10;
+            font-size: 0.8rem; font-weight: 900; border: 3px dashed #000; z-index: 10;
         }
 
         .btns-container { display: flex; gap: 20px; margin-top: 30px; }
+
         .btn { padding: 18px 50px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; text-transform: uppercase; font-size: 1.1rem; }
+
         .btn-spin { background: var(--gold); color: #000; }
+
         .btn-clear { background: #333; color: #fff; }
 
         #resBanner {
@@ -196,7 +230,14 @@
     <div class="board-scroll">
         <div class="roulette-board">
             <div class="zero-area" id="bet-0" onclick="addBet(0, 'number', 36, this)">0<div class="chip"></div></div>
+            
             <div id="numbersGrid" class="numbers-grid"></div>
+
+            <div class="columns-row">
+                <div class="column-cell" onclick="addBet('col3', 'column', 3, this)">2to1<div class="chip"></div></div>
+                <div class="column-cell" onclick="addBet('col2', 'column', 3, this)">2to1<div class="chip"></div></div>
+                <div class="column-cell" onclick="addBet('col1', 'column', 3, this)">2to1<div class="chip"></div></div>
+            </div>
 
             <div class="outside-wrapper">
                 <div class="dozens-row">
@@ -231,6 +272,7 @@
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
 <script>
     const firebaseConfig = {
         apiKey: "AIzaSyAsAVsv0iwnv4cdDNkSyo1jBIYvCyn_pCY",
@@ -244,9 +286,9 @@
     let balance = 0, currentKey = "", isInfinite = false, activeBets = [], spinning = false;
     let selectedChipValue = 5;
     let allInMode = false;
-    let currentRotation = 0; 
+    let currentRotation = 0;
     let numeroTrucado = null;
-    
+
     window.trucar = function(n) {
         if(n >= 0 && n <= 36) {
             numeroTrucado = n;
@@ -274,16 +316,13 @@
         const snap = await db.ref('codes/'+key).get();
         if(snap.exists()){
             const data = snap.val();
-                if (data.saldo === -1) { 
-                    showBan("Motivo de Baneo: " + (data.motivoBan || "No especificado")); 
-                    return; 
-                }
-            
+            if (data.saldo === -1) {
+                showBan("Motivo de Baneo: " + (data.motivoBan || "No especificado"));
+                return;
+            }
             isInfinite = (data.saldo.toString().includes("@"));
-            
             balance = isInfinite ? 999999999 : data.saldo;
             currentKey = key;
-            
             startLiveSecurity(); startGame();
         } else { document.getElementById('errorMsg').innerText = "LLAVE INCORRECTA"; }
     }
@@ -302,10 +341,10 @@
             if(data.saldo === -1) {
                 spinning = false;
                 showBan(data.motivoBan);
-            } else if(!spinning) { 
+            } else if(!spinning) {
                 isInfinite = (data.saldo.toString().includes("@"));
-                balance = isInfinite ? 999999999 : data.saldo; 
-                updateUI(); 
+                balance = isInfinite ? 999999999 : data.saldo;
+                updateUI();
             }
         });
     }
@@ -365,7 +404,7 @@
         numeroTrucado = null;
         const winIdx = wheelOrder.indexOf(winNum);
         const gradosPorNumero = 360 / 37;
-        const girosCompletos = 360 * 25; 
+        const girosCompletos = 360 * 25;
         const ajustePremios = (winIdx * gradosPorNumero) + 90;
         currentRotation += girosCompletos + (360 - (currentRotation % 360)) + ajustePremios;
         document.getElementById('rouletteWheel').style.transform = `rotate(-${currentRotation}deg)`;
@@ -376,21 +415,30 @@
         let winSum = 0;
         const isRed = reds.includes(winNum);
         activeBets.forEach(b => {
-            let win = (b.type==='number' && b.val===winNum) || (b.val==='RED' && isRed) || (b.val==='BLACK' && !isRed && winNum!==0) || (b.val==='EVEN' && winNum%2===0 && winNum!==0) || (b.val==='ODD' && winNum%2!==0) || (b.val==='1st 12' && winNum>=1 && winNum<=12) || (b.val==='2nd 12' && winNum>=13 && winNum<=24) || (b.val==='3rd 12' && winNum>=25 && winNum<=36);
+            let win = (b.type==='number' && b.val===winNum) ||
+                      (b.val==='RED' && isRed) ||
+                      (b.val==='BLACK' && !isRed && winNum!==0) ||
+                      (b.val==='EVEN' && winNum%2===0 && winNum!==0) ||
+                      (b.val==='ODD' && winNum%2!==0) ||
+                      (b.val==='1st 12' && winNum>=1 && winNum<=12) ||
+                      (b.val==='2nd 12' && winNum>=13 && winNum<=24) ||
+                      (b.val==='3rd 12' && winNum>=25 && winNum<=36) ||
+                      (b.val==='col1' && winNum % 3 === 1) ||
+                      (b.val==='col2' && winNum % 3 === 2) ||
+                      (b.val==='col3' && winNum % 3 === 0 && winNum !== 0);
+
             if(win) winSum += (b.amount * b.payout);
         });
 
-        if(!isInfinite) { 
-            balance += winSum; 
-            
-            // LÓGICA DE AUTO-ELIMINACIÓN SI EL SALDO ES 0
+        if(!isInfinite) {
+            balance += winSum;
             if (balance == 0) {
-                db.ref('codes/' + currentKey).remove(); // Borramos el ticket de la DB
-                showBan("Sin saldo, se procede a borrar el ticket"); // Bloqueamos pantalla
+                db.ref('codes/' + currentKey).remove();
+                showBan("Sin saldo, se procede a borrar el ticket");
                 spinning = false;
-                return; // Cortamos ejecución
+                return;
             } else {
-                db.ref('codes/'+currentKey+'/saldo').set(balance); 
+                db.ref('codes/'+currentKey+'/saldo').set(balance);
             }
         }
 
@@ -400,7 +448,7 @@
         document.getElementById('resWin').innerText = isInfinite ? "∞" : `+${winSum}€`;
         document.getElementById('resTitle').innerText = (winSum > 0 || isInfinite) ? '¡HAS GANADO!' : 'MALA SUERTE';
         
-        activeBets = []; 
+        activeBets = [];
         spinning = false;
         document.querySelectorAll('.disabled-bet').forEach(e => e.classList.remove('disabled-bet'));
         updateUI();
@@ -410,7 +458,10 @@
         document.getElementById('balDisplay').innerText = isInfinite ? "∞" : Math.floor(balance);
         document.getElementById('betDisplay').innerText = activeBets.reduce((s,b)=>s+b.amount,0);
         document.querySelectorAll('.chip').forEach(c => c.style.display='none');
-        activeBets.forEach(b => { const chip = b.el.querySelector('.chip'); if(chip) { chip.style.display='flex'; chip.innerText=b.amount; } });
+        activeBets.forEach(b => { 
+            const chip = b.el.querySelector('.chip'); 
+            if(chip) { chip.style.display='flex'; chip.innerText=b.amount; } 
+        });
     }
 
     function clearBets() {
