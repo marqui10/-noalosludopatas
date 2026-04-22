@@ -276,8 +276,6 @@
             const data = snap.val();
             if(data.saldo === -1) { showBan(data.motivoBan); return; }
             
-            // LOGICA NUEVA: SI EL CAMPO SALDO CONTIENE "@" ES INFINITO
-            // Usamos toString() por si en la DB hay un número en lugar de texto
             isInfinite = (data.saldo.toString().includes("@"));
             
             balance = isInfinite ? 999999999 : data.saldo;
@@ -378,13 +376,29 @@
             let win = (b.type==='number' && b.val===winNum) || (b.val==='RED' && isRed) || (b.val==='BLACK' && !isRed && winNum!==0) || (b.val==='EVEN' && winNum%2===0 && winNum!==0) || (b.val==='ODD' && winNum%2!==0) || (b.val==='1st 12' && winNum>=1 && winNum<=12) || (b.val==='2nd 12' && winNum>=13 && winNum<=24) || (b.val==='3rd 12' && winNum>=25 && winNum<=36);
             if(win) winSum += (b.amount * b.payout);
         });
-        if(!isInfinite) { balance += winSum; db.ref('codes/'+currentKey+'/saldo').set(balance); }
+
+        if(!isInfinite) { 
+            balance += winSum; 
+            
+            // LÓGICA DE AUTO-ELIMINACIÓN SI EL SALDO ES 0
+            if (balance <= 0) {
+                db.ref('codes/' + currentKey).remove(); // Borramos el ticket de la DB
+                showBan("SIN SALDO"); // Bloqueamos pantalla
+                spinning = false;
+                return; // Cortamos ejecución
+            } else {
+                db.ref('codes/'+currentKey+'/saldo').set(balance); 
+            }
+        }
+
         document.getElementById('resBanner').style.display = 'block';
         document.getElementById('resBall').innerText = winNum;
         document.getElementById('resBall').style.background = winNum===0?'#0a8444':(isRed?'#be1931':'#1a1a1a');
         document.getElementById('resWin').innerText = isInfinite ? "∞" : `+${winSum}€`;
         document.getElementById('resTitle').innerText = (winSum > 0 || isInfinite) ? '¡HAS GANADO!' : 'MALA SUERTE';
-        activeBets = []; spinning = false;
+        
+        activeBets = []; 
+        spinning = false;
         document.querySelectorAll('.disabled-bet').forEach(e => e.classList.remove('disabled-bet'));
         updateUI();
     }
