@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Master Panel - Elite Management v3</title>
+    <title>Master Panel - Live Elite v4.3</title>
     <style>
         :root {
             --gold: #bf953f;
@@ -10,6 +10,7 @@
             --panel-bg: #15183a;
             --red: #d63031;
             --green: #4ade80;
+            --blue: #3498db;
         }
         body { font-family: 'Segoe UI', sans-serif; background: var(--dark-bg); color: white; display: flex; flex-direction: column; align-items: center; padding: 30px; margin: 0; }
         
@@ -19,7 +20,7 @@
         .panel { background: var(--panel-bg); padding: 25px; border-radius: 15px; border: 2px solid var(--gold); width: 350px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         .panel-large { width: 100%; max-width: 1100px; margin-top: 20px; }
         h3 { color: var(--gold); text-align: center; margin-top: 0; border-bottom: 1px solid #333; padding-bottom: 10px; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 5px; border: 1px solid #333; box-sizing: border-box; background: #000; color: #fff; font-weight: bold; }
+        input, select { width: 100%; padding: 12px; margin: 10px 0; border-radius: 5px; border: 1px solid #333; box-sizing: border-box; background: #000; color: #fff; font-weight: bold; }
         
         .btn { width: 100%; padding: 12px; border: none; font-weight: bold; cursor: pointer; border-radius: 5px; margin-top: 5px; transition: 0.3s; }
         .btn-gold { background: var(--gold); color: black; }
@@ -27,14 +28,22 @@
         .btn-danger { background: var(--red); color: white; }
         .btn-warn { background: #e17055; color: white; }
         .btn-add { background: var(--green); color: black; }
+        .btn-blue { background: var(--blue); color: white; }
+
         .code-display { font-size: 1.8rem; color: var(--green); text-align: center; margin: 10px 0; font-family: monospace; }
         
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th { background: rgba(191, 149, 63, 0.2); color: var(--gold); padding: 12px; text-align: left; font-size: 0.85rem; }
         td { padding: 10px; border-bottom: 1px solid #222; font-size: 0.9rem; }
         .ban-row { color: #ff4d4d; text-decoration: line-through; opacity: 0.6; }
-        .custom-section { margin-top: 20px; padding-top: 15px; border-top: 1px solid #333; }
-        .time-cell { color: #888; font-size: 0.8rem; }
+
+        #historialContenedor { margin-top: 15px; max-height: 150px; overflow-y: auto; background: rgba(0,0,0,0.4); border-radius: 8px; padding: 10px; border: 1px solid #444; }
+        .hist-item { border-bottom: 1px solid #222; padding: 6px 0; font-size: 0.75rem; }
+
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 10001; padding: 20px; overflow-y: auto; }
+        .modal-content { background: var(--panel-bg); max-width: 900px; margin: 0 auto; border: 2px solid var(--gold); border-radius: 15px; padding: 25px; }
+        .filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 20px; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px; }
+        .resumen-caja { background: #000; padding: 15px; border-radius: 10px; border: 1px solid var(--gold); display: flex; justify-content: space-around; margin-bottom: 15px; }
     </style>
 </head>
 <body>
@@ -58,61 +67,102 @@
         <input type="number" id="monto" placeholder="SALDO INICIAL (€)">
         <button class="btn btn-gold" onclick="crearTicket()">ACTIVAR TICKET</button>
         
-        <div class="custom-section">
+        <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #333;">
             <h4 style="text-align: center; color: var(--gold); margin: 0 0 10px 0;">CREACIÓN MANUAL</h4>
             <input type="text" id="customCode" placeholder="CÓDIGO PERSONALIZADO" style="text-transform: uppercase;">
             <input type="text" id="customMonto" placeholder="SALDO (€)">
             <button class="btn btn-add" onclick="crearTicketManual()">CREAR MANUALMENTE</button>
         </div>
-        <div id="status" style="text-align:center; margin-top:10px; font-weight: bold;"></div>
     </div>
 
     <div class="panel">
-        <h3>GESTIONAR CÓDIGO</h3>
-        <input type="text" id="manageId" placeholder="BUSCAR CÓDIGO" style="text-transform: uppercase;">
-        <button class="btn btn-gold" onclick="consultarTicket()">CONSULTAR</button>
+        <h3>GESTIÓN EN VIVO</h3>
+        <input type="text" id="manageId" placeholder="ESCRIBIR CÓDIGO..." style="text-transform: uppercase;" oninput="escucharTicketEnVivo()">
         
         <div id="infoTicket" style="margin: 15px 0; display: none; background: rgba(0,0,0,0.5); padding: 15px; border-radius: 10px; border-left: 4px solid var(--gold);">
-            <p>Saldo Actual: <b id="currentBal" style="font-size: 1.2rem;">0</b>€</p>
+            <p>Saldo Actual: <b id="currentBal" style="font-size: 1.2rem; color:var(--green);">0</b>€</p>
             <p>Estado: <b id="currentState">---</b></p>
             
-            <div id="addMoneySection" class="add-money-box" style="margin-top: 10px; border-top: 1px dashed #444; padding-top: 10px;">
-                <input type="number" id="extraMoney" placeholder="MONTO A RECARGAR (€)">
+            <div id="addMoneySection" style="margin-top: 10px; border-top: 1px dashed #444; padding-top: 10px;">
+                <input type="number" id="extraMoney" placeholder="CANTIDAD A SUMAR (€)">
                 <button class="btn btn-add" onclick="añadirDinero()">+ SUMAR SALDO</button>
             </div>
 
-            <div id="banData" style="display:none; color: #ff4d4d; font-size: 0.85rem; border-top: 1px solid #444; padding-top: 10px; margin-top: 10px;">
-                Motivo: <i id="currentReason">---</i><br>
-                Saldo Pre-Ban: <span id="preBanSal">0</span>€
+            <div id="historialContenedor">
+                <div id="listaHistorial"></div>
             </div>
+            
+            <button class="btn btn-blue" onclick="abrirModalHistorial()">🔎 VER HISTORIAL COMPLETO</button>
         </div>
 
         <button class="btn btn-warn" onclick="retirarEfectivo()">CASH OUT (VACIAR)</button>
-        <button class="btn btn-danger" onclick="cashOutAndRemove()" style="background: #a01010;">CASH OUT & ELIMINAR</button>
-        <button class="btn btn-danger" onclick="banearTicket()" style="margin-top: 10px; border: 1px solid #000;">BANEAR TICKET</button>
-        <button class="btn btn-outline" onclick="desbanearTicket()" style="margin-top: 5px; font-size: 0.8rem;">DESBANEAR (RESTAURAR)</button>
-        <div id="statusManage" style="text-align:center; margin-top:10px;"></div>
+        <button class="btn btn-danger" onclick="banearTicket()">BANEAR TICKET</button>
+        <button class="btn btn-outline" onclick="desbanearTicket()" style="margin-top: 5px;">DESBANEAR</button>
     </div>
 
     <div class="panel panel-large">
-        <h3>LISTADO DE TICKETS (ÚLTIMOS MOVIMIENTOS)</h3>
+        <h3>LISTADO DE TICKETS (LIVE)</h3>
         <table id="topTable">
             <thead>
-                <tr>
-                    <th>CÓDIGO</th>
-                    <th>SALDO ACTUAL</th>
-                    <th>CREACIÓN</th>
-                    <th>ÚLT. MOVIMIENTO</th>
-                    <th>ESTADO</th>
-                </tr>
+                <tr><th>CÓDIGO</th><th>SALDO ACTUAL</th><th>CREACIÓN</th><th>ÚLT. MOVIMIENTO</th><th>ESTADO</th></tr>
             </thead>
             <tbody id="topList"></tbody>
         </table>
     </div>
 </div>
 
+<div id="modalHistorial" class="modal">
+    <div class="modal-content">
+        <div style="display:flex; justify-content: space-between; align-items: center;">
+            <h2 style="color:var(--gold); margin:0;">HISTORIAL DE MOVIMIENTOS</h2>
+            <button class="btn btn-danger" style="width: auto; padding: 5px 15px;" onclick="cerrarModal()">X</button>
+        </div>
+        <p id="modalCodigoTit" style="color:var(--blue); font-weight: bold;"></p>
+
+        <div class="filter-grid">
+            <div>
+                <label style="font-size: 0.7rem;">FILTRAR ORIGEN</label>
+                <select id="filtroJuego" onchange="aplicarFiltros()">
+                    <option value="TODOS">Todos</option>
+                    <option value="Slot Bar">Slot Bar</option>
+                    <option value="Blackjack Pro">Blackjack Pro</option>
+                    <option value="Caja">Caja/Recarga</option>
+                    <option value="Admin">Admin</option>
+                </select>
+            </div>
+            <div>
+                <label style="font-size: 0.7rem;">TIPO</label>
+                <select id="filtroTipo" onchange="aplicarFiltros()">
+                    <option value="TODOS">Todos</option>
+                    <option value="GANANCIA">Solo Ganancias (+)</option>
+                    <option value="PERDIDA">Solo Pérdidas (-)</option>
+                </select>
+            </div>
+            <div>
+                <label style="font-size: 0.7rem;">MONTO MIN (€)</label>
+                <input type="number" id="filtroMonto" placeholder="0" oninput="aplicarFiltros()">
+            </div>
+        </div>
+
+        <div class="resumen-caja">
+            <div style="text-align: center;">Movimientos: <br><b id="resMovs" style="color:var(--blue);">0</b></div>
+            <div style="text-align: center;">Balance Netos: <br><b id="resBalance" style="color:var(--green);">0€</b></div>
+        </div>
+
+        <div style="max-height: 400px; overflow-y: auto; background: #000; border-radius: 10px;">
+            <table id="tablaHistorialCompleto">
+                <thead>
+                    <tr><th>FECHA</th><th>ORIGEN</th><th>TIPO</th><th>MONTO</th></tr>
+                </thead>
+                <tbody id="bodyHistorialCompleto"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
 <script>
     const firebaseConfig = {
         apiKey: "AIzaSyAsAVsv0iwnv4cdDNkSyo1jBIYvCyn_pCY",
@@ -122,23 +172,55 @@
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
+    
+    let historialGlobal = [];
+    let currentTicketRef = null;
 
-    function getTime() {
-        return new Date().toLocaleString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit', day: '2-digit', month: '2-digit' });
+    function getTime() { return new Date().toLocaleString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit', day: '2-digit', month: '2-digit' }); }
+
+    function registrarMovimiento(id, tipo, monto, origen = "Caja") {
+        db.ref(`codes/${id}/historial`).push({ tipo: tipo, monto: monto, origen: origen, fecha: getTime() });
     }
 
     async function checkPass() {
         const inputPass = document.getElementById('adminPass').value;
-        const errorField = document.getElementById('loginError');
-        try {
-            const snap = await db.ref('admin/config/pass').get();
-            if (snap.exists()) {
-                if (inputPass === snap.val()) {
-                    document.getElementById('loginOverlay').style.display = 'none';
-                    loadTop();
-                } else { errorField.innerText = "ACCESO DENEGADO"; }
-            }
-        } catch (e) { errorField.innerText = "ERROR DE CONEXIÓN"; }
+        const snap = await db.ref('admin/config/pass').get();
+        if (snap.exists() && inputPass === snap.val()) {
+            document.getElementById('loginOverlay').style.display = 'none';
+            loadTop();
+        } else { document.getElementById('loginError').innerText = "ACCESO DENEGADO"; }
+    }
+
+    function escucharTicketEnVivo() {
+        const id = document.getElementById('manageId').value.toUpperCase().trim();
+        if(currentTicketRef) currentTicketRef.off();
+        if(!id || id.length < 4) {
+            document.getElementById('infoTicket').style.display = 'none';
+            return;
+        }
+
+        currentTicketRef = db.ref('codes/' + id);
+        currentTicketRef.on('value', snap => {
+            if(snap.exists()) {
+                const data = snap.val();
+                document.getElementById('infoTicket').style.display = 'block';
+                let esInf = data.saldo.toString().includes("@");
+                let esBan = data.saldo === -1;
+                
+                document.getElementById('currentBal').innerText = esInf ? "∞" : (esBan ? "0" : data.saldo);
+                document.getElementById('currentState').innerText = esBan ? "⛔ BANEADO" : "✅ ACTIVO";
+                document.getElementById('currentState').style.color = esBan ? "var(--red)" : "var(--green)";
+                document.getElementById('addMoneySection').style.display = esBan ? 'none' : 'block';
+
+                const histDiv = document.getElementById('listaHistorial');
+                histDiv.innerHTML = "";
+                historialGlobal = data.historial ? Object.values(data.historial).reverse() : [];
+                historialGlobal.slice(0, 5).forEach(mov => {
+                    histDiv.innerHTML += `<div class="hist-item"><b>${mov.origen}</b>: <span style="color:${mov.monto>0?'var(--green)':'var(--red)'}">${mov.monto}€</span></div>`;
+                });
+                if(document.getElementById('modalHistorial').style.display === 'block') aplicarFiltros();
+            } else { document.getElementById('infoTicket').style.display = 'none'; }
+        });
     }
 
     function generateRandomCode() {
@@ -160,101 +242,85 @@
         document.getElementById('generatedCode').innerText = "----";
     }
 
-    async function crearTicketManual() {
+    function crearTicketManual() {
         const id = document.getElementById('customCode').value.toUpperCase().trim();
         const rawMonto = document.getElementById('customMonto').value.trim();
         if(!id || rawMonto === "") return;
         let montoFinal = rawMonto.includes("@") ? rawMonto : parseFloat(rawMonto);
         saveTicket(id, montoFinal);
-        document.getElementById('customCode').value = "";
-        document.getElementById('customMonto').value = "";
     }
 
     function saveTicket(id, monto) {
         const ahora = getTime();
+        const saldoReal = (typeof monto === 'string' && monto.includes("@")) ? 999999 : monto;
         db.ref('codes/' + id).set({
-            saldo: monto,
-            fecha: ahora,
-            ultimaMod: ahora,
-            saldoAnterior: (typeof monto === 'string' && monto.includes("@")) ? 999999999 : monto
-        }).then(() => {
-            document.getElementById('status').innerHTML = `<span style="color:var(--green)">✅ TICKET ${id} OK</span>`;
-            setTimeout(() => document.getElementById('status').innerHTML = "", 3000);
-        });
-    }
-
-    async function consultarTicket() {
-        const id = document.getElementById('manageId').value.toUpperCase().trim();
-        if(!id) return;
-        const snap = await db.ref('codes/' + id).get();
-        if(snap.exists()) {
-            const data = snap.val();
-            document.getElementById('infoTicket').style.display = 'block';
-            let disp = data.saldo.toString().includes("@") ? "∞" : (data.saldo === -1 ? "0" : data.saldo);
-            document.getElementById('currentBal').innerText = disp;
-            const isBan = data.saldo === -1;
-            document.getElementById('currentState').innerText = isBan ? "⛔ BANEADO" : "✅ ACTIVO";
-            document.getElementById('currentState').style.color = isBan ? "var(--red)" : "var(--green)";
-            document.getElementById('banData').style.display = isBan ? "block" : "none";
-            document.getElementById('addMoneySection').style.display = isBan ? "none" : "block";
-            if(isBan) {
-                document.getElementById('currentReason').innerText = data.motivoBan || "---";
-                document.getElementById('preBanSal').innerText = data.saldoAnterior || "0";
-            }
-        }
+            saldo: monto, fecha: ahora, ultimaMod: ahora, saldoAnterior: saldoReal
+        }).then(() => { registrarMovimiento(id, "Carga Inicial", saldoReal, "Admin"); });
     }
 
     async function añadirDinero() {
         const id = document.getElementById('manageId').value.toUpperCase().trim();
         const extra = parseFloat(document.getElementById('extraMoney').value);
-        if(isNaN(extra)) return;
+        if(!id || isNaN(extra)) return;
         const snap = await db.ref('codes/' + id).get();
-        if(snap.exists() && !snap.val().saldo.toString().includes("@")) {
+        if(snap.exists()) {
             const nuevo = snap.val().saldo + extra;
-            await db.ref('codes/' + id).update({ saldo: nuevo, saldoAnterior: nuevo, ultimaMod: getTime() });
-            consultarTicket();
+            await db.ref('codes/' + id).update({ saldo: nuevo, ultimaMod: getTime() });
+            registrarMovimiento(id, "Recarga", extra, "Caja");
             document.getElementById('extraMoney').value = "";
         }
     }
 
     async function retirarEfectivo() {
         const id = document.getElementById('manageId').value.toUpperCase().trim();
-        if(confirm("Vaciar saldo?")) {
-            await db.ref('codes/' + id).update({ saldo: 0, saldoAnterior: 0, ultimaMod: getTime() });
-            consultarTicket();
+        const snap = await db.ref('codes/' + id).get();
+        if(snap.exists() && confirm("¿Vaciar saldo?")) {
+            const actual = snap.val().saldo;
+            await db.ref('codes/' + id).update({ saldo: 0, ultimaMod: getTime() });
+            registrarMovimiento(id, "Cash Out", -actual, "Caja");
         }
     }
 
-    async function cashOutAndRemove() {
-        const id = document.getElementById('manageId').value.toUpperCase().trim();
-        if(confirm("Borrar permanentemente?")) {
-            await db.ref('codes/' + id).remove();
-            document.getElementById('infoTicket').style.display = 'none';
-        }
-    }
-
+    // --- FUNCIÓN BANEAR ACTUALIZADA ---
     async function banearTicket() {
         const id = document.getElementById('manageId').value.toUpperCase().trim();
-        const snap = await db.ref('codes/' + id).get();
-        const motivo = prompt("Motivo:");
-        if(motivo) {
-            await db.ref('codes/' + id).update({
-                saldoAnterior: snap.val().saldo,
-                saldo: -1,
-                motivoBan: motivo,
-                ultimaMod: getTime()
-            });
-            consultarTicket();
+        if(!id) return;
+        const mot = prompt("Motivo del baneo:");
+        if(mot) {
+            const snap = await db.ref('codes/' + id).get();
+            if(snap.exists()) {
+                const data = snap.val();
+                const saldoActual = data.saldo;
+                const ahora = getTime();
+
+                // Si no es infinito, restamos el saldo en el historial
+                if(typeof saldoActual === 'number' && saldoActual > 0) {
+                    registrarMovimiento(id, "Saldo Retirado por BAN", -saldoActual, "Admin");
+                }
+
+                await db.ref('codes/' + id).update({ 
+                    saldoAnterior: saldoActual, 
+                    saldo: -1, 
+                    motivoBan: mot, 
+                    ultimaMod: ahora 
+                });
+                
+                registrarMovimiento(id, "TICKET BANEADO", 0, "Admin");
+            }
         }
     }
 
     async function desbanearTicket() {
         const id = document.getElementById('manageId').value.toUpperCase().trim();
+        if(!id) return;
         const snap = await db.ref('codes/' + id).get();
-        if(snap.exists() && snap.val().saldo === -1) {
-            const res = snap.val().saldoAnterior || 0;
-            await db.ref('codes/' + id).update({ saldo: res, motivoBan: null, ultimaMod: getTime() });
-            consultarTicket();
+        if(snap.exists()) {
+            const data = snap.val();
+            if(data.saldo === -1) {
+                const restaurado = data.saldoAnterior || 0;
+                await db.ref('codes/' + id).update({ saldo: restaurado, ultimaMod: getTime(), motivoBan: null });
+                registrarMovimiento(id, "DESBANEO", restaurado, "Admin");
+            } else { alert("No está baneado"); }
         }
     }
 
@@ -264,27 +330,44 @@
             list.innerHTML = "";
             let items = [];
             snap.forEach(c => { items.push({ id: c.key, ...c.val() }); });
-            
-            // Ordenar por última modificación (más recientes primero)
-            items.sort((a,b) => {
-                let fechaA = new Date(a.ultimaMod || 0);
-                let fechaB = new Date(b.ultimaMod || 0);
-                return fechaB - fechaA;
-            });
-
-            items.slice(0, 30).forEach(i => {
+            items.sort((a,b) => new Date(b.ultimaMod) - new Date(a.ultimaMod));
+            items.slice(0, 15).forEach(i => {
                 const isBan = i.saldo === -1;
-                const isInf = i.saldo.toString().includes("@");
-                list.innerHTML += `
-                    <tr class="${isBan?'ban-row':''}">
-                        <td style="color:var(--gold); font-weight:bold;">${i.id}</td>
-                        <td style="font-weight:bold;">${isBan?'---':(isInf?'∞':i.saldo+'€')}</td>
-                        <td class="time-cell">${i.fecha || '---'}</td>
-                        <td class="time-cell" style="color:var(--green)">${i.ultimaMod || '---'}</td>
-                        <td>${isBan?'🚫 BAN':(isInf?'⭐ MST':'✅ OK')}</td>
-                    </tr>`;
+                list.innerHTML += `<tr class="${isBan?'ban-row':''}"><td>${i.id}</td><td>${isBan?'0':i.saldo}€</td><td>${i.fecha}</td><td>${i.ultimaMod}</td><td>${isBan?'🚫 BAN':'✅ OK'}</td></tr>`;
             });
         });
+    }
+
+    function abrirModalHistorial() {
+        const id = document.getElementById('manageId').value.toUpperCase().trim();
+        document.getElementById('modalCodigoTit').innerText = "Ticket: " + id;
+        document.getElementById('modalHistorial').style.display = 'block';
+        aplicarFiltros();
+    }
+
+    function cerrarModal() { document.getElementById('modalHistorial').style.display = 'none'; }
+
+    function aplicarFiltros() {
+        const fJuego = document.getElementById('filtroJuego').value;
+        const fTipo = document.getElementById('filtroTipo').value;
+        const fMontoMin = parseFloat(document.getElementById('filtroMonto').value) || 0;
+        const body = document.getElementById('bodyHistorialCompleto');
+        body.innerHTML = "";
+        let sumNeto = 0, count = 0;
+
+        historialGlobal.forEach(mov => {
+            const cumpleJuego = (fJuego === "TODOS" || mov.origen === fJuego);
+            const cumpleTipo = (fTipo === "TODOS" || (fTipo === "GANANCIA" && mov.monto > 0) || (fTipo === "PERDIDA" && mov.monto < 0));
+            const cumpleMonto = Math.abs(mov.monto) >= fMontoMin;
+
+            if (cumpleJuego && cumpleTipo && cumpleMonto) {
+                sumNeto += mov.monto;
+                count++;
+                body.innerHTML += `<tr><td style="font-size:0.7rem;">${mov.fecha}</td><td style="color:var(--gold);">${mov.origen}</td><td>${mov.tipo}</td><td style="color:${mov.monto>0?'var(--green)':'var(--red)'};">${mov.monto}€</td></tr>`;
+            }
+        });
+        document.getElementById('resMovs').innerText = count;
+        document.getElementById('resBalance').innerText = sumNeto.toFixed(2) + "€";
     }
 </script>
 </body>
