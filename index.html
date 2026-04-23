@@ -19,19 +19,18 @@
             background-image: radial-gradient(circle at center, #1e224f 0%, #0a0c1a 100%);
             color: var(--text);
             margin: 0;
+            padding: 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
             min-height: 100vh;
-            overflow: hidden;
         }
 
         h1 {
-            font-size: 4rem;
+            font-size: clamp(2.5rem, 8vw, 4rem); /* Tamaño fluido */
             text-transform: uppercase;
-            letter-spacing: 8px;
-            margin-bottom: 50px;
+            letter-spacing: 4px;
+            margin: 40px 0;
             background: linear-gradient(to bottom, var(--gold-light) 0%, var(--gold) 50%, #aa771c 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -40,16 +39,20 @@
         }
 
         .lobby {
-            display: flex;
-            gap: 40px;
-            flex-wrap: wrap;
-            justify-content: center;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            width: 100%;
+            max-width: 1200px;
+            padding: 10px;
+            justify-items: center;
         }
 
         .game-card {
             background: var(--panel-bg);
-            width: 300px;
-            height: 400px;
+            width: 100%;
+            max-width: 300px;
+            height: 350px; /* Un poco más compactas para móvil */
             border-radius: 20px;
             border: 2px solid var(--gold);
             display: flex;
@@ -64,32 +67,34 @@
         }
 
         .game-card:hover {
-            transform: translateY(-15px) scale(1.05);
-            box-shadow: 0 0 30px var(--gold);
+            transform: translateY(-10px) scale(1.03);
+            box-shadow: 0 0 25px var(--gold);
             border-color: var(--gold-light);
         }
 
         .icon {
-            font-size: 5rem;
-            margin-bottom: 20px;
+            font-size: 4.5rem;
+            margin-bottom: 15px;
         }
 
         .game-title {
             color: var(--gold);
-            font-size: 1.8rem;
+            font-size: 1.5rem;
             font-weight: bold;
             text-transform: uppercase;
-            letter-spacing: 2px;
+            letter-spacing: 1px;
+            text-align: center;
         }
 
         .btn-play {
-            margin-top: 30px;
-            padding: 10px 30px;
+            margin-top: 25px;
+            padding: 10px 25px;
             background: var(--gold);
             color: black;
             border-radius: 50px;
             font-weight: bold;
             text-transform: uppercase;
+            font-size: 0.9rem;
             transition: 0.3s;
         }
 
@@ -98,20 +103,31 @@
             box-shadow: 0 0 15px var(--gold-light);
         }
 
-        /* Decoración de fondo */
+        /* Decoración de fondo ajustable */
         .decor {
-            position: absolute;
-            font-size: 10rem;
+            position: fixed;
+            font-size: clamp(5rem, 15vw, 10rem);
             opacity: 0.03;
             z-index: -1;
             user-select: none;
+        }
+
+        @media (max-width: 600px) {
+            .lobby {
+                grid-template-columns: 1fr; /* Una columna en pantallas muy pequeñas */
+            }
+            h1 {
+                margin: 20px 0;
+                letter-spacing: 2px;
+            }
         }
     </style>
 </head>
 <body>
 
-    <div class="decor" style="top: 10%; left: 10%;">♠</div>
-    <div class="decor" style="bottom: 10%; right: 10%;">♦</div>
+    <div class="decor" style="top: 5%; left: 5%;">♠</div>
+    <div class="decor" style="bottom: 5%; right: 5%;">♦</div>
+    <div class="decor" style="top: 40%; right: 5%; opacity: 0.01;">♣</div>
 
     <h1>CASINO</h1>
 
@@ -127,10 +143,22 @@
             <div class="game-title">La Ruleta</div>
             <div class="btn-play">Jugar Ahora</div>
         </a>
+
+        <a href="tragaperras.html" class="game-card">
+            <div class="icon">🎰</div>
+            <div class="game-title">Tragaperras</div>
+            <div class="btn-play">Jugar Ahora</div>
+        </a>
+
+        <a href="blackjack.html" class="game-card">
+            <div class="icon">🃏</div>
+            <div class="game-title">Blackjack</div>
+            <div class="btn-play">Jugar Ahora</div>
+        </a>
     </div>
 
-    <p style="margin-top: 50px; color: rgba(255,255,255,0.4); font-size: 0.9rem;">
-        Bienvenido al panel de juego elite v3
+    <p style="margin: 40px 0; color: rgba(255,255,255,0.4); font-size: 0.8rem; text-align: center;">
+        Bienvenido al panel de juego elite v3 | 18+ Juega con responsabilidad
     </p>
 
 </body>
