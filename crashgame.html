@@ -3,120 +3,120 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Crash Pro - Master Flight Edition</title>
+    <title>Crash Pro - Tactical Edition</title>
     <style>
         :root {
-            --bg: #0d1117;
+            --bg: #05070a;
             --gold: #d4af37;
-            --gold-light: #f9e29c;
-            --red: #be1931;
-            --green: #2ecc71;
-            --text: #ffffff;
-            --card-bg: #1c2128;
-            --felt-border: #30363d;
+            --gold-glow: rgba(212, 175, 55, 0.6);
+            --red: #ff3e3e;
+            --green: #00ff88;
+            --text: #e1e1e1;
+            --card-bg: #0d1117;
+            --grid: rgba(212, 175, 55, 0.05);
         }
 
-        body { margin: 0; font-family: 'Trebuchet MS', sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; min-height: 100vh; overflow-x: hidden; }
+        body { margin: 0; font-family: 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; min-height: 100vh; overflow: hidden; }
 
-        /* --- PANTALLAS DE ACCESO/BAN --- */
-        #banScreen { position: fixed; inset: 0; background: #000; display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 10000; text-align: center; }
-        .ban-card { border: 3px solid var(--red); padding: 50px; border-radius: 20px; background: #111; box-shadow: 0 0 50px rgba(190, 25, 49, 0.5); width: 90%; max-width: 450px; }
-        #unlockScreen { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; }
-        .login-card { background: var(--card-bg); padding: 40px; border-radius: 15px; border: 2px solid var(--gold); text-align: center; width: 300px; }
-        input.key-input { width: 100%; padding: 12px; margin: 20px 0; border-radius: 5px; border: 1px solid var(--gold); font-size: 1.1rem; text-align: center; background: #000; color: var(--gold-light); box-sizing: border-box; }
+        /* --- ACCESO / BAN --- */
+        #unlockScreen, #banScreen { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; }
+        #banScreen { display: none; background: radial-gradient(circle, #200 0%, #000 100%); }
+        .login-card { background: var(--card-bg); padding: 40px; border-radius: 20px; border: 1px solid var(--gold); text-align: center; box-shadow: 0 0 30px rgba(0,0,0,0.5); width: 320px; }
+        input.key-input { width: 100%; padding: 12px; margin: 20px 0; border-radius: 8px; border: 1px solid #30363d; background: #000; color: var(--gold); text-align: center; font-size: 1.2rem; font-weight: bold; }
 
-        /* --- INTERFAZ JUEGO --- */
-        #gameArea { display: none; width: 100%; max-width: 800px; padding: 20px; flex-direction: column; align-items: center; box-sizing: border-box; }
-        .stats-bar { width: 100%; display: flex; justify-content: space-between; padding: 15px 30px; background: var(--card-bg); border-radius: 10px; border-bottom: 3px solid var(--gold); margin-bottom: 15px; box-sizing: border-box; }
+        /* --- DISPLAY PRINCIPAL --- */
+        #gameArea { display: none; width: 100%; max-width: 900px; height: 100vh; padding: 15px; flex-direction: column; box-sizing: border-box; }
+        
+        .stats-bar { display: flex; justify-content: space-between; padding: 15px; background: var(--card-bg); border-radius: 12px; margin-bottom: 10px; border-left: 4px solid var(--gold); }
 
-        /* --- ÁREA CRASH CON VUELO --- */
         .crash-display {
-            width: 100%; height: 350px; background: #05070a; border: 2px solid var(--felt-border); border-radius: 15px;
-            position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center;
-            margin-bottom: 20px;
-        }
-        #flightCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
-        #multiplier { font-size: 5.5rem; font-weight: 900; color: var(--gold); text-shadow: 0 0 25px rgba(212, 175, 55, 0.5); z-index: 5; transition: transform 0.1s; pointer-events: none; }
-        #multiplier.crashed { color: var(--red); animation: shake 0.3s; transform: scale(1.1); text-shadow: 0 0 35px rgba(190, 25, 49, 0.7); }
-
-        @keyframes shake {
-            0%, 100% { transform: scale(1.1) translate(0, 0); }
-            10%, 30%, 50%, 70%, 90% { transform: scale(1.1) translate(-6px, 0); }
-            20%, 40%, 60%, 80% { transform: scale(1.1) translate(6px, 0); }
+            flex-grow: 1; background: #000; border-radius: 15px; position: relative; overflow: hidden;
+            border: 1px solid #1f242c; margin-bottom: 15px;
+            background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+            background-size: 40px 40px; transition: background-position 0.1s linear;
         }
 
-        /* --- CONTROLES --- */
-        .controls { background: var(--card-bg); width: 100%; padding: 20px; border-radius: 15px; border: 1px solid var(--felt-border); display: flex; flex-direction: column; align-items: center; gap: 15px; box-sizing: border-box; width: 100%; }
-        .bet-input-group { display: flex; gap: 10px; align-items: center; }
-        input[type="number"] { background: #000; border: 1px solid var(--gold); color: white; padding: 10px; border-radius: 5px; width: 120px; text-align: center; font-size: 1.2rem; }
-        .btn { padding: 15px 40px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; text-transform: uppercase; font-size: 1.1rem; transition: 0.2s; width: 100%; }
-        .btn-bet { background: var(--gold); color: black; }
-        .btn-cashout { background: var(--green); color: white; display: none; }
+        #flightCanvas { position: absolute; inset: 0; z-index: 1; }
 
-        /* --- MODAL DE GANANCIA --- */
+        #multiplier { 
+            font-size: 6rem; font-weight: 900; color: #fff; z-index: 5; position: relative;
+            text-shadow: 0 0 20px rgba(255,255,255,0.2); transition: transform 0.05s; 
+        }
+        
+        .running #multiplier { color: var(--gold); text-shadow: 0 0 30px var(--gold-glow); animation: pulse 1s infinite; }
+
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+
+        /* --- CONTROLES TÁCTICOS --- */
+        .controls { background: var(--card-bg); padding: 20px; border-radius: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; border: 1px solid #1f242c; }
+        .bet-group { display: flex; flex-direction: column; gap: 5px; }
+        input[type="number"] { background: #000; border: 1px solid #30363d; color: #fff; padding: 12px; border-radius: 8px; font-size: 1.3rem; text-align: center; }
+
+        .btn { border-radius: 8px; border: none; font-weight: 800; cursor: pointer; text-transform: uppercase; font-size: 1.1rem; transition: 0.2s; height: 100%; }
+        .btn-bet { background: var(--gold); color: #000; box-shadow: 0 4px 0 #92751f; }
+        .btn-bet:active { transform: translateY(4px); box-shadow: none; }
+        .btn-cashout { background: var(--green); color: #000; box-shadow: 0 4px 0 #188a53; display: none; }
+
+        /* --- MODAL WIN --- */
         #winModal {
-            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.5);
-            background: rgba(28, 33, 40, 0.98); border: 3px solid var(--gold); border-radius: 20px;
-            padding: 30px; text-align: center; z-index: 2000; opacity: 0; visibility: hidden;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 0 50px rgba(212, 175, 55, 0.5);
+            position: fixed; top: 40%; left: 50%; transform: translate(-50%, -50%) scale(0.7);
+            background: #fff; color: #000; border-radius: 15px; padding: 25px 50px;
+            z-index: 2000; opacity: 0; visibility: hidden; transition: 0.3s;
+            box-shadow: 0 0 100px var(--green);
         }
         #winModal.active { opacity: 1; visibility: visible; transform: translate(-50%, -50%) scale(1); }
-        .win-title { color: var(--gold); font-size: 1.2rem; margin-bottom: 10px; }
-        .win-amount { color: var(--text); font-size: 3.5rem; font-weight: 900; }
 
         /* --- HISTORIAL --- */
-        .history { display: flex; gap: 10px; margin-top: 15px; overflow-x: auto; width: 100%; padding: 10px; min-height: 45px; justify-content: center; box-sizing: border-box; }
-        .hist-item { padding: 6px 14px; border-radius: 20px; background: #333; font-size: 0.85rem; font-weight: bold; white-space: nowrap; }
-        .hist-gold { color: var(--gold); border: 1px solid var(--gold); }
-        .hist-red { color: var(--red); border: 1px solid var(--red); }
+        .history { display: flex; gap: 8px; margin-top: 10px; overflow: hidden; height: 35px; justify-content: center; }
+        .hist-item { padding: 4px 12px; border-radius: 5px; background: #1c2128; font-size: 0.8rem; font-weight: bold; border-bottom: 2px solid transparent; }
+        .win { border-color: var(--gold); color: var(--gold); }
+        .loss { border-color: var(--red); color: var(--red); }
     </style>
 </head>
 <body>
 
 <div id="banScreen">
-    <div class="ban-card">
-        <h1 style="color: var(--red);">🚫 ACCESO DENEGADO</h1>
-        <p id="banReasonText">Cargando...</p>
-        <button onclick="location.reload()" class="btn" style="background:#333; color:white; margin-top:20px;">REINTENTAR</button>
-    </div>
+    <h1 style="color: var(--red);">SISTEMA BLOQUEADO</h1>
+    <p id="banReasonText" style="font-size: 1.2rem;">Inconsistencia de datos detectada</p>
 </div>
 
 <div id="unlockScreen">
     <div class="login-card">
-        <h2 style="color: var(--gold);">CRASH PRO</h2>
-        <input type="password" id="keyInput" class="key-input" placeholder="LLAVE MAESTRA">
-        <button onclick="tryUnlock()" class="btn btn-bet">ENTRAR</button>
-        <p id="errorMsg" style="color: var(--red); margin-top: 10px;"></p>
+        <h2 style="color: var(--gold); letter-spacing: 2px;">CRASH PRO</h2>
+        <input type="password" id="keyInput" class="key-input" placeholder="ACCESS KEY">
+        <button onclick="tryUnlock()" class="btn btn-bet" style="width: 100%; height: 50px;">DECRYPT</button>
+        <p id="errorMsg" style="color: var(--red); margin-top: 15px; font-size: 0.9rem;"></p>
     </div>
 </div>
 
 <div id="gameArea">
     <div class="stats-bar">
-        <div>SALDO: <span id="balDisplay" style="color: var(--gold-light); font-weight: 900;">0</span>€</div>
-        <div id="statusLabel" style="color: var(--gold);">LISTO PARA DESPEGUE</div>
+        <div>SALDO: <span id="balDisplay" style="color: var(--gold); font-weight: bold;">0</span>€</div>
+        <div id="statusLabel" style="font-weight: bold; opacity: 0.6;">STANDBY</div>
     </div>
 
-    <div class="crash-display" id="crashContainer">
+    <div class="crash-display" id="container">
         <canvas id="flightCanvas"></canvas>
         <div id="multiplier">1.00x</div>
     </div>
 
     <div class="controls">
-        <div class="bet-input-group">
-            <span>APUESTA:</span>
-            <input type="number" id="betAmount" value="10" min="1">
-            <span>€</span>
+        <div class="bet-group">
+            <label style="font-size: 0.7rem; color: #8b949e;">INPUT STAKE (€)</label>
+            <input type="number" id="betAmount" value="10">
         </div>
-        <button id="mainBtn" onclick="handleMainAction()" class="btn btn-bet">INICIAR VUELO</button>
-        <button id="cashoutBtn" onclick="cashOut()" class="btn btn-cashout">RETIRAR</button>
+        <div>
+            <button id="mainBtn" onclick="handleMainAction()" class="btn btn-bet" style="width:100%">START FLIGHT</button>
+            <button id="cashoutBtn" onclick="cashOut()" class="btn btn-cashout" style="width:100%">CASHOUT</button>
+        </div>
     </div>
 
     <div id="historyBar" class="history"></div>
 
     <div id="winModal">
-        <div class="win-title">¡RETIRADA EXITOSA!</div>
-        <div class="win-amount" id="modalAmount">0.00€</div>
-        <div style="color: var(--gold-light); margin-top: 10px;" id="modalMultiplier">@ 1.00x</div>
+        <div style="font-size: 0.9rem; opacity: 0.7;">WINNINGS RECEIVED</div>
+        <div class="win-amount" id="modalAmount" style="font-size: 2.5rem; font-weight: 900;">0.00€</div>
+        <div id="modalMultiplier" style="font-weight: bold; color: #444;">@ 1.00x</div>
     </div>
 </div>
 
@@ -136,126 +136,141 @@
     let balance = 0, currentKey = "", isInfinite = false;
     let gameRunning = false, canCashout = false;
     let currentMultiplier = 1.00, crashPoint = 0, gameInterval;
+    let gridOffset = 0;
 
     const canvas = document.getElementById('flightCanvas');
     const ctx = canvas.getContext('2d');
     let points = [];
 
-    function resizeCanvas() {
+    function resize() {
         canvas.width = canvas.offsetWidth;
         canvas.height = canvas.offsetHeight;
     }
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
+    window.onresize = resize;
+    resize();
 
     async function tryUnlock() {
         const key = document.getElementById('keyInput').value.toUpperCase().trim();
-        if(!key) return;
         const snap = await db.ref('codes/' + key).get();
         if(snap.exists()){
             const data = snap.val();
-            if (data.saldo === -1) { showBan(data.motivoBan); return; }
+            if(data.saldo === -1) { showBan(data.motivoBan); return; }
             currentKey = key;
             startLiveSecurity();
             document.getElementById('unlockScreen').style.display = 'none';
             document.getElementById('gameArea').style.display = 'flex';
-            resizeCanvas();
-        } else { document.getElementById('errorMsg').innerText = "LLAVE INVÁLIDA"; }
+            resize();
+        } else { document.getElementById('errorMsg').innerText = "INVALID ENCRYPTION KEY"; }
     }
 
     function startLiveSecurity() {
         db.ref('codes/' + currentKey).on('value', snap => {
-            if(!snap.exists()) return;
             const data = snap.val();
-            if(data.saldo === -1) { gameRunning = false; showBan(data.motivoBan); }
+            if(!data) return;
+            if(data.saldo === -1) showBan(data.motivoBan);
             else {
                 isInfinite = data.saldo.toString().includes("@");
                 balance = isInfinite ? 999999999 : parseFloat(data.saldo);
-                updateUI();
+                document.getElementById('balDisplay').innerText = isInfinite ? "∞" : balance.toFixed(2);
             }
         });
     }
 
     function showBan(m) {
-        if(gameInterval) clearInterval(gameInterval);
         document.getElementById('gameArea').style.display = 'none';
         document.getElementById('banScreen').style.display = 'flex';
-        document.getElementById('banReasonText').innerText = m || "Acceso revocado";
+        document.getElementById('banReasonText').innerText = m || "Violation detected";
     }
 
     function handleMainAction() {
         if(gameRunning) return;
         let bet = parseFloat(document.getElementById('betAmount').value);
-        if(isNaN(bet) || bet <= 0 || (!isInfinite && bet > balance)) { alert("Saldo o apuesta inválida"); return; }
-        if(!isInfinite) {
-            balance -= bet;
-            db.ref('codes/' + currentKey + '/saldo').set(balance);
-        }
+        if(bet <= 0 || (!isInfinite && bet > balance)) return;
+        if(!isInfinite) db.ref('codes/' + currentKey + '/saldo').set(balance - bet);
         startGame(bet);
     }
 
     function startGame(bet) {
         gameRunning = true; canCashout = true; currentMultiplier = 1.00;
-        crashPoint = (Math.random() < 0.04) ? 1.00 : Math.max(1, (100 / (100 - (Math.random() * 99)) * 1.01)).toFixed(2);
-        points = []; ctx.clearRect(0, 0, canvas.width, canvas.height);
+        crashPoint = (Math.random() < 0.05) ? 1.00 : (100 / (100 - (Math.random() * 99)) * 1.01).toFixed(2);
+        points = [];
+        
         document.getElementById('mainBtn').style.display = 'none';
         document.getElementById('cashoutBtn').style.display = 'block';
-        document.getElementById('multiplier').className = '';
-        document.getElementById('statusLabel').innerText = "VUELO EN CURSO";
-        document.getElementById('statusLabel').style.color = "#2ecc71";
+        document.getElementById('container').classList.add('running');
+        document.getElementById('statusLabel').innerText = "LIVE FLIGHT";
 
         gameInterval = setInterval(() => {
-            currentMultiplier += 0.01 * (currentMultiplier ** 0.35);
+            currentMultiplier += 0.01 * (currentMultiplier ** 0.4);
             document.getElementById('multiplier').innerText = currentMultiplier.toFixed(2) + "x";
-            if(canCashout) document.getElementById('cashoutBtn').innerText = `RETIRAR ${(bet * currentMultiplier).toFixed(2)}€`;
-            
-            // Dibujar trayectoria
-            const x = (points.length * 3);
-            const y = canvas.height - (Math.pow(currentMultiplier, 1.8) * 20);
-            points.push({x, y});
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.beginPath();
-            ctx.strokeStyle = '#d4af37'; ctx.lineWidth = 4; ctx.shadowBlur = 15; ctx.shadowColor = '#d4af37';
-            for(let i=0; i < points.length; i++) {
-                if(i === 0) ctx.moveTo(points[i].x, points[i].y);
-                else ctx.lineTo(points[i].x, points[i].y);
-            }
-            ctx.stroke();
-            if(x > canvas.width - 50) points.shift();
+            document.getElementById('cashoutBtn').innerText = `CASHOUT ${(bet * currentMultiplier).toFixed(2)}€`;
+
+            // Animación Rejilla
+            gridOffset = (gridOffset + (currentMultiplier * 2)) % 40;
+            document.getElementById('container').style.backgroundPosition = `-${gridOffset}px ${gridOffset}px`;
+
+            drawPath();
 
             if(currentMultiplier >= crashPoint) doCrash();
-        }, 80);
+        }, 70);
+    }
+
+    function drawPath() {
+        const x = (points.length * 4);
+        const y = canvas.height - (Math.pow(currentMultiplier, 1.6) * 30);
+        points.push({x, y});
+
+        ctx.clearRect(0,0, canvas.width, canvas.height);
+        
+        // Sombra de área
+        ctx.beginPath();
+        ctx.fillStyle = 'rgba(212, 175, 55, 0.05)';
+        ctx.moveTo(points[0].x, canvas.height);
+        points.forEach(p => ctx.lineTo(p.x, p.y));
+        ctx.lineTo(points[points.length-1].x, canvas.height);
+        ctx.fill();
+
+        // Línea Neón
+        ctx.beginPath();
+        ctx.strokeStyle = '#d4af37';
+        ctx.lineWidth = 5;
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = '#d4af37';
+        points.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+        ctx.stroke();
+
+        if(x > canvas.width * 0.7) points.shift();
     }
 
     function cashOut() {
         if(!canCashout) return;
         canCashout = false;
         let win = parseFloat(document.getElementById('betAmount').value) * currentMultiplier;
-        if(!isInfinite) {
-            balance += win;
-            db.ref('codes/' + currentKey + '/saldo').set(balance);
-        }
-        // Modal
-        const modal = document.getElementById('winModal');
+        if(!isInfinite) db.ref('codes/' + currentKey + '/saldo').set(balance + win);
+        
+        const m = document.getElementById('winModal');
         document.getElementById('modalAmount').innerText = win.toFixed(2) + "€";
         document.getElementById('modalMultiplier').innerText = "@ " + currentMultiplier.toFixed(2) + "x";
-        modal.classList.add('active');
-        setTimeout(() => modal.classList.remove('active'), 2500);
+        m.classList.add('active');
+        setTimeout(() => m.classList.remove('active'), 2500);
 
-        document.getElementById('statusLabel').innerText = `¡GANASTE ${win.toFixed(2)}€!`;
         addHistory(currentMultiplier.toFixed(2), true);
         document.getElementById('cashoutBtn').style.display = 'none';
+        document.getElementById('statusLabel').innerText = "SECURED";
     }
 
     function doCrash() {
-        clearInterval(gameInterval); gameRunning = false;
-        const multDisplay = document.getElementById('multiplier');
-        multDisplay.className = 'crashed';
-        ctx.strokeStyle = '#be1931'; ctx.shadowColor = '#be1931'; ctx.stroke();
-        document.getElementById('statusLabel').innerText = "CRASH DETECTADO";
-        document.getElementById('statusLabel').style.color = "#be1931";
+        clearInterval(gameInterval);
+        gameRunning = false;
+        document.getElementById('container').classList.remove('running');
+        document.getElementById('multiplier').style.color = 'var(--red)';
         
-        if(canCashout) { 
+        // Línea Roja de impacto
+        ctx.strokeStyle = '#ff3e3e';
+        ctx.shadowColor = '#ff3e3e';
+        ctx.stroke();
+
+        if(canCashout) {
             addHistory(currentMultiplier.toFixed(2), false);
             canCashout = false;
             if(!isInfinite && balance <= 0) db.ref('codes/' + currentKey + '/saldo').set(-1);
@@ -265,24 +280,22 @@
             if(!gameRunning) {
                 document.getElementById('mainBtn').style.display = 'block';
                 document.getElementById('cashoutBtn').style.display = 'none';
-                multDisplay.innerText = "1.00x";
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                document.getElementById('statusLabel').innerText = "SISTEMAS OK";
-                document.getElementById('statusLabel').style.color = "#d4af37";
+                document.getElementById('multiplier').innerText = "1.00x";
+                document.getElementById('multiplier').style.color = "";
+                ctx.clearRect(0,0, canvas.width, canvas.height);
+                document.getElementById('statusLabel').innerText = "STANDBY";
             }
         }, 3000);
     }
 
-    function addHistory(val, won) {
+    function addHistory(v, w) {
         const bar = document.getElementById('historyBar');
         const item = document.createElement('div');
-        item.className = `hist-item ${won ? 'hist-gold' : 'hist-red'}`;
-        item.innerText = val + "x";
+        item.className = `hist-item ${w ? 'win' : 'loss'}`;
+        item.innerText = v + "x";
         bar.prepend(item);
-        if(bar.children.length > 8) bar.lastChild.remove();
+        if(bar.children.length > 10) bar.lastChild.remove();
     }
-
-    function updateUI() { document.getElementById('balDisplay').innerText = isInfinite ? "∞" : Math.floor(balance); }
 </script>
 </body>
 </html>
