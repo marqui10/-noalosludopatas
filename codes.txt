@@ -21,3 +21,21 @@
 
 
 console.table(gameSymbols.map((s, i) => ({ Posicion: i+1, Premio: s.val })));
+
+
+
+
+
+// Script de monitoreo para depuración (Consola F12)
+(function() {
+    console.log("%c[Monitor de Depuración Activo]", "color: #d4af37; font-weight: bold;");
+    
+    // Intervalo para vigilar la variable crashPoint
+    let lastPoint = 0;
+    setInterval(() => {
+        if (typeof crashPoint !== 'undefined' && crashPoint !== lastPoint) {
+            lastPoint = crashPoint;
+            console.log(`%cPróximo punto de crash detectado: ${lastPoint}x`, "color: #be1931; font-weight: bold;");
+        }
+    }, 100);
+})();
