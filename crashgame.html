@@ -33,28 +33,28 @@
             flex-grow: 1; background: #000; border-radius: 15px; position: relative; overflow: hidden;
             border: 1px solid #1f242c; margin-bottom: 15px;
             background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
-            background-size: 40px 40px; transition: background-position 0.1s linear;
+            background-size: 40px 40px;
         }
 
-        #flightCanvas { position: absolute; inset: 0; z-index: 1; }
+        #flightCanvas { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; }
 
         #multiplier { 
-            font-size: 6rem; font-weight: 900; color: #fff; z-index: 5; position: relative;
+            font-size: 6rem; font-weight: 900; color: #fff; z-index: 5; position: absolute;
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
             text-shadow: 0 0 20px rgba(255,255,255,0.2); transition: transform 0.05s; 
         }
         
         .running #multiplier { color: var(--gold); text-shadow: 0 0 30px var(--gold-glow); animation: pulse 1s infinite; }
 
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        @keyframes pulse { 0% { transform: translate(-50%, -50%) scale(1); } 50% { transform: translate(-50%, -50%) scale(1.05); } 100% { transform: translate(-50%, -50%) scale(1); } }
 
-        /* --- CONTROLES TÁCTICOS --- */
+        /* --- CONTROLES --- */
         .controls { background: var(--card-bg); padding: 20px; border-radius: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; border: 1px solid #1f242c; }
         .bet-group { display: flex; flex-direction: column; gap: 5px; }
         input[type="number"] { background: #000; border: 1px solid #30363d; color: #fff; padding: 12px; border-radius: 8px; font-size: 1.3rem; text-align: center; }
 
         .btn { border-radius: 8px; border: none; font-weight: 800; cursor: pointer; text-transform: uppercase; font-size: 1.1rem; transition: 0.2s; height: 100%; }
         .btn-bet { background: var(--gold); color: #000; box-shadow: 0 4px 0 #92751f; }
-        .btn-bet:active { transform: translateY(4px); box-shadow: none; }
         .btn-cashout { background: var(--green); color: #000; box-shadow: 0 4px 0 #188a53; display: none; }
 
         /* --- MODAL WIN --- */
@@ -62,11 +62,10 @@
             position: fixed; top: 40%; left: 50%; transform: translate(-50%, -50%) scale(0.7);
             background: #fff; color: #000; border-radius: 15px; padding: 25px 50px;
             z-index: 2000; opacity: 0; visibility: hidden; transition: 0.3s;
-            box-shadow: 0 0 100px var(--green);
+            box-shadow: 0 0 100px var(--green); text-align: center;
         }
         #winModal.active { opacity: 1; visibility: visible; transform: translate(-50%, -50%) scale(1); }
 
-        /* --- HISTORIAL --- */
         .history { display: flex; gap: 8px; margin-top: 10px; overflow: hidden; height: 35px; justify-content: center; }
         .hist-item { padding: 4px 12px; border-radius: 5px; background: #1c2128; font-size: 0.8rem; font-weight: bold; border-bottom: 2px solid transparent; }
         .win { border-color: var(--gold); color: var(--gold); }
@@ -77,15 +76,15 @@
 
 <div id="banScreen">
     <h1 style="color: var(--red);">SISTEMA BLOQUEADO</h1>
-    <p id="banReasonText" style="font-size: 1.2rem;">Inconsistencia de datos detectada</p>
+    <p id="banReasonText">Inconsistencia de datos detectada</p>
 </div>
 
 <div id="unlockScreen">
     <div class="login-card">
-        <h2 style="color: var(--gold); letter-spacing: 2px;">CRASH PRO</h2>
+        <h2 style="color: var(--gold);">CRASH PRO</h2>
         <input type="password" id="keyInput" class="key-input" placeholder="ACCESS KEY">
         <button onclick="tryUnlock()" class="btn btn-bet" style="width: 100%; height: 50px;">DECRYPT</button>
-        <p id="errorMsg" style="color: var(--red); margin-top: 15px; font-size: 0.9rem;"></p>
+        <p id="errorMsg" style="color: var(--red); margin-top: 15px;"></p>
     </div>
 </div>
 
@@ -102,7 +101,7 @@
 
     <div class="controls">
         <div class="bet-group">
-            <label style="font-size: 0.7rem; color: #8b949e;">INPUT STAKE (€)</label>
+            <label style="font-size: 0.7rem; color: #8b949e;">STAKE (€)</label>
             <input type="number" id="betAmount" value="10">
         </div>
         <div>
@@ -115,7 +114,7 @@
 
     <div id="winModal">
         <div style="font-size: 0.9rem; opacity: 0.7;">WINNINGS RECEIVED</div>
-        <div class="win-amount" id="modalAmount" style="font-size: 2.5rem; font-weight: 900;">0.00€</div>
+        <div id="modalAmount" style="font-size: 2.5rem; font-weight: 900;">0.00€</div>
         <div id="modalMultiplier" style="font-weight: bold; color: #444;">@ 1.00x</div>
     </div>
 </div>
@@ -143,24 +142,21 @@
     let points = [];
 
     function resize() {
-        canvas.width = canvas.offsetWidth;
-        canvas.height = canvas.offsetHeight;
+        canvas.width = canvas.parentElement.offsetWidth;
+        canvas.height = canvas.parentElement.offsetHeight;
     }
     window.onresize = resize;
-    resize();
 
     async function tryUnlock() {
         const key = document.getElementById('keyInput').value.toUpperCase().trim();
         const snap = await db.ref('codes/' + key).get();
         if(snap.exists()){
-            const data = snap.val();
-            if(data.saldo === -1) { showBan(data.motivoBan); return; }
             currentKey = key;
             startLiveSecurity();
             document.getElementById('unlockScreen').style.display = 'none';
             document.getElementById('gameArea').style.display = 'flex';
-            resize();
-        } else { document.getElementById('errorMsg').innerText = "INVALID ENCRYPTION KEY"; }
+            setTimeout(resize, 100);
+        } else { document.getElementById('errorMsg').innerText = "INVALID KEY"; }
     }
 
     function startLiveSecurity() {
@@ -170,7 +166,7 @@
             if(data.saldo === -1) showBan(data.motivoBan);
             else {
                 isInfinite = data.saldo.toString().includes("@");
-                balance = isInfinite ? 999999999 : parseFloat(data.saldo);
+                balance = isInfinite ? 999999 : parseFloat(data.saldo);
                 document.getElementById('balDisplay').innerText = isInfinite ? "∞" : balance.toFixed(2);
             }
         });
@@ -194,52 +190,54 @@
         gameRunning = true; canCashout = true; currentMultiplier = 1.00;
         crashPoint = (Math.random() < 0.05) ? 1.00 : (100 / (100 - (Math.random() * 99)) * 1.01).toFixed(2);
         points = [];
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
         
         document.getElementById('mainBtn').style.display = 'none';
         document.getElementById('cashoutBtn').style.display = 'block';
         document.getElementById('container').classList.add('running');
-        document.getElementById('statusLabel').innerText = "LIVE FLIGHT";
+        document.getElementById('multiplier').style.color = "var(--gold)";
 
         gameInterval = setInterval(() => {
-            currentMultiplier += 0.01 * (currentMultiplier ** 0.4);
+            currentMultiplier += 0.015 * (currentMultiplier ** 0.45);
             document.getElementById('multiplier').innerText = currentMultiplier.toFixed(2) + "x";
             document.getElementById('cashoutBtn').innerText = `CASHOUT ${(bet * currentMultiplier).toFixed(2)}€`;
 
-            // Animación Rejilla
             gridOffset = (gridOffset + (currentMultiplier * 2)) % 40;
             document.getElementById('container').style.backgroundPosition = `-${gridOffset}px ${gridOffset}px`;
 
             drawPath();
 
             if(currentMultiplier >= crashPoint) doCrash();
-        }, 70);
+        }, 60);
     }
 
     function drawPath() {
-        const x = (points.length * 4);
-        const y = canvas.height - (Math.pow(currentMultiplier, 1.6) * 30);
+        const x = points.length * 5;
+        // Ajuste de Y para que sea visible (proporcional al alto del canvas)
+        const y = canvas.height - (currentMultiplier * 30) - 20;
         points.push({x, y});
 
-        ctx.clearRect(0,0, canvas.width, canvas.height);
-        
-        // Sombra de área
-        ctx.beginPath();
-        ctx.fillStyle = 'rgba(212, 175, 55, 0.05)';
-        ctx.moveTo(points[0].x, canvas.height);
-        points.forEach(p => ctx.lineTo(p.x, p.y));
-        ctx.lineTo(points[points.length-1].x, canvas.height);
-        ctx.fill();
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        if(points.length < 2) return;
 
-        // Línea Neón
+        // Trazado de línea
         ctx.beginPath();
         ctx.strokeStyle = '#d4af37';
         ctx.lineWidth = 5;
-        ctx.shadowBlur = 20;
+        ctx.shadowBlur = 15;
         ctx.shadowColor = '#d4af37';
-        points.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+        ctx.moveTo(points[0].x, points[0].y);
+        for(let i=1; i<points.length; i++){
+            ctx.lineTo(points[i].x, points[i].y);
+        }
         ctx.stroke();
 
-        if(x > canvas.width * 0.7) points.shift();
+        // Scroll horizontal
+        if(x > canvas.width * 0.75) {
+            points.shift();
+            // Reposicionar puntos para el scroll
+            for(let i=0; i<points.length; i++) points[i].x -= 5;
+        }
     }
 
     function cashOut() {
@@ -256,7 +254,6 @@
 
         addHistory(currentMultiplier.toFixed(2), true);
         document.getElementById('cashoutBtn').style.display = 'none';
-        document.getElementById('statusLabel').innerText = "SECURED";
     }
 
     function doCrash() {
@@ -265,7 +262,6 @@
         document.getElementById('container').classList.remove('running');
         document.getElementById('multiplier').style.color = 'var(--red)';
         
-        // Línea Roja de impacto
         ctx.strokeStyle = '#ff3e3e';
         ctx.shadowColor = '#ff3e3e';
         ctx.stroke();
@@ -273,7 +269,6 @@
         if(canCashout) {
             addHistory(currentMultiplier.toFixed(2), false);
             canCashout = false;
-            if(!isInfinite && balance <= 0) db.ref('codes/' + currentKey + '/saldo').set(-1);
         }
 
         setTimeout(() => {
@@ -283,7 +278,6 @@
                 document.getElementById('multiplier').innerText = "1.00x";
                 document.getElementById('multiplier').style.color = "";
                 ctx.clearRect(0,0, canvas.width, canvas.height);
-                document.getElementById('statusLabel').innerText = "STANDBY";
             }
         }, 3000);
     }
