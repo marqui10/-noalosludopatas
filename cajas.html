@@ -3,130 +3,210 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CS:GO Style Case Opening</title>
+    <title>Tactical Loot - Case Opening</title>
     <style>
         :root {
             --bg: #05070a;
             --gold: #d4af37;
+            --gold-glow: rgba(212, 175, 55, 0.4);
+            --red: #ff3e3e;
             --card-bg: #0d1117;
-            --rarity-common: #4b69ff;
-            --rarity-rare: #8847ff;
-            --rarity-legend: #eb4b4b;
-            --rarity-gold: #e4ae39;
+            --text: #e1e1e1;
+            --rarity-common: #b0c3d9; /* Gris */
+            --rarity-rare: #4b69ff;    /* Azul */
+            --rarity-mythic: #8847ff;  /* Morado */
+            --rarity-legend: #eb4b4b;  /* Rojo */
+            --rarity-gold: #e4ae39;    /* Oro */
         }
 
         body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #fff; overflow: hidden; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
 
+        /* --- PANTALLAS DE BLOQUEO --- */
+        #unlockScreen, #banScreen { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; }
+        #banScreen { display: none; background: radial-gradient(circle, #200 0%, #000 100%); }
+        .login-card { background: var(--card-bg); padding: 40px; border-radius: 20px; border: 1px solid var(--gold); text-align: center; box-shadow: 0 0 30px rgba(0,0,0,0.5); width: 320px; }
+        input.key-input { width: 100%; padding: 12px; margin: 20px 0; border-radius: 8px; border: 1px solid #30363d; background: #000; color: var(--gold); text-align: center; font-size: 1.2rem; font-weight: bold; }
+
         /* --- HEADER --- */
-        .header { width: 100%; max-width: 900px; padding: 20px; display: flex; justify-content: space-between; align-items: center; }
-        #balance { color: var(--gold); font-weight: 900; font-size: 1.5rem; text-shadow: 0 0 10px rgba(212, 175, 55, 0.3); }
+        #gameArea { display: none; width: 100%; max-width: 900px; flex-direction: column; align-items: center; }
+        .header { width: 100%; padding: 20px; display: flex; justify-content: space-between; align-items: center; box-sizing: border-box; }
+        #balance { color: var(--gold); font-weight: 900; font-size: 1.5rem; }
 
-        /* --- CONTENEDOR RULETA --- */
+        /* --- RULETA --- */
         .roulette-wrapper {
-            position: relative; width: 100%; max-width: 800px; height: 160px;
-            background: #0a0e14; border: 2px solid #1f242c; margin: 50px 0;
-            overflow: hidden; border-radius: 10px;
-            box-shadow: inset 0 0 50px #000;
+            position: relative; width: 100%; max-width: 800px; height: 180px;
+            background: #0a0e14; border: 2px solid #1f242c; margin: 40px 0;
+            overflow: hidden; border-radius: 10px; box-shadow: inset 0 0 50px #000;
         }
-
-        /* Línea de selección central */
         .selector {
             position: absolute; left: 50%; top: 0; bottom: 0; width: 4px;
             background: var(--gold); z-index: 10; transform: translateX(-50%);
             box-shadow: 0 0 15px var(--gold);
         }
-
         .item-list {
-            display: flex; position: absolute; left: 0; top: 10px;
-            transition: transform 7s cubic-bezier(0.1, 0, 0.1, 1); /* Curva de frenado CS */
+            display: flex; position: absolute; left: 0; top: 15px;
+            transition: transform 7s cubic-bezier(0.1, 0, 0.1, 1);
             will-change: transform;
         }
-
         .case-item {
-            min-width: 140px; height: 140px; margin: 0 5px;
+            min-width: 150px; height: 150px; margin: 0 5px;
             background: #161b22; border-bottom: 5px solid #ccc;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            font-size: 2.5rem; position: relative; border-radius: 5px;
+            font-size: 2.8rem; position: relative; border-radius: 5px;
         }
 
-        /* Colores de Rareza */
-        .common { border-color: var(--rarity-common); background: linear-gradient(to top, rgba(75, 105, 255, 0.1), transparent); }
-        .rare { border-color: var(--rarity-rare); background: linear-gradient(to top, rgba(136, 71, 255, 0.1), transparent); }
+        /* --- RAREZAS --- */
+        .common { border-color: var(--rarity-common); background: linear-gradient(to top, rgba(176, 195, 217, 0.1), transparent); }
+        .rare { border-color: var(--rarity-rare); background: linear-gradient(to top, rgba(75, 105, 255, 0.1), transparent); }
+        .mythic { border-color: var(--rarity-mythic); background: linear-gradient(to top, rgba(136, 71, 255, 0.1), transparent); }
         .legend { border-color: var(--rarity-legend); background: linear-gradient(to top, rgba(235, 75, 75, 0.1), transparent); }
         .gold-item { border-color: var(--rarity-gold); background: linear-gradient(to top, rgba(228, 174, 57, 0.2), transparent); }
 
-        .item-mult { position: absolute; bottom: 5px; font-size: 0.8rem; font-weight: bold; opacity: 0.8; }
+        .item-label { position: absolute; bottom: 8px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
 
         /* --- CONTROLES --- */
-        .controls { background: var(--card-bg); padding: 30px; border-radius: 15px; border: 1px solid #1f242c; width: 300px; text-align: center; }
+        .controls { background: var(--card-bg); padding: 30px; border-radius: 15px; border: 1px solid #1f242c; width: 320px; text-align: center; }
         .btn-open {
             width: 100%; padding: 15px; background: var(--gold); color: #000; border: none;
             border-radius: 5px; font-weight: 900; cursor: pointer; text-transform: uppercase;
+            box-shadow: 0 4px 0 #92751f;
         }
-        .btn-open:disabled { opacity: 0.3; cursor: not-allowed; }
+        .btn-open:active { transform: translateY(2px); box-shadow: 0 2px 0 #92751f; }
+        .btn-open:disabled { opacity: 0.3; cursor: not-allowed; box-shadow: none; }
 
         /* --- WIN MODAL --- */
         #winModal {
             position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.5);
             background: #fff; color: #000; padding: 40px; border-radius: 20px;
-            text-align: center; z-index: 100; opacity: 0; visibility: hidden; transition: 0.5s;
+            text-align: center; z-index: 1000; opacity: 0; visibility: hidden; transition: 0.5s;
+            box-shadow: 0 0 100px rgba(255,255,255,0.2);
         }
         #winModal.active { opacity: 1; visibility: visible; transform: translate(-50%, -50%) scale(1); }
     </style>
 </head>
 <body>
 
-<div class="header">
-    <div style="font-weight: bold; letter-spacing: 2px;">TACTICAL CASES</div>
-    <div id="balance">100.00€</div>
+<div id="banScreen">
+    <h1 style="color: var(--red);">ACCESO DENEGADO</h1>
+    <p id="banReasonText">Ticket de seguridad expirado o inválido</p>
 </div>
 
-<div class="roulette-wrapper">
-    <div class="selector"></div>
-    <div class="item-list" id="itemList">
-        </div>
+<div id="unlockScreen">
+    <div class="login-card">
+        <h2 style="color: var(--gold);">SECURE ACCESS</h2>
+        <input type="password" id="keyInput" class="key-input" placeholder="INGRESA TU LLAVE">
+        <button onclick="tryUnlock()" class="btn-open" style="box-shadow: none;">DECRYPT</button>
+        <p id="errorMsg" style="color: var(--red); margin-top: 15px; font-size: 0.8rem;"></p>
+    </div>
 </div>
 
-<div class="controls">
-    <div style="margin-bottom: 10px; font-size: 0.8rem; opacity: 0.6;">COSTE DE APERTURA</div>
-    <div style="font-size: 1.5rem; font-weight: bold; margin-bottom: 20px;">10.00€</div>
-    <button id="openBtn" onclick="startOpening()" class="btn-open">ABRIR MALETÍN</button>
+<div id="gameArea">
+    <div class="header">
+        <div><span style="opacity: 0.5;">STATUS:</span> <span id="statusText" style="color: var(--gold);">SECURE</span></div>
+        <div id="balance">0.00€</div>
+    </div>
+
+    <div class="roulette-wrapper">
+        <div class="selector"></div>
+        <div class="item-list" id="itemList"></div>
+    </div>
+
+    <div class="controls">
+        <div style="font-size: 0.7rem; opacity: 0.6; margin-bottom: 5px;">TACTICAL CASE COST</div>
+        <div style="font-size: 1.8rem; font-weight: 900; margin-bottom: 20px;">10.00€</div>
+        <button id="openBtn" onclick="startOpening()" class="btn-open">UNLOCK CASE</button>
+    </div>
 </div>
 
 <div id="winModal">
-    <div style="color: #666; font-size: 0.9rem;">HAS OBTENIDO</div>
-    <div id="winIcon" style="font-size: 4rem; margin: 10px 0;">💰</div>
-    <div id="winName" style="font-size: 1.5rem; font-weight: 900;">OBJETO RARO</div>
-    <div id="winValue" style="color: var(--gold); font-weight: bold; margin-top: 5px;">+0.00€</div>
+    <div style="color: #666; font-size: 0.8rem; font-weight: bold;">OBJECT DEPLOYED</div>
+    <div id="winIcon" style="font-size: 4.5rem; margin: 15px 0;">📦</div>
+    <div id="winName" style="font-size: 1.4rem; font-weight: 900;">-</div>
+    <div id="winValue" style="color: #188a53; font-size: 1.2rem; font-weight: bold; margin-top: 10px;">+0.00€</div>
 </div>
 
-<script>
-    let balance = 100.00;
-    const itemWidth = 150; // Ancho + Margen
-    const list = document.getElementById('itemList');
-    const openBtn = document.getElementById('openBtn');
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
+<script>
+    // Configuración Firebase (Reutilizada)
+    const firebaseConfig = {
+        apiKey: "AIzaSyAsAVsv0iwnv4cdDNkSyo1jBIYvCyn_pCY",
+        authDomain: "rascay-d6d3d.firebaseapp.com",
+        databaseURL: "https://rascay-d6d3d-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "rascay-d6d3d"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    let balance = 0, currentKey = "", isInfinite = false;
+    const itemWidth = 160; 
+    const list = document.getElementById('itemList');
+
+    // Catálogo de objetos nuevos
     const possibleItems = [
-        { icon: '🔫', name: 'Pistola Básica', mult: 0.2, class: 'common' },
-        { icon: '🔪', name: 'Navaja Táctica', mult: 1.5, class: 'rare' },
-        { icon: '🧨', name: 'Granada Oro', mult: 5.0, class: 'legend' },
-        { icon: '🏆', name: 'Cáliz Maestro', mult: 20.0, class: 'gold-item' }
+        { icon: '📟', name: 'Radio Antigua', mult: 0.1, class: 'common' },
+        { icon: '🔋', name: 'Celda Energía', mult: 0.5, class: 'common' },
+        { icon: '🧥', name: 'Chaleco Kevlar', mult: 1.2, class: 'rare' },
+        { icon: '🧤', name: 'Guantes Piloto', mult: 2.0, class: 'rare' },
+        { icon: '🛰️', name: 'Módulo Satélite', mult: 4.5, class: 'mythic' },
+        { icon: '🔥', name: 'Core Térmico', mult: 8.0, class: 'legend' },
+        { icon: '🧬', name: 'Vial Genético', mult: 15.0, class: 'legend' },
+        { icon: '⚡', name: 'Rayo Maestro', mult: 50.0, class: 'gold-item' }
     ];
+
+    async function tryUnlock() {
+        const key = document.getElementById('keyInput').value.toUpperCase().trim();
+        if(!key) return;
+        
+        const snap = await db.ref('codes/' + key).get();
+        if(snap.exists()){
+            const data = snap.val();
+            if(data.saldo === -1) { showBan(data.motivoBan); return; }
+            currentKey = key;
+            startLiveSecurity();
+            document.getElementById('unlockScreen').style.display = 'none';
+            document.getElementById('gameArea').style.display = 'flex';
+            generateItems();
+        } else {
+            document.getElementById('errorMsg').innerText = "LLAVE DE ENCRIPTACIÓN INVÁLIDA";
+        }
+    }
+
+    function startLiveSecurity() {
+        db.ref('codes/' + currentKey).on('value', snap => {
+            const data = snap.val();
+            if(!data) return;
+            if(data.saldo === -1) {
+                showBan(data.motivoBan);
+            } else {
+                isInfinite = data.saldo.toString().includes("@");
+                balance = isInfinite ? 999999 : parseFloat(data.saldo);
+                document.getElementById('balance').innerText = isInfinite ? "∞" : balance.toFixed(2) + "€";
+            }
+        });
+    }
+
+    function showBan(m) {
+        document.getElementById('gameArea').style.display = 'none';
+        document.getElementById('banScreen').style.display = 'flex';
+        document.getElementById('banReasonText').innerText = m || "Infracción de términos detectada";
+    }
 
     function generateItems() {
         list.innerHTML = '';
-        // Generamos 80 items para que la ruleta parezca larga
-        for(let i = 0; i < 80; i++) {
+        for(let i = 0; i < 90; i++) {
             let rand = Math.random();
             let item;
-            if (rand < 0.02) item = possibleItems[3]; // 2% Oro
-            else if (rand < 0.10) item = possibleItems[2]; // 8% Legend
-            else if (rand < 0.40) item = possibleItems[1]; // 30% Raro
-            else item = possibleItems[0]; // Resto Común
+            if (rand < 0.015) item = possibleItems[7];      // Oro (1.5%)
+            else if (rand < 0.08) item = possibleItems[5 + Math.floor(Math.random()*2)]; // Rojo (6.5%)
+            else if (rand < 0.20) item = possibleItems[4];  // Morado (12%)
+            else if (rand < 0.50) item = possibleItems[2 + Math.floor(Math.random()*2)]; // Azul (30%)
+            else item = possibleItems[Math.floor(Math.random()*2)]; // Gris (50%)
 
             const div = document.createElement('div');
             div.className = `case-item ${item.class}`;
-            div.innerHTML = `<span>${item.icon}</span><span class="item-mult">x${item.mult.toFixed(1)}</span>`;
+            div.innerHTML = `<span>${item.icon}</span><span class="item-label">x${item.mult}</span>`;
             div.dataset.mult = item.mult;
             div.dataset.name = item.name;
             div.dataset.icon = item.icon;
@@ -134,43 +214,37 @@
         }
     }
 
-    generateItems();
-
     function startOpening() {
-        if(balance < 10) return;
+        if(balance < 10 && !isInfinite) return;
         
-        balance -= 10;
-        updateUI();
+        // Descontar saldo en Firebase
+        if(!isInfinite) db.ref('codes/' + currentKey + '/saldo').set(balance - 10);
         
+        const openBtn = document.getElementById('openBtn');
         openBtn.disabled = true;
-        generateItems(); // Regenerar para cada apertura
+        generateItems(); 
         
         list.style.transition = 'none';
         list.style.transform = 'translateX(0px)';
-        
-        // Forzamos reflow
-        void list.offsetWidth;
+        void list.offsetWidth; 
 
-        // Calculamos destino (detenerse entre el item 65 y 75)
-        const targetIndex = 65 + Math.floor(Math.random() * 10);
-        const randomOffset = Math.floor(Math.random() * 100) - 50; // Desfase para no caer siempre al centro
+        const targetIndex = 75 + Math.floor(Math.random() * 8);
+        const randomOffset = Math.floor(Math.random() * 80) - 40; 
         const finalX = -(targetIndex * itemWidth) + (document.querySelector('.roulette-wrapper').offsetWidth / 2) - (itemWidth / 2) + randomOffset;
 
         list.style.transition = 'transform 7s cubic-bezier(0.1, 0, 0.1, 1)';
         list.style.transform = `translateX(${finalX}px)`;
 
-        // Al terminar la animación
         setTimeout(() => {
-            const winningItem = list.children[targetIndex];
-            const mult = parseFloat(winningItem.dataset.mult);
-            const winAmount = 10 * mult;
+            const winner = list.children[targetIndex];
+            const winVal = 10 * parseFloat(winner.dataset.mult);
             
-            balance += winAmount;
-            showWin(winningItem.dataset.icon, winningItem.dataset.name, winAmount);
+            if(!isInfinite) db.ref('codes/' + currentKey + '/saldo').set((balance) + winVal);
+            
+            showWin(winner.dataset.icon, winner.dataset.name, winVal);
             
             setTimeout(() => {
                 openBtn.disabled = false;
-                updateUI();
             }, 3000);
         }, 7100);
     }
@@ -184,11 +258,6 @@
         modal.classList.add('active');
         setTimeout(() => modal.classList.remove('active'), 2500);
     }
-
-    function updateUI() {
-        document.getElementById('balance').innerText = balance.toFixed(2) + "€";
-    }
 </script>
-
 </body>
 </html>
