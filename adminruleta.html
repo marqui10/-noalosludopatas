@@ -98,6 +98,7 @@
         <button class="btn btn-warn" onclick="retirarEfectivo()">CASH OUT (VACIAR)</button>
         <button class="btn btn-danger" onclick="banearTicket()">BANEAR TICKET</button>
         <button class="btn btn-outline" onclick="desbanearTicket()" style="margin-top: 5px;">DESBANEAR</button>
+        <button class="btn btn-danger" onclick="borrarTicket()" style="margin-top: 15px; background: #222; border: 1px solid var(--red);">BORRAR TICKET DEFINITIVAMENTE</button>
     </div>
 
     <div class="panel panel-large">
@@ -281,7 +282,6 @@
         }
     }
 
-    // --- FUNCIÓN BANEAR ACTUALIZADA ---
     async function banearTicket() {
         const id = document.getElementById('manageId').value.toUpperCase().trim();
         if(!id) return;
@@ -292,19 +292,15 @@
                 const data = snap.val();
                 const saldoActual = data.saldo;
                 const ahora = getTime();
-
-                // Si no es infinito, restamos el saldo en el historial
                 if(typeof saldoActual === 'number' && saldoActual > 0) {
                     registrarMovimiento(id, "Saldo Retirado por BAN", -saldoActual, "Admin");
                 }
-
                 await db.ref('codes/' + id).update({ 
                     saldoAnterior: saldoActual, 
                     saldo: -1, 
                     motivoBan: mot, 
                     ultimaMod: ahora 
                 });
-                
                 registrarMovimiento(id, "TICKET BANEADO", 0, "Admin");
             }
         }
@@ -368,6 +364,18 @@
         });
         document.getElementById('resMovs').innerText = count;
         document.getElementById('resBalance').innerText = sumNeto.toFixed(2) + "€";
+    }
+
+    // --- NUEVA FUNCIÓN PARA BORRAR ---
+    async function borrarTicket() {
+        const id = document.getElementById('manageId').value.toUpperCase().trim();
+        if(!id) return;
+        if(confirm(`¿ESTÁS SEGURO? Se eliminará el ticket ${id} y todo su historial para siempre.`)) {
+            await db.ref('codes/' + id).remove();
+            alert("Ticket eliminado.");
+            document.getElementById('manageId').value = "";
+            document.getElementById('infoTicket').style.display = 'none';
+        }
     }
 </script>
 </body>
