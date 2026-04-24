@@ -34,14 +34,13 @@
             position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center;
             margin-bottom: 20px;
         }
-        #multiplier { font-size: 5rem; font-weight: 900; color: var(--gold); text-shadow: 0 0 20px rgba(212, 175, 55, 0.4); z-index: 2; }
-        #multiplier.crashed { color: var(--red); }
-        .rocket-svg { position: absolute; bottom: 20px; left: 20px; width: 50px; transition: transform 0.1s linear; opacity: 0.5; }
+        #multiplier { font-size: 5rem; font-weight: 900; color: var(--gold); text-shadow: 0 0 20px rgba(212, 175, 55, 0.4); z-index: 2; transition: transform 0.1s; }
+        #multiplier.crashed { color: var(--red); transform: scale(1.1); }
 
         /* --- CONTROLES --- */
-        .controls { background: var(--card-bg); width: 100%; padding: 20px; border-radius: 15px; border: 1px solid #30363d; display: flex; flex-direction: column; align-items: center; gap: 15px; }
+        .controls { background: var(--card-bg); width: 100%; padding: 20px; border-radius: 15px; border: 1px solid #30363d; display: flex; flex-direction: column; align-items: center; gap: 15px; box-sizing: border-box; }
         .bet-input-group { display: flex; gap: 10px; align-items: center; }
-        input[type="number"] { background: #000; border: 1px solid var(--gold); color: white; padding: 10px; border-radius: 5px; width: 100px; text-align: center; font-size: 1.2rem; }
+        input[type="number"] { background: #000; border: 1px solid var(--gold); color: white; padding: 10px; border-radius: 5px; width: 120px; text-align: center; font-size: 1.2rem; }
         
         .btn { padding: 15px 40px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; text-transform: uppercase; font-size: 1.1rem; transition: 0.2s; width: 100%; }
         .btn-bet { background: var(--gold); color: black; }
@@ -49,8 +48,8 @@
         .btn:disabled { opacity: 0.3; cursor: not-allowed; }
 
         /* --- HISTORIAL --- */
-        .history { display: flex; gap: 10px; margin-top: 15px; overflow-x: auto; width: 100%; padding: 10px; }
-        .hist-item { padding: 5px 12px; border-radius: 20px; background: #333; font-size: 0.8rem; font-weight: bold; }
+        .history { display: flex; gap: 10px; margin-top: 15px; overflow-x: auto; width: 100%; padding: 10px; min-height: 40px; justify-content: center; }
+        .hist-item { padding: 5px 12px; border-radius: 20px; background: #333; font-size: 0.8rem; font-weight: bold; white-space: nowrap; }
         .hist-gold { color: var(--gold); border: 1px solid var(--gold); }
         .hist-red { color: var(--red); border: 1px solid var(--red); }
     </style>
@@ -77,14 +76,11 @@
 <div id="gameArea">
     <div class="stats-bar">
         <div>SALDO: <span id="balDisplay" style="color: var(--gold-light); font-weight: 900;">0</span>€</div>
-        <div id="statusLabel" style="color: var(--gold);">ESPERANDO...</div>
+        <div id="statusLabel" style="color: var(--gold);">PREPARADO</div>
     </div>
 
     <div class="crash-display">
         <div id="multiplier">1.00x</div>
-        <svg class="rocket-svg" viewBox="0 0 24 24" fill="var(--gold)">
-            <path d="M12,2L4.5,20.29L5.21,21L12,18L18.79,21L19.5,20.29L12,2Z" />
-        </svg>
     </div>
 
     <div class="controls">
@@ -117,20 +113,22 @@
     let gameRunning = false, canCashout = false;
     let currentMultiplier = 1.00, crashPoint = 0, gameInterval;
 
-    // --- SEGURIDAD Y LOGIN ---
+    // --- ACCESO Y SEGURIDAD ---
     async function tryUnlock() {
         const key = document.getElementById('keyInput').value.toUpperCase().trim();
-        const snap = await db.ref('codes/'+key).get();
+        const snap = await db.ref('codes/' + key).get();
         if(snap.exists()){
             currentKey = key;
             startLiveSecurity();
-            document.getElementById('unlockScreen').style.display='none';
-            document.getElementById('gameArea').style.display='flex';
-        } else { document.getElementById('errorMsg').innerText = "LLAVE INVÁLIDA"; }
+            document.getElementById('unlockScreen').style.display = 'none';
+            document.getElementById('gameArea').style.display = 'flex';
+        } else { 
+            document.getElementById('errorMsg').innerText = "LLAVE INVÁLIDA"; 
+        }
     }
 
     function startLiveSecurity() {
-        db.ref('codes/'+currentKey).on('value', snap => {
+        db.ref('codes/' + currentKey).on('value', snap => {
             if(!snap.exists()) return;
             const data = snap.val();
             if(data.saldo === -1) {
@@ -138,16 +136,17 @@
                 showBan(data.motivoBan);
             } else {
                 isInfinite = data.saldo.toString().includes("@");
-                balance = isInfinite ? 999999999 : data.saldo;
+                balance = isInfinite ? 999999999 : parseFloat(data.saldo);
                 updateUI();
             }
         });
     }
 
     function showBan(m) {
-        document.getElementById('gameArea').style.display='none';
-        document.getElementById('banScreen').style.display='flex';
+        document.getElementById('gameArea').style.display = 'none';
+        document.getElementById('banScreen').style.display = 'flex';
         document.getElementById('banReasonText').innerText = m || "Acceso revocado";
+        if(gameInterval) clearInterval(gameInterval);
     }
 
     // --- LÓGICA DEL JUEGO ---
@@ -158,10 +157,9 @@
         if(isNaN(bet) || bet <= 0) return;
         if(!isInfinite && bet > balance) { alert("Saldo insuficiente"); return; }
 
-        // Restar saldo
         if(!isInfinite) {
             balance -= bet;
-            db.ref('codes/'+currentKey+'/saldo').set(balance);
+            db.ref('codes/' + currentKey + '/saldo').set(balance);
         }
 
         startGame(bet);
@@ -171,8 +169,6 @@
         gameRunning = true;
         canCashout = true;
         currentMultiplier = 1.00;
-        
-        // Generar punto de crash (Lógica: mayor probabilidad de crash bajo, menor de alto)
         crashPoint = generateCrashPoint();
         
         document.getElementById('mainBtn').style.display = 'none';
@@ -182,11 +178,12 @@
         document.getElementById('statusLabel').style.color = "#2ecc71";
 
         gameInterval = setInterval(() => {
-            currentMultiplier += 0.01 * (currentMultiplier ** 0.5); // Aceleración suave
+            currentMultiplier += 0.01 * (currentMultiplier ** 0.5); 
             document.getElementById('multiplier').innerText = currentMultiplier.toFixed(2) + "x";
             
-            // Actualizar botón de cashout con ganancia potencial
-            document.getElementById('cashoutBtn').innerText = `RETIRAR ${(bet * currentMultiplier).toFixed(2)}€`;
+            if(canCashout) {
+                document.getElementById('cashoutBtn').innerText = `RETIRAR ${(bet * currentMultiplier).toFixed(2)}€`;
+            }
 
             if(currentMultiplier >= crashPoint) {
                 doCrash();
@@ -195,10 +192,9 @@
     }
 
     function generateCrashPoint() {
-        const e = 2.71828;
         const r = Math.random();
-        // Fórmula de probabilidad estándar para juegos de crash
-        return Math.max(1, (100 / (100 - (r * 99))).toFixed(2));
+        if (r < 0.05) return 1.00; // 5% de crash instantáneo
+        return Math.max(1, (99 / (100 - (r * 99)) * 1.01)).toFixed(2);
     }
 
     function cashOut() {
@@ -210,14 +206,12 @@
 
         if(!isInfinite) {
             balance += win;
-            db.ref('codes/'+currentKey+'/saldo').set(balance);
+            db.ref('codes/' + currentKey + '/saldo').set(balance);
         }
 
-        document.getElementById('statusLabel').innerText = `¡GANASTE ${win.toFixed(2)}€!`;
-        document.getElementById('statusLabel').style.color = var(--green);
+        document.getElementById('statusLabel').innerText = `¡RETIRADO: ${win.toFixed(2)}€!`;
+        document.getElementById('statusLabel').style.color = "#d4af37";
         addHistory(currentMultiplier.toFixed(2), true);
-        
-        // El juego sigue visualmente hasta el crash, pero el usuario ya cobró
         document.getElementById('cashoutBtn').style.display = 'none';
     }
 
@@ -225,16 +219,16 @@
         clearInterval(gameInterval);
         gameRunning = false;
         
-        document.getElementById('multiplier').classList.add('crashed');
-        document.getElementById('multiplier').innerText = currentMultiplier.toFixed(2) + "x CRASH!";
-        document.getElementById('statusLabel').innerText = "CATASTROFE";
-        document.getElementById('statusLabel').style.color = var(--red);
+        const multDisplay = document.getElementById('multiplier');
+        multDisplay.classList.add('crashed');
+        multDisplay.innerText = currentMultiplier.toFixed(2) + "x";
         
-        if(canCashout) { // Si no ha retirado, perdió
+        document.getElementById('statusLabel').innerText = "CRASH!";
+        document.getElementById('statusLabel').style.color = "#be1931";
+        
+        if(canCashout) { 
             addHistory(currentMultiplier.toFixed(2), false);
-            if(!isInfinite && balance <= 0) {
-                db.ref('codes/'+currentKey+'/saldo').set(-1);
-            }
+            canCashout = false;
         }
 
         setTimeout(() => {
@@ -242,13 +236,11 @@
                 document.getElementById('mainBtn').style.display = 'block';
                 document.getElementById('cashoutBtn').style.display = 'none';
                 document.getElementById('multiplier').innerText = "1.00x";
-                document.getElementById('multiplier').classList.remove('crashed');
+                multDisplay.classList.remove('crashed');
                 document.getElementById('statusLabel').innerText = "PREPARADO";
-                document.getElementById('statusLabel').style.color = var(--gold);
+                document.getElementById('statusLabel').style.color = "#d4af37";
             }
         }, 3000);
-
-        canCashout = false;
     }
 
     function addHistory(val, won) {
