@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Slot Bar 2026 - Master Multi-Line</title>
+    <title>Slot Bar 2026 - Master Edition</title>
     <style>
         :root {
             --bg: #05070a;
@@ -13,75 +13,52 @@
             --text: #ffffff;
             --slot-bg: #1c2128;
         }
-        body { margin: 0; font-family: 'Trebuchet MS', sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+        body { margin: 0; font-family: 'Trebuchet MS', sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; min-height: 100vh; overflow-x: hidden; }
         
-        /* --- PANTALLAS DE ACCESO Y BANEO --- */
-        #banScreen {
-            position: fixed; inset: 0; background: #000;
-            display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 10000;
-            color: white; text-align: center;
-        }
+        #banScreen, #unlockScreen { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; }
+        #banScreen { display: none; background: #000; }
+        .card { background: #1c2128; padding: 40px; border-radius: 15px; border: 2px solid var(--gold); text-align: center; width: 300px; box-shadow: 0 0 40px rgba(0,0,0,0.5); }
+        .key-input { width: 100%; padding: 12px; margin: 20px 0; border-radius: 5px; border: 1px solid var(--gold); font-size: 1.1rem; text-align: center; background: #000; color: var(--gold-light); box-sizing: border-box; outline: none; }
 
-        .ban-card {
-            border: 3px solid var(--red); padding: 50px; border-radius: 20px;
-            background: #111; box-shadow: 0 0 50px rgba(190, 25, 49, 0.5);
-            max-width: 450px; width: 90%;
-        }
-
-        #unlockScreen {
-            position: fixed; inset: 0; background: var(--bg);
-            display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999;
-        }
-
-        .login-card {
-            background: #1c2128; padding: 40px; border-radius: 15px;
-            border: 2px solid var(--gold); text-align: center; width: 300px;
-        }
-
-        input.key-input {
-            width: 100%; padding: 12px; margin: 20px 0; border-radius: 5px;
-            border: 1px solid var(--gold); font-size: 1.1rem; text-align: center;
-            background: #000; color: var(--gold-light); box-sizing: border-box;
-        }
-
-        /* --- INTERFAZ JUEGO --- */
         #gameArea { display: none; width: 100%; max-width: 500px; padding: 15px; flex-direction: column; align-items: center; }
-        .stats-bar { width: 100%; display: flex; justify-content: space-between; padding: 15px 20px; background: var(--slot-bg); border-radius: 10px; border-bottom: 3px solid var(--gold); margin-bottom: 15px; box-sizing: border-box; font-weight: bold; }
+        .stats-bar { width: 100%; display: flex; justify-content: space-between; padding: 15px 20px; background: var(--slot-bg); border-radius: 10px; border-bottom: 3px solid var(--gold); margin-bottom: 15px; box-sizing: border-box; font-weight: bold; font-size: 1.1rem; }
 
         .machine-body { background: linear-gradient(180deg, #444 0%, #111 100%); padding: 15px; border-radius: 20px; border: 6px solid #555; width: 100%; box-sizing: border-box; box-shadow: 0 10px 0 #222; }
         .grid-3x3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; background: #000; padding: 10px; border-radius: 10px; }
-        .cell { height: 90px; background: #fff; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 2.8rem; color: #000; border-bottom: 4px solid #ccc; }
+        .cell { height: 95px; background: #fff; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 3rem; color: #000; border-bottom: 5px solid #ccc; transition: transform 0.1s; }
         
-        .win-glow { animation: glow 0.4s infinite alternate; z-index: 10; box-shadow: inset 0 0 25px var(--gold); }
+        .win-glow { animation: glow 0.4s infinite alternate; z-index: 10; box-shadow: inset 0 0 30px var(--gold); }
         @keyframes glow { from { background: #fff; transform: scale(1); } to { background: var(--gold-light); transform: scale(1.05); } }
 
-        .main-controls { margin-top: 20px; display: flex; flex-direction: column; gap: 15px; width: 100%; }
-        .chip-box { display: flex; gap: 10px; justify-content: center; }
-        .chip { padding: 10px 20px; border: 2px solid var(--gold); border-radius: 20px; cursor: pointer; font-weight: bold; color: var(--gold); }
-        .chip.active { background: var(--gold); color: black; }
-        
-        .btn-spin { background: var(--red); color: white; border: none; padding: 20px; font-size: 1.5rem; font-weight: bold; border-radius: 10px; cursor: pointer; box-shadow: 0 5px 0 #700; width: 100%; }
-        .btn-spin:active { transform: translateY(3px); box-shadow: 0 2px 0 #700; }
+        .paytable { margin-top: 15px; width: 100%; background: rgba(28, 33, 40, 0.9); border: 1px solid var(--gold); border-radius: 10px; padding: 12px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; box-sizing: border-box; }
+        .pay-item { display: flex; align-items: center; justify-content: space-between; font-size: 0.8rem; border-bottom: 1px solid #333; padding: 5px 0; }
+        .pay-item span:last-child { color: var(--gold-light); font-weight: bold; }
 
-        #resBanner { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; color: black; padding: 30px; border-radius: 20px; z-index: 10001; text-align: center; border: 5px solid var(--gold); box-shadow: 0 0 50px rgba(0,0,0,0.8); }
+        .chip-box { display: flex; gap: 12px; justify-content: center; margin-top: 20px; }
+        .chip { padding: 12px 22px; border: 2px solid var(--gold); border-radius: 20px; cursor: pointer; font-weight: bold; color: var(--gold); transition: 0.2s; }
+        .chip.active { background: var(--gold); color: black; box-shadow: 0 0 15px var(--gold); }
+        
+        .btn-spin { background: var(--red); color: white; border: none; padding: 22px; font-size: 1.6rem; font-weight: bold; border-radius: 12px; cursor: pointer; box-shadow: 0 6px 0 #700; width: 100%; margin-top: 20px; text-transform: uppercase; letter-spacing: 2px; }
+        .btn-spin:disabled { background: #555; box-shadow: none; transform: translateY(4px); cursor: default; }
+
+        #resBanner { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; color: black; padding: 40px; border-radius: 25px; z-index: 10001; text-align: center; border: 6px solid var(--gold); box-shadow: 0 0 100px rgba(0,0,0,0.9); }
     </style>
 </head>
 <body>
 
 <div id="banScreen">
-    <div class="ban-card">
-        <h1 style="color: var(--red); font-size: 2.5rem; margin-bottom: 10px;">🚫 ACCESO DENEGADO</h1>
-        <p id="banReasonText" style="font-size: 1.2rem; font-weight: bold; color: white; margin: 0;">Cuenta suspendida</p>
-        <button onclick="location.reload()" class="btn-spin" style="margin-top: 30px; width: 100%; padding: 12px;">REINTENTAR</button>
+    <div class="card">
+        <h1 style="color: var(--red);">SISTEMA BLOQUEADO</h1>
+        <button onclick="location.reload()" class="btn-spin" style="padding:10px; font-size:1rem;">REINTENTAR</button>
     </div>
 </div>
 
 <div id="unlockScreen">
-    <div class="login-card">
+    <div class="card">
         <h2 style="color: var(--gold);">SLOT BAR 2026</h2>
         <input type="password" id="keyInput" class="key-input" placeholder="LLAVE">
-        <button onclick="tryUnlock()" class="btn-spin" style="width:100%; padding: 12px;">VALIDAR</button>
-        <p id="errorMsg" style="color: var(--red); margin-top: 10px;"></p>
+        <button onclick="tryUnlock()" class="btn-spin" style="padding:12px; font-size:1.1rem; margin:0; box-shadow:none;">ENTRAR</button>
+        <p id="errorMsg" style="color: var(--red); margin-top: 10px; font-size: 0.9rem;"></p>
     </div>
 </div>
 
@@ -93,26 +70,34 @@
     
     <div class="machine-body">
         <div class="grid-3x3" id="mainGrid">
-            <div id="c0" class="cell">❌</div><div id="c1" class="cell">❌</div><div id="c2" class="cell">❌</div>
-            <div id="c3" class="cell">❌</div><div id="c4" class="cell">❌</div><div id="c5" class="cell">❌</div>
-            <div id="c6" class="cell">❌</div><div id="c7" class="cell">❌</div><div id="c8" class="cell">❌</div>
+            <div id="c0" class="cell">💎</div><div id="c1" class="cell">7️⃣</div><div id="c2" class="cell">🔔</div>
+            <div id="c3" class="cell">🍒</div><div id="c4" class="cell">🍉</div><div id="c5" class="cell">🍋</div>
+            <div id="c6" class="cell">🍊</div><div id="c7" class="cell">🍇</div><div id="c8" class="cell">❌</div>
         </div>
     </div>
 
-    <div class="main-controls">
-        <div class="chip-box">
-            <div class="chip active" onclick="setBet(10, this)">10</div>
-            <div class="chip" onclick="setBet(50, this)">50</div>
-            <div class="chip" onclick="setBet(100, this)">100</div>
-        </div>
-        <button id="spinBtn" class="btn-spin" onclick="startSpin()">GIRAR</button>
+    <div class="paytable">
+        <div class="pay-item"><span>💎</span> <span id="p_diam">--</span></div>
+        <div class="pay-item"><span>7️⃣</span> <span id="p_siet">--</span></div>
+        <div class="pay-item"><span>🔔</span> <span id="p_camp">--</span></div>
+        <div class="pay-item"><span>🍒</span> <span id="p_cher">--</span></div>
+        <div class="pay-item"><span>🍉</span> <span id="p_sand">--</span></div>
+        <div class="pay-item"><span>🍋</span> <span id="p_limo">--</span></div>
+        <div class="pay-item"><span>🍊</span> <span id="p_nara">--</span></div>
+        <div class="pay-item"><span>🍇</span> <span id="p_uvas">--</span></div>
     </div>
+
+    <div class="chip-box">
+        <div class="chip active" onclick="setBet(10, this)">10</div>
+        <div class="chip" onclick="setBet(50, this)">50</div>
+        <div class="chip" onclick="setBet(100, this)">100</div>
+    </div>
+    <button id="spinBtn" class="btn-spin" onclick="startSpin()">GIRAR</button>
 </div>
 
 <div id="resBanner">
-    <h2 id="resTitle"></h2>
-    <h1 id="resWin"></h1>
-    <button onclick="closeBanner()" class="btn-spin" style="font-size: 1rem; padding: 10px;">OK</button>
+    <h1 id="resWin" style="font-size:3.5rem; margin:10px 0;">0€</h1>
+    <button onclick="document.getElementById('resBanner').style.display='none'" class="btn-spin" style="padding:10px; font-size:1.1rem; box-shadow:none;">COBRAR</button>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -128,9 +113,51 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    let balance = 0, currentKey = "", isInfinite = false, currentBet = 10, spinning = false, spinInterval = null;
-    const multipliers = { '💎': 150, '7️⃣': 75, '🔔': 30, '🍒': 10, '🍉': 5, '🍋': 2 };
+    let balance = 0, currentKey = "", currentBet = 10, spinning = false;
+    const multipliers = { '💎': 40, '7️⃣': 20, '🔔': 10, '🍒': 5, '🍉': 3, '🍋': 1.5, '🍊': 1.2, '🍇': 1.1 };
     const winLines = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+
+    // --- FUNCIÓN HISTORIAL (UNIFICADA) ---
+    function registrarHistorial(tipo, monto) {
+        if(!currentKey) return;
+        const ahora = new Date().toLocaleString('es-ES', { 
+            hour: '2-digit', minute: '2-digit', second: '2-digit', 
+            day: '2-digit', month: '2-digit', year: 'numeric'
+        });
+        db.ref(`codes/${currentKey}/historial`).push({
+            tipo: tipo,
+            monto: monto,
+            origen: "Slot Bar",
+            fecha: ahora
+        });
+        db.ref(`codes/${currentKey}/ultimaMod`).set(ahora);
+    }
+
+    async function tryUnlock() {
+        const key = document.getElementById('keyInput').value.toUpperCase().trim();
+        if(!key) return;
+        const snap = await db.ref('codes/'+key).get();
+        if(snap.exists()){
+            currentKey = key;
+            db.ref('codes/'+currentKey).on('value', s => {
+                const d = s.val();
+                if(!d) return;
+                if(d.saldo === -1) { 
+                    document.getElementById('gameArea').style.display='none'; 
+                    document.getElementById('banScreen').style.display='flex'; 
+                } else {
+                    balance = d.saldo;
+                    document.getElementById('balDisplay').innerText = Math.floor(balance);
+                    updateUI();
+                }
+            });
+            document.getElementById('unlockScreen').style.display = 'none';
+            document.getElementById('gameArea').style.display = 'flex';
+            updatePaytable();
+        } else {
+            document.getElementById('errorMsg').innerText = "LLAVE INVÁLIDA";
+        }
+    }
 
     function setBet(v, el) {
         if(spinning) return;
@@ -138,127 +165,81 @@
         document.getElementById('betDisplay').innerText = v;
         document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
         el.classList.add('active');
-    }
-
-    async function tryUnlock() {
-        const key = document.getElementById('keyInput').value.toUpperCase().trim();
-        const snap = await db.ref('codes/'+key).get();
-        if(snap.exists()){
-            const data = snap.val();
-            if (data.saldo === -1) {
-                showBan(data.motivoBan);
-                return;
-            }
-            currentKey = key;
-            startLiveSecurity(); 
-            startGame();
-        } else { document.getElementById('errorMsg').innerText = "LLAVE INVÁLIDA"; }
-    }
-
-    function showBan(motivo) {
-        spinning = false;
-        if(spinInterval) clearInterval(spinInterval);
-        document.getElementById('unlockScreen').style.display = 'none';
-        document.getElementById('gameArea').style.display = 'none';
-        document.getElementById('resBanner').style.display = 'none';
-        document.getElementById('banScreen').style.display = 'flex';
-        document.getElementById('banReasonText').innerText = motivo || "Cuenta suspendida";
-    }
-
-    function startLiveSecurity() {
-        db.ref('codes/'+currentKey).on('value', snap => {
-            if(!snap.exists()) return;
-            const data = snap.val();
-            if(data.saldo === -1) {
-                showBan(data.motivoBan);
-            } else {
-                isInfinite = (data.saldo.toString().includes("@"));
-                balance = isInfinite ? 999999999 : data.saldo;
-                updateUI();
-            }
-        });
-    }
-
-    function startGame() {
-        document.getElementById('unlockScreen').style.display='none';
-        document.getElementById('gameArea').style.display='flex';
+        updatePaytable();
         updateUI();
     }
 
-    function startSpin() {
-        if (spinning || (!isInfinite && balance < currentBet)) return;
-        spinning = true;
-        document.querySelectorAll('.cell').forEach(c => c.classList.remove('win-glow'));
-
-        if(!isInfinite) {
-            balance -= currentBet;
-            db.ref('codes/'+currentKey+'/saldo').set(balance <= 0 ? -1 : balance);
+    function updatePaytable() {
+        const ids = {'💎':'p_diam','7️⃣':'p_siet','🔔':'p_camp','🍒':'p_cher','🍉':'p_sand','🍋':'p_limo','🍊':'p_nara','🍇':'p_uvas'};
+        for(let sym in multipliers) {
+            if(ids[sym]) document.getElementById(ids[sym]).innerText = (currentBet * multipliers[sym]).toFixed(1) + "€";
         }
-
-        const roll = Math.random() * 100;
-        let winSymbol = null;
-        if (roll < 0.5) winSymbol = '💎';
-        else if (roll < 1.5) winSymbol = '7️⃣';
-        else if (roll < 4) winSymbol = '🔔';
-        else if (roll < 8) winSymbol = '🍒';
-        else if (roll < 12) winSymbol = '🍉';
-        else if (roll < 15) winSymbol = '🍋';
-
-        let times = 0;
-        const filler = ['❌', '🍋', '🍉'];
-        spinInterval = setInterval(() => {
-            for(let i=0; i<9; i++) document.getElementById('c'+i).innerText = filler[Math.floor(Math.random()*filler.length)];
-            times++;
-            if(times > 20) {
-                clearInterval(spinInterval);
-                if (winSymbol) {
-                    const line = winLines[Math.floor(Math.random() * winLines.length)];
-                    line.forEach(idx => document.getElementById('c' + idx).innerText = winSymbol);
-                } else {
-                    document.getElementById('c4').innerText = '❌';
-                }
-                processResult();
-            }
-        }, 60);
     }
 
-    function processResult() {
-        const grid = [];
-        for(let i=0; i<9; i++) grid.push(document.getElementById('c'+i).innerText);
-        let totalWinMult = 0;
-        let winIdx = new Set();
+    function startSpin() {
+        if (spinning || balance < currentBet) return;
+        spinning = true;
+        balance -= currentBet;
+        db.ref('codes/'+currentKey).update({ saldo: balance });
+        
+        registrarHistorial("Apuesta Spin", -currentBet);
+        
+        document.querySelectorAll('.cell').forEach(c => c.classList.remove('win-glow'));
 
-        winLines.forEach(line => {
-            const [a,b,c] = line;
-            if(grid[a] === grid[b] && grid[b] === grid[c] && multipliers[grid[a]]) {
-                totalWinMult += multipliers[grid[a]];
-                line.forEach(i => winIdx.add(i));
-            }
-        });
+        const symbols = ['💎', '7️⃣', '🔔', '🍒', '🍉', '🍋', '🍊', '🍇', '❌', '❌', '❌'];
+        const roll = Math.random() * 100;
+        let winSymbol = null;
+        
+        if (roll < 18.0) { 
+            if (roll < 0.2) winSymbol = '💎';       // 0.2% (Rango: 0.0 - 0.2)
+            else if (roll < 1.0) winSymbol = '7️⃣';  // 0.8% (Rango: 0.2 - 1.0)
+            else if (roll < 2.5) winSymbol = '🔔';  // 1.5% (Rango: 1.0 - 2.5)
+            else if (roll < 5.5) winSymbol = '🍒';  // 3.0% (Rango: 2.5 - 5.5)
+            else if (roll < 10.0) winSymbol = '🍉'; // 4.5% (Rango: 5.5 - 10.0)
+            else if (roll < 14.0) winSymbol = '🍋'; // 4.0% (Rango: 10.0 - 14.0)
+            else if (roll < 16.5) winSymbol = '🍊'; // 2.5% (Rango: 14.0 - 16.5)
+            else winSymbol = '🍇';                  // 1.5% (Rango: 16.5 - 18.0)
+        }
 
-        if (totalWinMult > 0) {
-            const prize = currentBet * totalWinMult;
-            balance += prize;
-            winIdx.forEach(i => document.getElementById('c'+i).classList.add('win-glow'));
-            if(!isInfinite) db.ref('codes/'+currentKey+'/saldo').set(balance);
-            setTimeout(() => showResult("¡WIN!", prize), 300);
+        let t = 0;
+        let si = setInterval(() => {
+            for(let i=0; i<9; i++) document.getElementById('c'+i).innerText = symbols[Math.floor(Math.random()*symbols.length)];
+            t++;
+            if(t > 22) { clearInterval(si); finalize(winSymbol); }
+        }, 65);
+    }
+
+    function finalize(winSymbol) {
+        if (winSymbol) {
+            const line = winLines[Math.floor(Math.random() * 8)];
+            const fillers = ['❌', '🍇', '🍋'].filter(s => s !== winSymbol);
+            for(let i=0; i<9; i++) document.getElementById('c'+i).innerText = fillers[Math.floor(Math.random()*fillers.length)];
+            line.forEach(idx => {
+                document.getElementById('c'+idx).innerText = winSymbol;
+                document.getElementById('c'+idx).classList.add('win-glow');
+            });
+            let winVal = currentBet * multipliers[winSymbol];
+            balance += winVal;
+            db.ref('codes/'+currentKey).update({ saldo: balance });
+            
+            registrarHistorial("Premio Slot", winVal);
+            
+            setTimeout(() => {
+                document.getElementById('resWin').innerText = winVal.toFixed(1) + "€";
+                document.getElementById('resBanner').style.display = 'block';
+            }, 500);
+        } else {
+            document.getElementById('c4').innerText = '❌';
+            document.getElementById('c0').innerText = '❌';
         }
         spinning = false;
         updateUI();
     }
 
     function updateUI() {
-        document.getElementById('balDisplay').innerText = isInfinite ? "∞" : Math.floor(balance);
-        document.getElementById('spinBtn').disabled = spinning;
+        document.getElementById('balDisplay').innerText = Math.floor(balance);
+        document.getElementById('spinBtn').disabled = spinning || balance < currentBet;
     }
-
-    function showResult(t, a) {
-        document.getElementById('resTitle').innerText = t;
-        document.getElementById('resWin').innerText = `+${a}€`;
-        document.getElementById('resBanner').style.display = 'block';
-    }
-
-    function closeBanner() { document.getElementById('resBanner').style.display = 'none'; }
 </script>
 </body>
 </html>
