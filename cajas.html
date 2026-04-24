@@ -3,27 +3,30 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Tactical Loot - Unique Items</title>
+    <title>Tactical Loot - VIP Edition</title>
     <style>
         :root {
             --bg: #030508; --gold: #d4af37; --red: #ff3e3e; --green: #00ff88; --card-bg: #0d1117;
             --rarity-0: #4b4b4b; --rarity-1: #4b69ff; --rarity-2: #8847ff; --rarity-3: #eb4b4b; --rarity-4: #e4ae39;
+            --vip: #00e5ff;
         }
         body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #fff; display: flex; flex-direction: column; align-items: center; min-height: 100vh; overflow-x: hidden; }
         
         #unlockScreen, #gameArea { width: 100%; display: flex; flex-direction: column; align-items: center; }
         #unlockScreen { position: fixed; inset: 0; background: var(--bg); justify-content: center; z-index: 9999; }
         .login-card { background: var(--card-bg); padding: 40px; border-radius: 20px; border: 1px solid var(--gold); text-align: center; width: 320px; }
-        input.key-input { width: 100%; padding: 12px; margin: 20px 0; border-radius: 8px; border: 1px solid #333; background: #000; color: var(--gold); text-align: center; }
+        input.key-input, input.auto-input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #333; background: #000; color: var(--gold); text-align: center; font-weight: bold; }
 
-        #gameArea { display: none; max-width: 1000px; padding: 20px; box-sizing: border-box; }
+        #gameArea { display: none; max-width: 1100px; padding: 20px; box-sizing: border-box; }
         .header { width: 100%; display: flex; justify-content: space-between; background: var(--card-bg); padding: 15px; border-radius: 10px; border-bottom: 2px solid var(--gold); margin-bottom: 20px; box-sizing: border-box;}
 
         /* SELECCIÓN DE CAJAS */
-        .case-selector { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; width: 100%; margin-bottom: 20px; }
-        .case-card { background: var(--card-bg); padding: 15px; border-radius: 10px; border: 1px solid #1f242c; text-align: center; cursor: pointer; transition: 0.2s; }
+        .case-selector { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 100%; margin-bottom: 20px; }
+        .case-card { background: var(--card-bg); padding: 12px; border-radius: 10px; border: 1px solid #1f242c; text-align: center; cursor: pointer; transition: 0.2s; }
         .case-card.active { border-color: var(--gold); background: #161b22; box-shadow: 0 0 10px rgba(212, 175, 55, 0.2); }
-        .case-price { color: var(--gold); font-weight: 900; font-size: 1.2rem; }
+        .case-card.vip-card.active { border-color: var(--vip); box-shadow: 0 0 10px rgba(0, 229, 255, 0.2); }
+        .case-price { color: var(--gold); font-weight: 900; font-size: 1.1rem; }
+        .vip-price { color: var(--vip) !important; }
 
         /* RULETA */
         .roulette-container { position: relative; width: 100%; height: 160px; background: #07090c; border: 2px solid #1f242c; overflow: hidden; border-radius: 5px; margin-bottom: 20px; }
@@ -31,14 +34,17 @@
         .item-strip { display: flex; position: absolute; left: 0; top: 5px; will-change: transform; transition: transform 4s cubic-bezier(0.1, 0, 0.1, 1); }
         .item-box { min-width: 150px; height: 150px; margin: 0 5px; background: #11141a; display: flex; align-items: center; justify-content: center; border-bottom: 4px solid transparent; font-size: 3rem; }
 
-        .main-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 100%; margin-bottom: 20px; }
-        .btn-main { background: var(--gold); color: #000; border: none; padding: 15px; border-radius: 5px; font-weight: 900; cursor: pointer; width: 100%; }
-        .btn-auto.active { background: var(--red); color: #fff; }
+        /* CONTROLES AUTOMÁTICO */
+        .main-controls { display: grid; grid-template-columns: 1fr 1.5fr; gap: 20px; width: 100%; margin-bottom: 20px; }
+        .control-panel { background: var(--card-bg); padding: 20px; border-radius: 10px; border: 1px solid #1f242c; }
+        .btn-main { background: var(--gold); color: #000; border: none; padding: 15px; border-radius: 5px; font-weight: 900; cursor: pointer; width: 100%; text-transform: uppercase; }
+        .btn-auto { background: #1a1f26; color: var(--gold); border: 1px solid var(--gold); margin-top: 10px; }
+        .btn-auto.active { background: var(--red); color: #fff; border-color: var(--red); }
 
         .inventory-wrapper { display: flex; gap: 20px; width: 100%; }
         .inventory-section { background: var(--card-bg); padding: 20px; border-radius: 10px; flex: 1.5; }
         .table-section { background: var(--card-bg); padding: 20px; border-radius: 10px; flex: 1; }
-        .inv-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(45px, 1fr)); gap: 5px; max-height: 150px; overflow-y: auto; }
+        .inv-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(45px, 1fr)); gap: 5px; max-height: 200px; overflow-y: auto; }
         .inv-slot { aspect-ratio: 1; background: #05070a; border: 1px solid #1f242c; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
         
         .loot-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
@@ -52,7 +58,7 @@
 
 <div id="unlockScreen">
     <div class="login-card">
-        <h2 style="color: var(--gold);">TERMINAL</h2>
+        <h2 style="color: var(--gold);">SISTEMA DE SUMINISTROS</h2>
         <input type="password" id="keyInput" class="key-input" placeholder="ACCESS KEY">
         <button onclick="tryUnlock()" class="btn-main">CONECTAR</button>
     </div>
@@ -61,21 +67,25 @@
 <div id="gameArea">
     <div class="header">
         <div>SALDO: <span id="balanceDisplay" style="color: var(--gold);">0.00€</span></div>
-        <div>BATCH: <span id="autoCountDisplay" style="color:var(--gold)">0</span></div>
+        <div>RESTANTES: <span id="autoCountDisplay" style="color:var(--gold)">0</span></div>
     </div>
 
     <div class="case-selector">
         <div class="case-card active" id="case-wood" onclick="selectCase('wood')">
-            <div style="font-size:0.7rem; opacity:0.5">CAJA MADERA</div>
+            <div style="font-size:0.6rem; opacity:0.5">MADERA</div>
             <div class="case-price">10€</div>
         </div>
         <div class="case-card" id="case-iron" onclick="selectCase('iron')">
-            <div style="font-size:0.7rem; opacity:0.5">CAJA ACERO</div>
+            <div style="font-size:0.6rem; opacity:0.5">ACERO</div>
             <div class="case-price">50€</div>
         </div>
         <div class="case-card" id="case-gold" onclick="selectCase('gold')">
-            <div style="font-size:0.7rem; opacity:0.5">CAJA ORO</div>
+            <div style="font-size:0.6rem; opacity:0.5">ORO</div>
             <div class="case-price">250€</div>
+        </div>
+        <div class="case-card vip-card" id="case-vip" onclick="selectCase('vip')">
+            <div style="font-size:0.6rem; color:var(--vip)">VIP PLATINUM</div>
+            <div class="case-price vip-price">1000€</div>
         </div>
     </div>
 
@@ -85,24 +95,32 @@
     </div>
 
     <div class="main-controls">
-        <button id="openBtn" onclick="startCase()" class="btn-main">ABRIR</button>
-        <button id="autoBtn" onclick="toggleAuto()" class="btn-main" style="background:#1a1f26; color:var(--gold); border:1px solid var(--gold)">BATCH (10)</button>
+        <div class="control-panel">
+            <button id="openBtn" onclick="startCase()" class="btn-main">ABRIR 1</button>
+        </div>
+        <div class="control-panel">
+            <div style="display:flex; gap:10px; align-items:center">
+                <label style="font-size:0.7rem; opacity:0.5">CANTIDAD:</label>
+                <input type="number" id="boxLimit" class="auto-input" value="10" min="1" style="margin:0; flex:1">
+            </div>
+            <button id="autoBtn" onclick="toggleAuto()" class="btn-main btn-auto">EJECUTAR BATCH</button>
+        </div>
     </div>
 
     <div class="inventory-wrapper">
         <div class="inventory-section">
-            <div style="font-size:0.7rem; margin-bottom:10px; opacity:0.5">INVENTARIO RECIENTE</div>
+            <div style="font-size:0.7rem; margin-bottom:10px; opacity:0.5">ÚLTIMOS HALLAZGOS</div>
             <div class="inv-grid" id="invGrid"></div>
         </div>
         <div class="table-section">
-            <div id="tableTitle" style="font-size:0.7rem; margin-bottom:10px; opacity:0.5">CONTENIDO</div>
+            <div id="tableTitle" style="font-size:0.7rem; margin-bottom:10px; opacity:0.5">PREMIOS</div>
             <table class="loot-table"><tbody id="lootTableBody"></tbody></table>
         </div>
     </div>
 </div>
 
 <div id="winModal">
-    <div id="winRarity" style="font-size: 0.7rem; font-weight: bold;">RARITY</div>
+    <div id="winRarity" style="font-size: 0.7rem; font-weight: bold;">WINNER</div>
     <div id="winIcon" style="font-size: 4rem;">📦</div>
     <div id="winName" style="font-weight: 900;">OBJETO</div>
     <div id="winValue" style="color: #188a53; font-weight: bold;">+0.00€</div>
@@ -125,7 +143,6 @@
     let selectedTier = 'wood';
     const itemWidth = 160;
 
-    // DEFINICIÓN DE OBJETOS POR CAJA (Mismas categorías, diferentes iconos/nombres)
     const itemsByTier = {
         wood: [
             { icon: '🔩', name: 'Tornillo', mult: 0.01, color: 'var(--rarity-0)' },
@@ -144,23 +161,34 @@
             { icon: '👑', name: 'Corona', mult: 30.0, color: 'var(--rarity-4)' }
         ],
         gold: [
-            { icon: '💩', name: 'Basura Dorada', mult: 0.01, color: 'var(--rarity-0)' },
-            { icon: '📱', name: 'iPhone', mult: 0.1, color: 'var(--rarity-0)' },
+            { icon: '💩', name: 'Chatarra Dorada', mult: 0.01, color: 'var(--rarity-0)' },
+            { icon: '📱', name: 'Smartphone', mult: 0.1, color: 'var(--rarity-0)' },
             { icon: '🔱', name: 'Tridente', mult: 0.8, color: 'var(--rarity-1)' },
             { icon: '🚀', name: 'Misil', mult: 2.5, color: 'var(--rarity-2)' },
-            { icon: '🛸', name: 'Escudo Alien', mult: 5.0, color: 'var(--rarity-3)' },
+            { icon: '🛸', name: 'Escudo UAP', mult: 5.0, color: 'var(--rarity-3)' },
             { icon: '💰', name: 'Saco de Oro', mult: 30.0, color: 'var(--rarity-4)' }
+        ],
+        vip: [
+            { icon: '🕯️', name: 'Vela Negra', mult: 0.01, color: 'var(--rarity-0)' },
+            { icon: '⌚', name: 'Rolex', mult: 0.1, color: 'var(--rarity-0)' },
+            { icon: '🐆', name: 'Jaguar Mascota', mult: 0.8, color: 'var(--rarity-1)' },
+            { icon: '🚁', name: 'Helicóptero', mult: 2.5, color: 'var(--rarity-2)' },
+            { icon: '🏢', name: 'Rascacielos', mult: 5.0, color: 'var(--rarity-3)' },
+            { icon: '🪐', name: 'Planeta Propio', mult: 30.0, color: 'var(--rarity-4)' }
         ]
     };
 
-    const prices = { wood: 10, iron: 50, gold: 250 };
+    const prices = { wood: 10, iron: 50, gold: 250, vip: 1000 };
 
     function renderTable() {
         const body = document.getElementById('lootTableBody');
         const list = itemsByTier[selectedTier];
-        const price = prices[selectedTier];
+        const currentPrice = prices[selectedTier];
         body.innerHTML = list.map(item => `
-            <tr><td style="color:${item.color}">${item.icon} ${item.name}</td><td style="text-align:right">x${item.mult}</td></tr>
+            <tr>
+                <td style="color:${item.color}">${item.icon} ${item.name}</td>
+                <td style="text-align:right; font-weight:bold">${(currentPrice * item.mult).toFixed(2)}€</td>
+            </tr>
         `).join('');
     }
 
@@ -176,11 +204,11 @@
     function getWeightedItem() {
         let r = Math.random();
         const list = itemsByTier[selectedTier];
-        if (r < 0.003) return list[5]; // Reliquia
-        if (r < 0.02) return list[4];  // Épico
-        if (r < 0.08) return list[3];  // Raro
-        if (r < 0.25) return list[2];  // Común
-        return list[Math.floor(Math.random()*2)]; // Basura
+        if (r < 0.003) return list[5]; 
+        if (r < 0.02) return list[4];  
+        if (r < 0.08) return list[3];  
+        if (r < 0.25) return list[2];  
+        return list[Math.floor(Math.random()*2)]; 
     }
 
     function buildStrip() {
@@ -212,6 +240,7 @@
     function startLiveSecurity() {
         db.ref('codes/' + currentKey).on('value', snap => {
             const data = snap.val();
+            if(!data) return;
             isInfinite = data.saldo.toString().includes("@");
             balance = isInfinite ? 999999 : parseFloat(data.saldo);
             document.getElementById('balanceDisplay').innerText = isInfinite ? "∞" : balance.toFixed(2) + "€";
@@ -230,7 +259,7 @@
         void strip.offsetWidth;
         const targetIndex = 88;
         const finalX = -(targetIndex * 160) + (document.querySelector('.roulette-container').offsetWidth / 2) - 80;
-        strip.style.transition = `transform ${isAutoMode ? '1.2s' : '4s'} cubic-bezier(0.1, 0, 0.1, 1)`;
+        strip.style.transition = `transform ${isAutoMode ? '1s' : '4s'} cubic-bezier(0.1, 0, 0.1, 1)`;
         strip.style.transform = `translateX(${finalX}px)`;
         setTimeout(() => {
             const winner = JSON.parse(strip.children[targetIndex].dataset.itemData);
@@ -244,19 +273,24 @@
                     boxesLeft--; document.getElementById('autoCountDisplay').innerText = boxesLeft;
                     if(boxesLeft > 0) startCase(); else toggleAuto();
                 }
-            }, isAutoMode ? 200 : 1500);
-        }, isAutoMode ? 1300 : 4100);
+            }, isAutoMode ? 150 : 1500);
+        }, isAutoMode ? 1100 : 4100);
     }
 
     function toggleAuto() {
-        isAutoMode = !isAutoMode;
-        const btn = document.getElementById('autoBtn');
-        if(isAutoMode) {
-            boxesLeft = 10; btn.innerText = "DETENER"; btn.classList.add('active');
-            document.getElementById('autoCountDisplay').innerText = "10";
+        if(!isAutoMode) {
+            boxesLeft = parseInt(document.getElementById('boxLimit').value) || 0;
+            if(boxesLeft <= 0) return;
+            isAutoMode = true;
+            document.getElementById('autoBtn').innerText = "CANCELAR BATCH";
+            document.getElementById('autoBtn').classList.add('active');
+            document.getElementById('autoCountDisplay').innerText = boxesLeft;
             startCase();
         } else {
-            btn.innerText = "BATCH (10)"; btn.classList.remove('active');
+            isAutoMode = false;
+            boxesLeft = 0;
+            document.getElementById('autoBtn').innerText = "EJECUTAR BATCH";
+            document.getElementById('autoBtn').classList.remove('active');
             document.getElementById('autoCountDisplay').innerText = "0";
         }
     }
@@ -266,7 +300,7 @@
         const slot = document.createElement('div');
         slot.className = 'inv-slot'; slot.innerText = icon;
         grid.prepend(slot);
-        if(grid.children.length > 40) grid.lastChild.remove();
+        if(grid.children.length > 50) grid.lastChild.remove();
     }
 
     function showWin(item, amount) {
