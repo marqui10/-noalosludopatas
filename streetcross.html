@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Casino Elite - Selección de Juego</title>
+    <style>
+        :root {
+            --gold: #bf953f;
+            --gold-light: #fcf6ba;
+            --dark-bg: #0a0c1a;
+            --panel-bg: #15183a;
+            --text: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--dark-bg);
+            background-image: radial-gradient(circle at center, #1e224f 0%, #0a0c1a 100%);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        h1 {
+            font-size: clamp(2.5rem, 8vw, 4rem);
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            margin: 40px 0;
+            background: linear-gradient(to bottom, var(--gold-light) 0%, var(--gold) 50%, #aa771c 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 10px rgba(191, 149, 63, 0.5));
+            text-align: center;
+        }
+
+        .lobby {
+            display: grid;
+            /* Crea columnas automáticas que se ajustan al ancho de la pantalla */
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            width: 100%;
+            max-width: 1200px;
+            padding: 10px;
+            justify-items: center;
+        }
+
+        .game-card {
+            background: var(--panel-bg);
+            width: 100%;
+            max-width: 280px;
+            height: 320px;
+            border-radius: 20px;
+            border: 2px solid var(--gold);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+
+        .game-card:hover {
+            transform: translateY(-10px) scale(1.03);
+            box-shadow: 0 0 25px var(--gold);
+            border-color: var(--gold-light);
+        }
+
+        .icon {
+            font-size: 4rem;
+            margin-bottom: 10px;
+        }
+
+        .game-title {
+            color: var(--gold);
+            font-size: 1.4rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-align: center;
+        }
+
+        .btn-play {
+            margin-top: 20px;
+            padding: 8px 20px;
+            background: var(--gold);
+            color: black;
+            border-radius: 50px;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            transition: 0.3s;
+        }
+
+        .game-card:hover .btn-play {
+            background: var(--gold-light);
+            box-shadow: 0 0 15px var(--gold-light);
+        }
+
+        .decor {
+            position: fixed;
+            font-size: clamp(5rem, 15vw, 10rem);
+            opacity: 0.03;
+            z-index: -1;
+            user-select: none;
+        }
+
+        @media (max-width: 600px) {
+            .lobby {
+                grid-template-columns: 1fr;
+            }
+            .game-card {
+                max-width: 100%;
+                height: 280px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="decor" style="top: 5%; left: 5%;">♠</div>
+    <div class="decor" style="bottom: 5%; right: 5%;">♦</div>
+    <div class="decor" style="top: 45%; left: 50%; transform: translateX(-50%); opacity: 0.02;">♣</div>
+
+    <h1>CASINO</h1>
+
+    <div class="lobby">
+        <a href="rascaygana.html" class="game-card">
+            <div class="icon">🎫</div>
+            <div class="game-title">Rasca y Gana</div>
+            <div class="btn-play">Jugar Ahora</div>
+        </a>
+
+        <a href="ruleta.html" class="game-card">
+            <div class="icon">🎡</div>
+            <div class="game-title">La Ruleta</div>
+            <div class="btn-play">Jugar Ahora</div>
+        </a>
+
+        <a href="tragaperras.html" class="game-card">
+            <div class="icon">🎰</div>
+            <div class="game-title">Tragaperras</div>
+            <div class="btn-play">Jugar Ahora</div>
+        </a>
+
+        <a href="blackjack.html" class="game-card">
+            <div class="icon">🃏</div>
+            <div class="game-title">Blackjack</div>
+            <div class="btn-play">Jugar Ahora</div>
+        </a>
+
+        <a href="cajas.html" class="game-card">
+            <div class="icon">📦</div>
+            <div class="game-title">Cajas</div>
+            <div class="btn-play">Jugar Ahora</div>
+        </a>
+
+        <a href="crashgame.html" class="game-card">
+            <div class="icon">🚀</div>
+            <div class="game-title">Crash Game</div>
+            <div class="btn-play">Jugar Ahora</div>
+        </a>
+
+        <a href="tower.html" class="game-card">
+            <div class="icon">🏰</div>
+            <div class="game-title">Tower</div>
+            <div class="btn-play">Jugar Ahora</div>
+        </a>
+    </div>
+
+    <p style="margin: 40px 0; color: rgba(255,255,255,0.4); font-size: 0.8rem; text-align: center;">
+        Bienvenido al panel de juego elite v3 | 18+ Juega con responsabilidad
+    </p>
+
+</body>
+</html>
