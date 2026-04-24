@@ -371,4 +371,377 @@
     }
 </script>
 </body>
+</html><!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Master Panel - Live Elite v4.3</title>
+    <style>
+        :root {
+            --gold: #bf953f;
+            --dark-bg: #0a0c1a;
+            --panel-bg: #15183a;
+            --red: #d63031;
+            --green: #4ade80;
+            --blue: #3498db;
+        }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--dark-bg); color: white; display: flex; flex-direction: column; align-items: center; padding: 30px; margin: 0; }
+        
+        #loginOverlay { position: fixed; inset: 0; background: var(--dark-bg); z-index: 10000; display: flex; align-items: center; justify-content: center; }
+        .login-box { background: var(--panel-bg); padding: 40px; border-radius: 15px; border: 2px solid var(--gold); text-align: center; }
+        .container { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; max-width: 1200px; width: 100%; }
+        .panel { background: var(--panel-bg); padding: 25px; border-radius: 15px; border: 2px solid var(--gold); width: 350px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .panel-large { width: 100%; max-width: 1100px; margin-top: 20px; }
+        h3 { color: var(--gold); text-align: center; margin-top: 0; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        input, select { width: 100%; padding: 12px; margin: 10px 0; border-radius: 5px; border: 1px solid #333; box-sizing: border-box; background: #000; color: #fff; font-weight: bold; }
+        
+        .btn { width: 100%; padding: 12px; border: none; font-weight: bold; cursor: pointer; border-radius: 5px; margin-top: 5px; transition: 0.3s; }
+        .btn-gold { background: var(--gold); color: black; }
+        .btn-outline { background: transparent; border: 1px solid var(--gold); color: var(--gold); }
+        .btn-danger { background: var(--red); color: white; }
+        .btn-warn { background: #e17055; color: white; }
+        .btn-add { background: var(--green); color: black; }
+        .btn-blue { background: var(--blue); color: white; }
+
+        .code-display { font-size: 1.8rem; color: var(--green); text-align: center; margin: 10px 0; font-family: monospace; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th { background: rgba(191, 149, 63, 0.2); color: var(--gold); padding: 12px; text-align: left; font-size: 0.85rem; }
+        td { padding: 10px; border-bottom: 1px solid #222; font-size: 0.9rem; }
+        .ban-row { color: #ff4d4d; text-decoration: line-through; opacity: 0.6; }
+
+        #historialContenedor { margin-top: 15px; max-height: 150px; overflow-y: auto; background: rgba(0,0,0,0.4); border-radius: 8px; padding: 10px; border: 1px solid #444; }
+        .hist-item { border-bottom: 1px solid #222; padding: 6px 0; font-size: 0.75rem; }
+
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 10001; padding: 20px; overflow-y: auto; }
+        .modal-content { background: var(--panel-bg); max-width: 900px; margin: 0 auto; border: 2px solid var(--gold); border-radius: 15px; padding: 25px; }
+        .filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 20px; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px; }
+        .resumen-caja { background: #000; padding: 15px; border-radius: 10px; border: 1px solid var(--gold); display: flex; justify-content: space-around; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+
+<div id="loginOverlay">
+    <div class="login-box">
+        <h2 style="color: var(--gold);">SISTEMA DE CONTROL</h2>
+        <input type="password" id="adminPass" placeholder="CONTRASEÑA MAESTRA">
+        <button class="btn btn-gold" onclick="checkPass()">ENTRAR</button>
+        <p id="loginError" style="color: var(--red); margin-top: 10px;"></p>
+    </div>
+</div>
+
+<h2 style="margin-bottom: 30px; letter-spacing: 2px;">PANEL DE ADMINISTRACIÓN Y CAJA</h2>
+
+<div class="container">
+    <div class="panel">
+        <h3>NUEVO TICKET</h3>
+        <button class="btn btn-outline" onclick="generateRandomCode()">GENERAR CÓDIGO</button>
+        <div id="generatedCode" class="code-display">----</div>
+        <input type="number" id="monto" placeholder="SALDO INICIAL (€)">
+        <button class="btn btn-gold" onclick="crearTicket()">ACTIVAR TICKET</button>
+        
+        <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #333;">
+            <h4 style="text-align: center; color: var(--gold); margin: 0 0 10px 0;">CREACIÓN MANUAL</h4>
+            <input type="text" id="customCode" placeholder="CÓDIGO PERSONALIZADO" style="text-transform: uppercase;">
+            <input type="text" id="customMonto" placeholder="SALDO (€)">
+            <button class="btn btn-add" onclick="crearTicketManual()">CREAR MANUALMENTE</button>
+        </div>
+    </div>
+
+    <div class="panel">
+        <h3>GESTIÓN EN VIVO</h3>
+        <input type="text" id="manageId" placeholder="ESCRIBIR CÓDIGO..." style="text-transform: uppercase;" oninput="escucharTicketEnVivo()">
+        
+        <div id="infoTicket" style="margin: 15px 0; display: none; background: rgba(0,0,0,0.5); padding: 15px; border-radius: 10px; border-left: 4px solid var(--gold);">
+            <p>Saldo Actual: <b id="currentBal" style="font-size: 1.2rem; color:var(--green);">0</b>€</p>
+            <p>Estado: <b id="currentState">---</b></p>
+            
+            <div id="addMoneySection" style="margin-top: 10px; border-top: 1px dashed #444; padding-top: 10px;">
+                <input type="number" id="extraMoney" placeholder="CANTIDAD A SUMAR (€)">
+                <button class="btn btn-add" onclick="añadirDinero()">+ SUMAR SALDO</button>
+            </div>
+
+            <div id="historialContenedor">
+                <div id="listaHistorial"></div>
+            </div>
+            
+            <button class="btn btn-blue" onclick="abrirModalHistorial()">🔎 VER HISTORIAL COMPLETO</button>
+        </div>
+
+        <button class="btn btn-warn" onclick="retirarEfectivo()">CASH OUT (VACIAR)</button>
+        <button class="btn btn-danger" onclick="banearTicket()">BANEAR TICKET</button>
+        <button class="btn btn-outline" onclick="desbanearTicket()" style="margin-top: 5px;">DESBANEAR</button>
+    </div>
+
+    <div class="panel panel-large">
+        <h3>LISTADO DE TICKETS (LIVE)</h3>
+        <table id="topTable">
+            <thead>
+                <tr><th>CÓDIGO</th><th>SALDO ACTUAL</th><th>CREACIÓN</th><th>ÚLT. MOVIMIENTO</th><th>ESTADO</th></tr>
+            </thead>
+            <tbody id="topList"></tbody>
+        </table>
+    </div>
+</div>
+
+<div id="modalHistorial" class="modal">
+    <div class="modal-content">
+        <div style="display:flex; justify-content: space-between; align-items: center;">
+            <h2 style="color:var(--gold); margin:0;">HISTORIAL DE MOVIMIENTOS</h2>
+            <button class="btn btn-danger" style="width: auto; padding: 5px 15px;" onclick="cerrarModal()">X</button>
+        </div>
+        <p id="modalCodigoTit" style="color:var(--blue); font-weight: bold;"></p>
+
+        <div class="filter-grid">
+            <div>
+                <label style="font-size: 0.7rem;">FILTRAR ORIGEN</label>
+                <select id="filtroJuego" onchange="aplicarFiltros()">
+                    <option value="TODOS">Todos</option>
+                    <option value="Slot Bar">Slot Bar</option>
+                    <option value="Blackjack Pro">Blackjack Pro</option>
+                    <option value="Caja">Caja/Recarga</option>
+                    <option value="Admin">Admin</option>
+                </select>
+            </div>
+            <div>
+                <label style="font-size: 0.7rem;">TIPO</label>
+                <select id="filtroTipo" onchange="aplicarFiltros()">
+                    <option value="TODOS">Todos</option>
+                    <option value="GANANCIA">Solo Ganancias (+)</option>
+                    <option value="PERDIDA">Solo Pérdidas (-)</option>
+                </select>
+            </div>
+            <div>
+                <label style="font-size: 0.7rem;">MONTO MIN (€)</label>
+                <input type="number" id="filtroMonto" placeholder="0" oninput="aplicarFiltros()">
+            </div>
+        </div>
+
+        <div class="resumen-caja">
+            <div style="text-align: center;">Movimientos: <br><b id="resMovs" style="color:var(--blue);">0</b></div>
+            <div style="text-align: center;">Balance Netos: <br><b id="resBalance" style="color:var(--green);">0€</b></div>
+        </div>
+
+        <div style="max-height: 400px; overflow-y: auto; background: #000; border-radius: 10px;">
+            <table id="tablaHistorialCompleto">
+                <thead>
+                    <tr><th>FECHA</th><th>ORIGEN</th><th>TIPO</th><th>MONTO</th></tr>
+                </thead>
+                <tbody id="bodyHistorialCompleto"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyAsAVsv0iwnv4cdDNkSyo1jBIYvCyn_pCY",
+        authDomain: "rascay-d6d3d.firebaseapp.com",
+        databaseURL: "https://rascay-d6d3d-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "rascay-d6d3d"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    
+    let historialGlobal = [];
+    let currentTicketRef = null;
+
+    function getTime() { return new Date().toLocaleString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit', day: '2-digit', month: '2-digit' }); }
+
+    function registrarMovimiento(id, tipo, monto, origen = "Caja") {
+        db.ref(`codes/${id}/historial`).push({ tipo: tipo, monto: monto, origen: origen, fecha: getTime() });
+    }
+
+    async function checkPass() {
+        const inputPass = document.getElementById('adminPass').value;
+        const snap = await db.ref('admin/config/pass').get();
+        if (snap.exists() && inputPass === snap.val()) {
+            document.getElementById('loginOverlay').style.display = 'none';
+            loadTop();
+        } else { document.getElementById('loginError').innerText = "ACCESO DENEGADO"; }
+    }
+
+    function escucharTicketEnVivo() {
+        const id = document.getElementById('manageId').value.toUpperCase().trim();
+        if(currentTicketRef) currentTicketRef.off();
+        if(!id || id.length < 4) {
+            document.getElementById('infoTicket').style.display = 'none';
+            return;
+        }
+
+        currentTicketRef = db.ref('codes/' + id);
+        currentTicketRef.on('value', snap => {
+            if(snap.exists()) {
+                const data = snap.val();
+                document.getElementById('infoTicket').style.display = 'block';
+                let esInf = data.saldo.toString().includes("@");
+                let esBan = data.saldo === -1;
+                
+                document.getElementById('currentBal').innerText = esInf ? "∞" : (esBan ? "0" : data.saldo);
+                document.getElementById('currentState').innerText = esBan ? "⛔ BANEADO" : "✅ ACTIVO";
+                document.getElementById('currentState').style.color = esBan ? "var(--red)" : "var(--green)";
+                document.getElementById('addMoneySection').style.display = esBan ? 'none' : 'block';
+
+                const histDiv = document.getElementById('listaHistorial');
+                histDiv.innerHTML = "";
+                historialGlobal = data.historial ? Object.values(data.historial).reverse() : [];
+                historialGlobal.slice(0, 5).forEach(mov => {
+                    histDiv.innerHTML += `<div class="hist-item"><b>${mov.origen}</b>: <span style="color:${mov.monto>0?'var(--green)':'var(--red)'}">${mov.monto}€</span></div>`;
+                });
+                if(document.getElementById('modalHistorial').style.display === 'block') aplicarFiltros();
+            } else { document.getElementById('infoTicket').style.display = 'none'; }
+        });
+    }
+
+    function generateRandomCode() {
+        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        let res = '';
+        for (let i = 0; i < 6; i++) res += chars.charAt(Math.floor(Math.random() * chars.length));
+        db.ref('codes/' + res).once('value', s => {
+            if (s.exists()) generateRandomCode();
+            else document.getElementById('generatedCode').innerText = res;
+        });
+    }
+
+    function crearTicket() {
+        const id = document.getElementById('generatedCode').innerText;
+        const monto = parseFloat(document.getElementById('monto').value);
+        if(id === "----" || isNaN(monto)) return;
+        saveTicket(id, monto);
+        document.getElementById('monto').value = "";
+        document.getElementById('generatedCode').innerText = "----";
+    }
+
+    function crearTicketManual() {
+        const id = document.getElementById('customCode').value.toUpperCase().trim();
+        const rawMonto = document.getElementById('customMonto').value.trim();
+        if(!id || rawMonto === "") return;
+        let montoFinal = rawMonto.includes("@") ? rawMonto : parseFloat(rawMonto);
+        saveTicket(id, montoFinal);
+    }
+
+    function saveTicket(id, monto) {
+        const ahora = getTime();
+        const saldoReal = (typeof monto === 'string' && monto.includes("@")) ? 999999 : monto;
+        db.ref('codes/' + id).set({
+            saldo: monto, fecha: ahora, ultimaMod: ahora, saldoAnterior: saldoReal
+        }).then(() => { registrarMovimiento(id, "Carga Inicial", saldoReal, "Admin"); });
+    }
+
+    async function añadirDinero() {
+        const id = document.getElementById('manageId').value.toUpperCase().trim();
+        const extra = parseFloat(document.getElementById('extraMoney').value);
+        if(!id || isNaN(extra)) return;
+        const snap = await db.ref('codes/' + id).get();
+        if(snap.exists()) {
+            const nuevo = snap.val().saldo + extra;
+            await db.ref('codes/' + id).update({ saldo: nuevo, ultimaMod: getTime() });
+            registrarMovimiento(id, "Recarga", extra, "Caja");
+            document.getElementById('extraMoney').value = "";
+        }
+    }
+
+    async function retirarEfectivo() {
+        const id = document.getElementById('manageId').value.toUpperCase().trim();
+        const snap = await db.ref('codes/' + id).get();
+        if(snap.exists() && confirm("¿Vaciar saldo?")) {
+            const actual = snap.val().saldo;
+            await db.ref('codes/' + id).update({ saldo: 0, ultimaMod: getTime() });
+            registrarMovimiento(id, "Cash Out", -actual, "Caja");
+        }
+    }
+
+    // --- FUNCIÓN BANEAR ACTUALIZADA ---
+    async function banearTicket() {
+        const id = document.getElementById('manageId').value.toUpperCase().trim();
+        if(!id) return;
+        const mot = prompt("Motivo del baneo:");
+        if(mot) {
+            const snap = await db.ref('codes/' + id).get();
+            if(snap.exists()) {
+                const data = snap.val();
+                const saldoActual = data.saldo;
+                const ahora = getTime();
+
+                // Si no es infinito, restamos el saldo en el historial
+                if(typeof saldoActual === 'number' && saldoActual > 0) {
+                    registrarMovimiento(id, "Saldo Retirado por BAN", -saldoActual, "Admin");
+                }
+
+                await db.ref('codes/' + id).update({ 
+                    saldoAnterior: saldoActual, 
+                    saldo: -1, 
+                    motivoBan: mot, 
+                    ultimaMod: ahora 
+                });
+                
+                registrarMovimiento(id, "TICKET BANEADO", 0, "Admin");
+            }
+        }
+    }
+
+    async function desbanearTicket() {
+        const id = document.getElementById('manageId').value.toUpperCase().trim();
+        if(!id) return;
+        const snap = await db.ref('codes/' + id).get();
+        if(snap.exists()) {
+            const data = snap.val();
+            if(data.saldo === -1) {
+                const restaurado = data.saldoAnterior || 0;
+                await db.ref('codes/' + id).update({ saldo: restaurado, ultimaMod: getTime(), motivoBan: null });
+                registrarMovimiento(id, "DESBANEO", restaurado, "Admin");
+            } else { alert("No está baneado"); }
+        }
+    }
+
+    function loadTop() {
+        db.ref('codes').on('value', snap => {
+            const list = document.getElementById('topList');
+            list.innerHTML = "";
+            let items = [];
+            snap.forEach(c => { items.push({ id: c.key, ...c.val() }); });
+            items.sort((a,b) => new Date(b.ultimaMod) - new Date(a.ultimaMod));
+            items.slice(0, 15).forEach(i => {
+                const isBan = i.saldo === -1;
+                list.innerHTML += `<tr class="${isBan?'ban-row':''}"><td>${i.id}</td><td>${isBan?'0':i.saldo}€</td><td>${i.fecha}</td><td>${i.ultimaMod}</td><td>${isBan?'🚫 BAN':'✅ OK'}</td></tr>`;
+            });
+        });
+    }
+
+    function abrirModalHistorial() {
+        const id = document.getElementById('manageId').value.toUpperCase().trim();
+        document.getElementById('modalCodigoTit').innerText = "Ticket: " + id;
+        document.getElementById('modalHistorial').style.display = 'block';
+        aplicarFiltros();
+    }
+
+    function cerrarModal() { document.getElementById('modalHistorial').style.display = 'none'; }
+
+    function aplicarFiltros() {
+        const fJuego = document.getElementById('filtroJuego').value;
+        const fTipo = document.getElementById('filtroTipo').value;
+        const fMontoMin = parseFloat(document.getElementById('filtroMonto').value) || 0;
+        const body = document.getElementById('bodyHistorialCompleto');
+        body.innerHTML = "";
+        let sumNeto = 0, count = 0;
+
+        historialGlobal.forEach(mov => {
+            const cumpleJuego = (fJuego === "TODOS" || mov.origen === fJuego);
+            const cumpleTipo = (fTipo === "TODOS" || (fTipo === "GANANCIA" && mov.monto > 0) || (fTipo === "PERDIDA" && mov.monto < 0));
+            const cumpleMonto = Math.abs(mov.monto) >= fMontoMin;
+
+            if (cumpleJuego && cumpleTipo && cumpleMonto) {
+                sumNeto += mov.monto;
+                count++;
+                body.innerHTML += `<tr><td style="font-size:0.7rem;">${mov.fecha}</td><td style="color:var(--gold);">${mov.origen}</td><td>${mov.tipo}</td><td style="color:${mov.monto>0?'var(--green)':'var(--red)'};">${mov.monto}€</td></tr>`;
+            }
+        });
+        document.getElementById('resMovs').innerText = count;
+        document.getElementById('resBalance').innerText = sumNeto.toFixed(2) + "€";
+    }
+</script>
+</body>
 </html>
