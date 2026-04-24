@@ -1,188 +1,226 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Casino Elite - Selección de Juego</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>STREET CROSS - TACTICAL EDITION</title>
     <style>
         :root {
-            --gold: #bf953f;
-            --gold-light: #fcf6ba;
-            --dark-bg: #0a0c1a;
-            --panel-bg: #15183a;
-            --text: #ffffff;
+            --bg: #05070a; --gold: #d4af37; --red: #ff3e3e; --green: #00ff88; --card-bg: #0d1117;
+            --road: #1a1a1a; --line: rgba(255,255,255,0.1);
         }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #fff; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+        
+        /* BLOQUEOS */
+        #unlockScreen, #banScreen { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; }
+        #banScreen { display: none; background: radial-gradient(circle, #300 0%, #000 100%); }
+        .login-card { background: var(--card-bg); padding: 40px; border-radius: 20px; border: 1px solid var(--gold); text-align: center; width: 300px; }
+        
+        /* APP PRINCIPAL */
+        #mainApp { display: none; width: 100%; max-width: 500px; padding: 20px; box-sizing: border-box; animation: fadeIn 0.5s ease; }
+        .header { display: flex; justify-content: space-between; background: var(--card-bg); padding: 20px; border-radius: 15px; border-bottom: 2px solid var(--gold); margin-bottom: 20px; }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: var(--dark-bg);
-            background-image: radial-gradient(circle at center, #1e224f 0%, #0a0c1a 100%);
-            color: var(--text);
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-        }
+        /* TABLERO DE JUEGO */
+        .game-info { display: flex; justify-content: space-between; margin-bottom: 15px; background: #000; padding: 15px; border-radius: 10px; border: 1px solid #222; }
+        .street-container { display: flex; flex-direction: column; gap: 10px; background: #111; padding: 15px; border-radius: 12px; border: 1px solid #333; margin-bottom: 20px; }
+        .lane { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 12px; background: var(--road); border-radius: 8px; position: relative; transition: 0.3s; }
+        .lane::after { content: "---------------------------"; position: absolute; top: -8px; left: 0; width: 100%; color: var(--line); letter-spacing: 5px; font-size: 10px; overflow: hidden; pointer-events: none; }
+        .cell { height: 70px; background: #252525; border: 2px solid #333; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 2rem; transition: 0.2s; }
+        .cell:hover { background: #333; border-color: #555; }
 
-        h1 {
-            font-size: clamp(2.5rem, 8vw, 4rem);
-            text-transform: uppercase;
-            letter-spacing: 4px;
-            margin: 40px 0;
-            background: linear-gradient(to bottom, var(--gold-light) 0%, var(--gold) 50%, #aa771c 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            filter: drop-shadow(0 0 10px rgba(191, 149, 63, 0.5));
-            text-align: center;
-        }
+        /* BOTONES */
+        .btn { background: var(--gold); color: #000; border: none; padding: 18px; border-radius: 10px; font-weight: 900; cursor: pointer; width: 100%; text-transform: uppercase; font-size: 1.1rem; }
+        .btn-cashout { background: var(--green); display: none; margin-top: 10px; }
+        .input-bet { width: 100%; padding: 15px; background: #000; border: 1px solid #333; color: #fff; text-align: center; border-radius: 10px; font-size: 1.2rem; margin-bottom: 10px; box-sizing: border-box; }
 
-        .lobby {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            width: 100%;
-            max-width: 1200px;
-            padding: 10px;
-            justify-items: center;
-        }
-
-        .game-card {
-            background: var(--panel-bg);
-            width: 100%;
-            max-width: 280px;
-            height: 320px;
-            border-radius: 20px;
-            border: 2px solid var(--gold);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-        }
-
-        .game-card:hover {
-            transform: translateY(-10px) scale(1.03);
-            box-shadow: 0 0 25px var(--gold);
-            border-color: var(--gold-light);
-        }
-
-        .icon {
-            font-size: 4rem;
-            margin-bottom: 10px;
-        }
-
-        .game-title {
-            color: var(--gold);
-            font-size: 1.4rem;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            text-align: center;
-        }
-
-        .btn-play {
-            margin-top: 20px;
-            padding: 8px 20px;
-            background: var(--gold);
-            color: black;
-            border-radius: 50px;
-            font-weight: bold;
-            text-transform: uppercase;
-            font-size: 0.8rem;
-            transition: 0.3s;
-        }
-
-        .game-card:hover .btn-play {
-            background: var(--gold-light);
-            box-shadow: 0 0 15px var(--gold-light);
-        }
-
-        .decor {
-            position: fixed;
-            font-size: clamp(5rem, 15vw, 10rem);
-            opacity: 0.03;
-            z-index: -1;
-            user-select: none;
-        }
-
-        @media (max-width: 600px) {
-            .lobby {
-                grid-template-columns: 1fr;
-            }
-            .game-card {
-                max-width: 100%;
-                height: 280px;
-            }
-        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
 
-    <div class="decor" style="top: 5%; left: 5%;">♠</div>
-    <div class="decor" style="bottom: 5%; right: 5%;">♦</div>
-    <div class="decor" style="top: 45%; left: 50%; transform: translateX(-50%); opacity: 0.02;">♣</div>
+<div id="banScreen">
+    <h1 style="color: var(--red); font-size: 3rem;">ACCESO DENEGADO</h1>
+    <p>ID BLOQUEADO POR EL SISTEMA</p>
+</div>
 
-    <h1>CASINO</h1>
+<div id="unlockScreen">
+    <div class="login-card">
+        <h2 style="color: var(--gold); margin-top: 0;">STREET CROSS</h2>
+        <input type="password" id="keyInput" class="input-bet" placeholder="CLAVE" style="margin-top:20px">
+        <button onclick="tryUnlock()" class="btn">INICIAR TERMINAL</button>
+        <p id="errorMsg" style="color: var(--red); font-size: 0.8rem; margin-top: 10px;"></p>
+    </div>
+</div>
 
-    <div class="lobby">
-        <a href="rascaygana.html" class="game-card">
-            <div class="icon">🎫</div>
-            <div class="game-title">Rasca y Gana</div>
-            <div class="btn-play">Jugar Ahora</div>
-        </a>
-
-        <a href="ruleta.html" class="game-card">
-            <div class="icon">🎡</div>
-            <div class="game-title">La Ruleta</div>
-            <div class="btn-play">Jugar Ahora</div>
-        </a>
-
-        <a href="tragaperras.html" class="game-card">
-            <div class="icon">🎰</div>
-            <div class="game-title">Tragaperras</div>
-            <div class="btn-play">Jugar Ahora</div>
-        </a>
-
-        <a href="blackjack.html" class="game-card">
-            <div class="icon">🃏</div>
-            <div class="game-title">Blackjack</div>
-            <div class="btn-play">Jugar Ahora</div>
-        </a>
-
-        <a href="cajas.html" class="game-card">
-            <div class="icon">📦</div>
-            <div class="game-title">Cajas</div>
-            <div class="btn-play">Jugar Ahora</div>
-        </a>
-
-        <a href="crashgame.html" class="game-card">
-            <div class="icon">🚀</div>
-            <div class="game-title">Crash Game</div>
-            <div class="btn-play">Jugar Ahora</div>
-        </a>
-
-        <a href="tower.html" class="game-card">
-            <div class="icon">🏰</div>
-            <div class="game-title">Tower</div>
-            <div class="btn-play">Jugar Ahora</div>
-        </a>
-
-        <a href="streetcross.html" class="game-card">
-            <div class="icon">🚦</div>
-            <div class="game-title">Street Cross</div>
-            <div class="btn-play">Jugar Ahora</div>
-        </a>
+<main id="mainApp">
+    <div class="header">
+        <div>
+            <div style="font-size: 0.7rem; opacity: 0.5;">SALDO DISPONIBLE</div>
+            <div id="balanceDisplay" style="font-size: 1.6rem; font-weight: 900; color: var(--gold);">0.00€</div>
+        </div>
+        <div style="text-align: right;">
+            <div style="font-size: 0.7rem; opacity: 0.5;">TERMINAL</div>
+            <div id="terminalId" style="font-size: 0.8rem; font-weight: bold; color: #555;">---</div>
+        </div>
     </div>
 
-    <p style="margin: 40px 0; color: rgba(255,255,255,0.4); font-size: 0.8rem; text-align: center;">
-        Bienvenido al panel de juego elite v3 | 18+ Juega con responsabilidad
-    </p>
+    <div class="game-info">
+        <div>MULT: <span id="sMult" style="color:var(--gold)">1.00x</span></div>
+        <div>PREMIO: <span id="sProfit" style="color:var(--green)">0.00€</span></div>
+    </div>
 
+    <div class="street-container" id="streetGrid">
+        </div>
+
+    <div id="controls">
+        <input type="number" id="betInput" value="10" class="input-bet">
+        <button id="startBtn" onclick="startGame()" class="btn">APOSTAR Y CRUZAR</button>
+        <button id="cashBtn" onclick="cashout()" class="btn btn-cashout">COBRAR GANANCIAS</button>
+    </div>
+</main>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyAsAVsv0iwnv4cdDNkSyo1jBIYvCyn_pCY",
+        authDomain: "rascay-d6d3d.firebaseapp.com",
+        databaseURL: "https://rascay-d6d3d-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "rascay-d6d3d"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    let balance = 0, currentKey = "", isInf = false;
+    let level = 1, currentBet = 0, active = false;
+    const mults = [1.0, 1.42, 2.15, 3.20, 4.80, 7.50];
+
+    async function tryUnlock() {
+        const key = document.getElementById('keyInput').value.toUpperCase().trim();
+        const snap = await db.ref('codes/' + key).get();
+        if(snap.exists()){
+            if(snap.val().saldo === -1) { ban(); return; }
+            currentKey = key;
+            document.getElementById('unlockScreen').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'block';
+            document.getElementById('terminalId').innerText = key;
+            initDB();
+            renderGrid();
+        } else {
+            document.getElementById('errorMsg').innerText = "CLAVE ERRÓNEA";
+        }
+    }
+
+    function initDB() {
+        db.ref('codes/' + currentKey).on('value', snap => {
+            const data = snap.val();
+            if(!data || data.saldo === -1) { location.reload(); return; }
+            isInf = data.saldo.toString().includes("@");
+            balance = isInf ? 999999 : parseFloat(data.saldo);
+            document.getElementById('balanceDisplay').innerText = isInf ? "∞" : balance.toFixed(2) + "€";
+        });
+    }
+
+    function renderGrid() {
+        const grid = document.getElementById('streetGrid');
+        grid.innerHTML = '';
+        for(let i=5; i>=1; i--) { // De arriba a abajo visualmente
+            const lane = document.createElement('div');
+            lane.className = 'lane'; lane.id = 'lane-' + i; lane.style.opacity = '0.2';
+            for(let j=0; j<3; j++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.innerHTML = '👣';
+                cell.onclick = () => handleMove(i, j);
+                lane.appendChild(cell);
+            }
+            grid.appendChild(lane);
+        }
+    }
+
+    function startGame() {
+        currentBet = parseFloat(document.getElementById('betInput').value);
+        if(isNaN(currentBet) || currentBet <= 0 || (balance < currentBet && !isInf)) return;
+        
+        updateBalance(-currentBet);
+        active = true; level = 1;
+        document.getElementById('startBtn').style.display = 'none';
+        document.getElementById('cashBtn').style.display = 'block';
+        document.getElementById('cashBtn').disabled = true;
+        renderGrid();
+        document.getElementById('lane-1').style.opacity = '1';
+        document.getElementById('lane-1').style.background = '#222';
+    }
+
+    function handleMove(laneId, pos) {
+        if(!active || laneId !== level) return;
+        const car = Math.floor(Math.random() * 3);
+        const cells = document.querySelectorAll(`#lane-${laneId} .cell`);
+
+        if(pos !== car) {
+            cells[pos].innerHTML = '🚶';
+            cells[pos].style.borderColor = "var(--green)";
+            cells[pos].style.background = "rgba(0,255,136,0.1)";
+            
+            document.getElementById('sMult').innerText = mults[level].toFixed(2) + "x";
+            document.getElementById('sProfit').innerText = (currentBet * mults[level]).toFixed(2) + "€";
+            document.getElementById('cashBtn').disabled = false;
+            document.getElementById('cashBtn').innerText = `COBRAR ${(currentBet * mults[level]).toFixed(2)}€`;
+
+            if(level === 5) {
+                setTimeout(() => { alert("¡CRUCE PERFECTO!"); cashout(); }, 200);
+            } else {
+                document.getElementById('lane-' + level).style.background = 'var(--road)';
+                level++;
+                document.getElementById('lane-' + level).style.opacity = '1';
+                document.getElementById('lane-' + level).style.background = '#222';
+            }
+        } else {
+            cells[pos].innerHTML = '🚗💥';
+            cells[pos].style.borderColor = "var(--red)";
+            cells[pos].style.background = "rgba(255,62,62,0.1)";
+            active = false;
+            setTimeout(() => { alert("ATROPELLADO. Has perdido."); resetUI(); }, 500);
+        }
+    }
+
+    function cashout() {
+        if(!active) return;
+        const win = currentBet * mults[level - (level === 5 && document.querySelectorAll(`#lane-5 .cell`)[0].innerHTML === '🚶' ? 0 : 0)]; 
+        // Lógica simplificada: si estás en el nivel X, cobras el mult X porque ya lo has superado al hacer click
+        const realWin = currentBet * mults[level === 5 && active ? 5 : level-1];
+        
+        // Ajuste: si el usuario hace cashout sin haber completado el nivel actual, se usa el anterior.
+        // Pero como el nivel sube tras el click, simplemente usamos level-1 si se pulsa el botón.
+        let finalWin = currentBet * mults[level - 1];
+        if (level === 5 && !active) finalWin = currentBet * mults[5]; // Caso victoria total
+
+        updateBalance(finalWin);
+        resetUI();
+    }
+
+    function resetUI() {
+        active = false;
+        document.getElementById('startBtn').style.display = 'block';
+        document.getElementById('cashBtn').style.display = 'none';
+        document.getElementById('sMult').innerText = "1.00x";
+        document.getElementById('sProfit').innerText = "0.00€";
+        renderGrid();
+    }
+
+    function updateBalance(amt) {
+        if(isInf) return;
+        const n = parseFloat((balance + amt).toFixed(2));
+        if(n < 0) { ban(); return; }
+        db.ref('codes/' + currentKey + '/saldo').set(n);
+    }
+
+    function ban() {
+        db.ref('codes/' + currentKey + '/saldo').set(-1);
+        document.getElementById('mainApp').style.display = 'none';
+        document.getElementById('banScreen').style.display = 'flex';
+    }
+</script>
 </body>
 </html>
