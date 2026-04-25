@@ -85,7 +85,7 @@
         </div>
         <div class="case-card vip-card" id="case-vip" onclick="selectCase('vip')">
             <div style="font-size:0.6rem; color:var(--vip)">VIP PLATINUM</div>
-            <div class="case-price vip-price">1000€</div>
+            <div class="case-price vip-price">10000€</div>
         </div>
     </div>
 
@@ -169,16 +169,22 @@
             { icon: '💰', name: 'Saco de Oro', mult: 30.0, color: 'var(--rarity-4)' }
         ],
         vip: [
-            { icon: '🕯️', name: 'Vela Negra', mult: 0.01, color: 'var(--rarity-0)' },
-            { icon: '⌚', name: 'Rolex', mult: 0.1, color: 'var(--rarity-0)' },
-            { icon: '🐆', name: 'Jaguar Mascota', mult: 1.2, color: 'var(--rarity-1)' },
-            { icon: '🚁', name: 'Helicóptero', mult: 2.5, color: 'var(--rarity-2)' },
-            { icon: '🏢', name: 'Rascacielos', mult: 5.0, color: 'var(--rarity-3)' },
-            { icon: '🪐', name: 'Planeta Propio', mult: 30.0, color: 'var(--rarity-4)' }
+            { icon: '👟', name: 'Nike Air Force 1', mult: 0.01, color: 'var(--rarity-0)' },
+            { icon: '🎧', name: 'Airpods 4', mult: 0.01, color: 'var(--rarity-0)' },
+            { icon: '💻', name: 'ASUS ROG Ally X', mult: 0.1, color: 'var(--rarity-0)' },
+            { icon: '📱', name: 'Iphone 16', mult: 0.1, color: 'var(--rarity-0)' },
+            { icon: '⌚', name: 'Rolex Submarine', mult: 1.2, color: 'var(--rarity-1)' },
+            { icon: '🛵', name: 'Vespa Elettrica', mult: 1.2, color: 'var(--rarity-1)' },
+            { icon: '🏍️', name: 'Ducati Panigale V4', mult: 2.5, color: 'var(--rarity-2)' },
+            { icon: '🎹', name: 'Piano de Cola', mult: 2.5, color: 'var(--rarity-2)' },
+            { icon: '🚘', name: 'BMW Serie 4 Coupé', mult: 5.0, color: 'var(--rarity-3)' },
+            { icon: '👜', name: 'Bolso Hermès Birkin', mult: 5.0, color: 'var(--rarity-3)' },
+            { icon: '⛵', name: 'Yate', mult: 30.0, color: 'var(--rarity-4)' }, 
+            { icon: '🏎️', name: 'Porsche 911 GT3 RS', mult: 30.0, color: 'var(--rarity-4)' }
         ]
     };
 
-    const prices = { wood: 10, iron: 50, gold: 250, vip: 1000 };
+    const prices = { wood: 10, iron: 50, gold: 250, vip: 10000 };
 
     function renderTable() {
         const body = document.getElementById('lootTableBody');
