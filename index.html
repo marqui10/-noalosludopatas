@@ -30,7 +30,7 @@
             font-size: clamp(2.5rem, 8vw, 4rem);
             text-transform: uppercase;
             letter-spacing: 4px;
-            margin: 40px 0 20px 0;
+            margin: 40px 0 10px 0;
             background: linear-gradient(to bottom, var(--gold-light) 0%, var(--gold) 50%, #aa771c 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -38,9 +38,8 @@
             text-align: center;
         }
 
-        /* Botón de Normas */
         .btn-rules {
-            margin-bottom: 40px;
+            margin-bottom: 30px;
             padding: 10px 25px;
             background: transparent;
             color: var(--gold);
@@ -49,12 +48,48 @@
             cursor: pointer;
             font-weight: bold;
             text-transform: uppercase;
+        }
+
+        /* --- MODAL DE JUEGO (FULLSCREEN) --- */
+        #gameModal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: #000;
+            z-index: 99999;
+        }
+
+        #gameIframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .close-game {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            font-size: 40px;
+            color: #fff;
+            cursor: pointer;
+            z-index: 100000;
+            text-shadow: 0 0 10px #000;
+            font-weight: bold;
             transition: 0.3s;
         }
-        .btn-rules:hover {
-            background: var(--gold);
-            color: black;
-            box-shadow: 0 0 15px var(--gold);
+        .close-game:hover { color: var(--gold); transform: scale(1.2); }
+
+        /* --- PANTALLA DE CASINO CERRADO --- */
+        #closedScreen {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: var(--dark-bg);
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 200000;
+            text-align: center;
         }
 
         .lobby {
@@ -71,194 +106,149 @@
             background: var(--panel-bg);
             width: 100%;
             max-width: 280px;
-            height: 320px;
+            height: 300px;
             border-radius: 20px;
             border: 2px solid var(--gold);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            text-decoration: none;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+            transition: 0.4s;
             position: relative;
-            overflow: hidden;
             box-shadow: 0 10px 25px rgba(0,0,0,0.5);
         }
 
-        .game-card:hover {
-            transform: translateY(-10px) scale(1.03);
-            box-shadow: 0 0 25px var(--gold);
-            border-color: var(--gold-light);
-        }
+        .game-card:hover { transform: translateY(-10px); box-shadow: 0 0 25px var(--gold); }
+        .icon { font-size: 3.5rem; margin-bottom: 10px; }
+        .game-title { color: var(--gold); font-weight: bold; text-transform: uppercase; }
+        .btn-play { margin-top: 15px; padding: 8px 20px; background: var(--gold); color: black; border-radius: 50px; font-weight: bold; font-size: 0.7rem; }
 
-        .icon {
-            font-size: 4rem;
-            margin-bottom: 10px;
-        }
-
-        .game-title {
-            color: var(--gold);
-            font-size: 1.4rem;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            text-align: center;
-        }
-
-        .btn-play {
-            margin-top: 20px;
-            padding: 8px 20px;
-            background: var(--gold);
-            color: black;
-            border-radius: 50px;
-            font-weight: bold;
-            text-transform: uppercase;
-            font-size: 0.8rem;
-            transition: 0.3s;
-        }
-
-        .game-card:hover .btn-play {
-            background: var(--gold-light);
-            box-shadow: 0 0 15px var(--gold-light);
-        }
-
-        /* Modal de Normas */
-        .modal {
+        .modal-rules {
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.85);
-            z-index: 20000;
+            background: rgba(0,0,0,0.9);
+            z-index: 10000;
             justify-content: center;
             align-items: center;
-            padding: 20px;
         }
-        .modal-content {
-            background: var(--panel-bg);
-            border: 2px solid var(--gold);
-            padding: 30px;
-            border-radius: 15px;
-            max-width: 500px;
-            width: 100%;
-            max-height: 80vh;
-            overflow-y: auto;
-            position: relative;
-        }
-        .close-modal {
-            position: absolute;
-            top: 10px;
-            right: 15px;
-            font-size: 2rem;
-            color: var(--gold);
-            cursor: pointer;
-        }
-
-        .decor {
-            position: fixed;
-            font-size: clamp(5rem, 15vw, 10rem);
-            opacity: 0.03;
-            z-index: -1;
-            user-select: none;
-        }
-
-        @media (max-width: 600px) {
-            .lobby { grid-template-columns: 1fr; }
-            .game-card { max-width: 100%; height: 280px; }
-        }
+        .modal-content { background: var(--panel-bg); padding: 30px; border-radius: 15px; border: 2px solid var(--gold); max-width: 400px; }
     </style>
 </head>
 <body>
 
-    <div class="decor" style="top: 5%; left: 5%;">♠</div>
-    <div class="decor" style="bottom: 5%; right: 5%;">♦</div>
-    <div class="decor" style="top: 45%; left: 50%; transform: translateX(-50%); opacity: 0.02;">♣</div>
-
-    <h1>CASINO</h1>
-
-    <button class="btn-rules" onclick="toggleModal(true)">Ver Normas del Casino</button>
-
-    <div class="lobby">
-        <a href="rascaygana.html" class="game-card">
-            <div class="icon">🎫</div>
-            <div class="game-title">Rasca y Gana</div>
-            <div class="btn-play">Jugar Ahora</div>
-        </a>
-
-        <a href="ruleta.html" class="game-card">
-            <div class="icon">🎡</div>
-            <div class="game-title">La Ruleta</div>
-            <div class="btn-play">Jugar Ahora</div>
-        </a>
-
-        <a href="tragaperras.html" class="game-card">
-            <div class="icon">🎰</div>
-            <div class="game-title">Tragaperras</div>
-            <div class="btn-play">Jugar Ahora</div>
-        </a>
-
-        <a href="blackjack.html" class="game-card">
-            <div class="icon">🃏</div>
-            <div class="game-title">Blackjack</div>
-            <div class="btn-play">Jugar Ahora</div>
-        </a>
-
-        <a href="cajas.html" class="game-card">
-            <div class="icon">📦</div>
-            <div class="game-title">Cajas</div>
-            <div class="btn-play">Jugar Ahora</div>
-        </a>
-
-        <a href="crashgame.html" class="game-card">
-            <div class="icon">🚀</div>
-            <div class="game-title">Crash Game</div>
-            <div class="btn-play">Jugar Ahora</div>
-        </a>
-
-        <a href="minas.html" class="game-card">
-            <div class="icon">💣</div>
-            <div class="game-title">Minas</div>
-            <div class="btn-play">Jugar Ahora</div>
-        </a>
-
-        <a href="streetcross.html" class="game-card">
-            <div class="icon">🚦</div>
-            <div class="game-title">Street Cross</div>
-            <div class="btn-play">Jugar Ahora</div>
-        </a>
+    <div id="closedScreen">
+        <h1 style="color: var(--accent-red);">CASINO CERRADO</h1>
+        <p style="font-size: 1.5rem; opacity: 0.7;">Estamos realizando tareas de mantenimiento.</p>
+        <div style="font-size: 5rem; margin-top: 20px;">🚧</div>
+        <p style="margin-top: 30px; color: var(--gold);">Vuelve más tarde para seguir ganando.</p>
     </div>
 
-    <div id="rulesModal" class="modal">
-        <div class="modal-content">
-            <span class="close-modal" onclick="toggleModal(false)">&times;</span>
-            <h2 style="color: var(--gold); border-bottom: 1px solid var(--gold); padding-bottom: 10px;">Normas de Elite v3</h2>
-            <ul style="line-height: 1.6; color: #ccc;">
-                <li><strong>Responsabilidad:</strong> Prohibido el acceso a menores de 18 años.</li>
-                <li><strong>Saldo:</strong> El saldo es virtual y se gestiona mediante tu Key de acceso.</li>
-                <li><strong>Seguridad:</strong> El uso de scripts externos o intentos de hackeo resultará en baneo automático (Saldo -1).</li>
-                <li><strong>Juego Limpio:</strong> Las probabilidades son generadas aleatoriamente por el sistema.</li>
-                <li><strong>Retiradas:</strong> En el juego de Minas, limpiar el tablero retirará automáticamente tu ganancia.</li>
-            </ul>
-            <p style="font-size: 0.8rem; text-align: center; color: var(--gold);">¡Buena suerte, jugador!</p>
+    <div id="gameModal">
+        <span class="close-game" onclick="closeGame()">&times;</span>
+        <iframe id="gameIframe" src=""></iframe>
+    </div>
+
+    <h1>CASINO</h1>
+    <button class="btn-rules" onclick="toggleRules(true)">Ver Normas</button>
+
+    <div class="lobby">
+        <div onclick="openGame('rascaygana.html')" class="game-card">
+            <div class="icon">🎫</div>
+            <div class="game-title">Rasca y Gana</div>
+            <div class="btn-play">Jugar</div>
+        </div>
+        <div onclick="openGame('ruleta.html')" class="game-card">
+            <div class="icon">🎡</div>
+            <div class="game-title">La Ruleta</div>
+            <div class="btn-play">Jugar</div>
+        </div>
+        <div onclick="openGame('tragaperras.html')" class="game-card">
+            <div class="icon">🎰</div>
+            <div class="game-title">Tragaperras</div>
+            <div class="btn-play">Jugar</div>
+        </div>
+        <div onclick="openGame('blackjack.html')" class="game-card">
+            <div class="icon">🃏</div>
+            <div class="game-title">Blackjack</div>
+            <div class="btn-play">Jugar</div>
+        </div>
+        <div onclick="openGame('cajas.html')" class="game-card">
+            <div class="icon">📦</div>
+            <div class="game-title">Cajas</div>
+            <div class="btn-play">Jugar</div>
+        </div>
+        <div onclick="openGame('crashgame.html')" class="game-card">
+            <div class="icon">🚀</div>
+            <div class="game-title">Crash Game</div>
+            <div class="btn-play">Jugar</div>
+        </div>
+        <div onclick="openGame('minas.html')" class="game-card">
+            <div class="icon">💣</div>
+            <div class="game-title">Minas</div>
+            <div class="btn-play">Jugar</div>
+        </div>
+        <div onclick="openGame('streetcross.html')" class="game-card">
+            <div class="icon">🚦</div>
+            <div class="game-title">Street Cross</div>
+            <div class="btn-play">Jugar</div>
         </div>
     </div>
 
-    <p style="margin: 40px 0; color: rgba(255,255,255,0.4); font-size: 0.8rem; text-align: center;">
-        Bienvenido al panel de juego elite v3 | 18+ Juega con responsabilidad
-    </p>
+    <div id="rulesModal" class="modal-rules">
+        <div class="modal-content">
+            <h2 style="color: var(--gold);">Normas</h2>
+            <p>1. Prohibido menores de 18 años.</p>
+            <p>2. Cualquier intento de hackeo será penalizado con baneo automático.</p>
+            <button onclick="toggleRules(false)" class="btn-play" style="width: 100%;">Entendido</button>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
     <script>
-        function toggleModal(show) {
+        const firebaseConfig = {
+            apiKey: "AIzaSyAsAVsv0iwnv4cdDNkSyo1jBIYvCyn_pCY",
+            authDomain: "rascay-d6d3d.firebaseapp.com",
+            databaseURL: "https://rascay-d6d3d-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "rascay-d6d3d"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // 1. CONTROL DE ESTADO DEL CASINO (Abierto/Cerrado)
+        // Busca el nodo 'config/estado' en tu BD. Si es 'cerrado', bloquea todo.
+        db.ref('config/estado').on('value', snap => {
+            const estado = snap.val();
+            if(estado === 'cerrado') {
+                document.getElementById('closedScreen').style.display = 'flex';
+            } else {
+                document.getElementById('closedScreen').style.display = 'none';
+            }
+        });
+
+        // 2. FUNCIÓN PARA ABRIR JUEGOS EN MODAL FULLSCREEN
+        function openGame(url) {
+            const modal = document.getElementById('gameModal');
+            const iframe = document.getElementById('gameIframe');
+            iframe.src = url;
+            modal.style.display = 'block';
+            document.body.style.overflow = 'hidden'; // Evita scroll de fondo
+        }
+
+        function closeGame() {
+            const modal = document.getElementById('gameModal');
+            const iframe = document.getElementById('gameIframe');
+            iframe.src = ""; // Limpia el juego al cerrar
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        function toggleRules(show) {
             document.getElementById('rulesModal').style.display = show ? 'flex' : 'none';
         }
-
-        // Cerrar al hacer clic fuera del contenido
-        window.onclick = function(event) {
-            let modal = document.getElementById('rulesModal');
-            if (event.target == modal) {
-                modal.style.display = "none";
-            }
-        }
     </script>
-
 </body>
 </html>
