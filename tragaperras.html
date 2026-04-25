@@ -186,7 +186,6 @@
 
         const symbols = ['💎', '7️⃣', '🔔', '🍒', '🍉', '🍋', '🍊', '🍇', '❌'];
         
-        // Probabilidad de activar el combo (ajustable)
         const roll = Math.random() * 100;
         let isWin = roll < 18.0; 
 
@@ -199,49 +198,50 @@
     }
 
     function finalize(isWin) {
+        let winVal = 0;
+        const grid = [];
+        for(let i=0; i<9; i++) grid.push(document.getElementById('c'+i));
+
         if (isWin) {
-            // Definimos las columnas del combo como en la imagen
-            const colLimones = [0, 3, 6]; 
-            const colCerezas = [2, 5, 8]; 
-            
-            // Limpiar con algo neutro
-            for(let i=0; i<9; i++) {
-                document.getElementById('c'+i).innerText = '🍊';
+            // Lógica forzada de combo
+            grid.forEach(c => c.innerText = '🍊');
+            [0, 3, 6].forEach(i => grid[i].innerText = '🍋');
+            [2, 5, 8].forEach(i => grid[i].innerText = '🍒');
+            grid[7].innerText = '🍇';
+        } else {
+            // Generación aleatoria de pérdida (pero ahora se analiza)
+            grid.forEach(c => c.innerText = ['❌', '🍊', '🍇'][Math.floor(Math.random()*3)]);
+        }
+
+        // --- SISTEMA DE DETECCIÓN DE PREMIOS ---
+        const lines = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8], // Horizontales
+            [0, 3, 6], [1, 4, 7], [2, 5, 8], // Verticales
+            [0, 4, 8], [2, 4, 6]             // Diagonales
+        ];
+
+        lines.forEach(line => {
+            const s1 = grid[line[0]].innerText;
+            const s2 = grid[line[1]].innerText;
+            const s3 = grid[line[2]].innerText;
+
+            if (s1 !== '❌' && s1 === s2 && s1 === s3) {
+                winVal += (currentBet * (multipliers[s1] || 0));
+                line.forEach(idx => grid[idx].classList.add('win-glow'));
             }
+        });
 
-            // Aplicar Limones (Columna 1)
-            colLimones.forEach(idx => {
-                document.getElementById('c'+idx).innerText = '🍋';
-                document.getElementById('c'+idx).classList.add('win-glow');
-            });
-
-            // Aplicar Cerezas (Columna 3)
-            colCerezas.forEach(idx => {
-                document.getElementById('c'+idx).innerText = '🍒';
-                document.getElementById('c'+idx).classList.add('win-glow');
-            });
-            
-            // Añadir la uva decorativa en el centro inferior como en la imagen
-            document.getElementById('c7').innerText = '🍇';
-
-            // Cálculo de premio doble
-            let winVal = (currentBet * multipliers['🍋']) + (currentBet * multipliers['🍒']);
+        if (winVal > 0) {
             balance += winVal;
             db.ref('codes/'+currentKey).update({ saldo: balance });
-            
-            registrarHistorial("Premio Combo", winVal);
+            registrarHistorial("Premio Slot", winVal);
             
             setTimeout(() => {
                 document.getElementById('resWin').innerText = winVal.toFixed(1) + "€";
                 document.getElementById('resBanner').style.display = 'block';
             }, 500);
-        } else {
-            // Caso pierde: distribución aleatoria sin líneas
-            for(let i=0; i<9; i++) {
-                const losSymbol = ['❌', '🍊', '🍇'][Math.floor(Math.random()*3)];
-                document.getElementById('c'+i).innerText = losSymbol;
-            }
         }
+
         spinning = false;
         updateUI();
     }
