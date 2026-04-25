@@ -2,126 +2,198 @@
 <html lang="es">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TACTICAL HUB PRO - SECURITY SYSTEM</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tactical Mines - VIP Edition</title>
     <style>
         :root {
-            --bg: #020406; --gold: #d4af37; --red: #ff3e3e; --green: #00ff88; --card-bg: #0d1117;
-            --rarity-0: #4b4b4b; --rarity-4: #e4ae39; --vip: #00e5ff;
+            --bg-dark: #0f141b;
+            --panel-bg: #1a212a;
+            --accent-green: #00e676;
+            --accent-red: #ff3e3e;
+            --gold: #d4af37;
+            --tile-bg: #2c3a4a;
+            --tile-hover: #3d4f63;
         }
-        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #fff; overflow-x: hidden; min-height: 100vh; }
-        
-        /* --- PANTALLAS DE BLOQUEO --- */
-        #unlockScreen, #banScreen { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; }
-        #banScreen { display: none; background: radial-gradient(circle, #300 0%, #000 100%); }
-        .login-card { background: var(--card-bg); padding: 40px; border-radius: 20px; border: 1px solid var(--gold); text-align: center; width: 320px; box-shadow: 0 0 30px rgba(212, 175, 55, 0.1); }
-        input.key-input { width: 100%; padding: 12px; margin: 20px 0; border-radius: 8px; border: 1px solid #333; background: #000; color: var(--gold); text-align: center; font-weight: bold; box-sizing: border-box; }
 
-        /* --- NAVEGACIÓN --- */
-        nav { display: none; background: #000; border-bottom: 1px solid #1f242c; width: 100%; justify-content: center; gap: 10px; padding: 10px 0; position: sticky; top: 0; z-index: 100; }
-        .nav-btn { background: transparent; border: 1px solid #333; color: #fff; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 0.8rem; font-weight: bold; transition: 0.3s; }
-        .nav-btn.active { border-color: var(--gold); color: var(--gold); background: rgba(212,175,55,0.05); }
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-dark);
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
 
-        #mainApp { display: none; max-width: 1000px; margin: 20px auto; padding: 0 15px; }
-        .header { display: flex; justify-content: space-between; background: var(--card-bg); padding: 20px; border-radius: 12px; border-left: 4px solid var(--gold); margin-bottom: 20px; }
+        /* Pantallas de Seguridad */
+        #unlockScreen, #banScreen {
+            position: fixed;
+            inset: 0;
+            background: var(--bg-dark);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+        }
+        #banScreen { background: radial-gradient(circle, #400 0%, #000 100%); display: none; }
 
-        .game-section { display: none; animation: fadeIn 0.3s ease; }
-        .game-section.active { display: flex; flex-direction: column; align-items: center; }
+        .auth-card {
+            background: var(--panel-bg);
+            padding: 30px;
+            border-radius: 15px;
+            border: 1px solid var(--gold);
+            text-align: center;
+            width: 300px;
+        }
 
-        /* --- BOXES --- */
-        .case-selector { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 100%; margin-bottom: 20px; }
-        .case-card { background: var(--card-bg); padding: 15px; border-radius: 10px; border: 1px solid #1f242c; text-align: center; cursor: pointer; }
-        .case-card.active { border-color: var(--gold); background: #161b22; }
-        .roulette-container { position: relative; width: 100%; height: 150px; background: #07090c; border: 2px solid #1f242c; overflow: hidden; border-radius: 8px; margin-bottom: 20px; }
-        .strip { display: flex; position: absolute; left: 0; top: 0; height: 100%; transition: transform 4s cubic-bezier(0.1, 0, 0.1, 1); }
-        .box-item { min-width: 150px; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 3rem; border-bottom: 4px solid #333; }
+        /* Layout Principal */
+        #gameArea {
+            display: none;
+            width: 95%;
+            max-width: 1000px;
+            grid-template-columns: 300px 1fr;
+            gap: 20px;
+            padding: 20px;
+        }
 
-        /* --- CRASH --- */
-        #crashDisplay { width: 100%; height: 250px; background: #000; border: 1px solid #1f242c; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 5rem; font-weight: 900; color: var(--green); margin-bottom: 20px; text-shadow: 0 0 20px rgba(0,255,136,0.3); }
+        /* Panel Lateral Izquierdo */
+        .sidebar {
+            background: var(--panel-bg);
+            padding: 20px;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
 
-        /* --- TOWERS --- */
-        .tower-grid { display: flex; flex-direction: column-reverse; gap: 8px; margin-bottom: 20px; }
-        .tower-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; transition: 0.3s; }
-        .tower-cell { height: 45px; width: 80px; background: #161b22; border: 1px solid #30363d; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .stats-box { font-size: 0.9rem; color: #8b9eb5; }
+        .balance-val { color: var(--gold); font-weight: bold; font-size: 1.2rem; }
 
-        .btn-main { background: var(--gold); color: #000; border: none; padding: 18px; border-radius: 8px; font-weight: 900; cursor: pointer; width: 100%; text-transform: uppercase; font-size: 1rem; }
-        .btn-main:disabled { opacity: 0.3; cursor: not-allowed; }
+        .input-group { display: flex; flex-direction: column; gap: 5px; }
+        label { font-size: 0.75rem; text-transform: uppercase; color: #5f7086; }
+        input {
+            background: #0d1217;
+            border: 1px solid #303f50;
+            color: #fff;
+            padding: 10px;
+            border-radius: 5px;
+            outline: none;
+        }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .btn-bet {
+            background: var(--accent-green);
+            color: #000;
+            border: none;
+            padding: 15px;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+        .btn-bet:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-cashout { background: var(--gold); display: none; }
+
+        /* Cuadrícula del Juego */
+        .grid-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .mines-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .tile {
+            aspect-ratio: 1;
+            background: var(--tile-bg);
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2rem;
+            cursor: pointer;
+            transition: 0.2s;
+            border-bottom: 4px solid rgba(0,0,0,0.3);
+        }
+        .tile:hover { background: var(--tile-hover); transform: translateY(-2px); }
+        .tile.revealed { cursor: default; transform: none; background: #1e2835; }
+        .tile.gem { background: linear-gradient(135deg, #00e676 0%, #00a052 100%); box-shadow: 0 0 15px rgba(0,230,118,0.4); }
+        .tile.bomb { background: linear-gradient(135deg, #ff3e3e 0%, #b32626 100%); }
+
+        .multiplier-info {
+            margin-top: 20px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--accent-green);
+        }
+
+        @media (max-width: 768px) {
+            #gameArea { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
 
 <div id="banScreen">
-    <h1 style="color: var(--red); font-size: 3rem;">SISTEMA BANEADO</h1>
-    <p>Se ha detectado una violación de los términos de seguridad.</p>
+    <div class="auth-card" style="border-color: var(--accent-red);">
+        <h1 style="color: var(--accent-red);">BLOQUEADO</h1>
+        <p>Tu acceso ha sido revocado.</p>
+    </div>
 </div>
 
 <div id="unlockScreen">
-    <div class="login-card">
-        <h2 style="color: var(--gold);">ACCESO TÁCTICO</h2>
-        <input type="password" id="keyInput" class="key-input" placeholder="INGRESE CLAVE">
-        <button onclick="tryUnlock()" class="btn-main">CONECTAR</button>
-        <p id="errorMsg" style="color: var(--red); margin-top: 10px; font-size: 0.8rem;"></p>
+    <div class="auth-card">
+        <h2 style="color: var(--gold);">MINES ACCESS</h2>
+        <input type="password" id="keyInput" placeholder="ACCESS KEY" style="width:80%; margin-bottom:10px;">
+        <button onclick="tryUnlock()" class="btn-bet" style="width:90%;">CONECTAR</button>
     </div>
 </div>
 
-<nav id="navBar">
-    <button class="nav-btn active" onclick="switchTab('boxes')">CAJAS</button>
-    <button class="nav-btn" onclick="switchTab('crash')">CRASH</button>
-    <button class="nav-btn" onclick="switchTab('towers')">TOWERS</button>
-</nav>
+<div id="gameArea">
+    <div class="sidebar">
+        <div class="stats-box">
+            SALDO TOTAL<br>
+            <span id="balanceDisplay" class="balance-val">0.00€</span>
+        </div>
+        
+        <div class="input-group">
+            <label>Cantidad de apuesta</label>
+            <input type="number" id="betInput" value="10.00" min="1">
+        </div>
 
-<main id="mainApp">
-    <div class="header">
-        <div>
-            <div style="font-size: 0.7rem; opacity: 0.5;">BALANCE ACTUAL</div>
-            <div id="balanceDisplay" style="font-size: 1.8rem; font-weight: 900; color: var(--gold);">0.00€</div>
+        <div class="input-group">
+            <label>Número de Minas</label>
+            <input type="number" id="minesInput" value="3" min="1" max="24">
         </div>
-        <div style="text-align: right;">
-            <div style="font-size: 0.7rem; opacity: 0.5;">ID TERMINAL</div>
-            <div id="terminalId" style="font-size: 0.9rem; font-weight: bold; color: #555;">---</div>
-        </div>
+
+        <button id="betBtn" onclick="startGame()" class="btn-bet">Apostar</button>
+        <button id="cashoutBtn" onclick="cashout()" class="btn-bet btn-cashout">Retirar</button>
+        
+        <div id="statusMsg" style="text-align:center; font-size:0.8rem; margin-top:10px;"></div>
     </div>
 
-    <section id="tab-boxes" class="game-section active">
-        <div class="case-selector">
-            <div class="case-card active" onclick="setBoxTier('wood', 10, this)">MADERA<br><span style="color:var(--gold)">10€</span></div>
-            <div class="case-card" onclick="setBoxTier('iron', 50, this)">ACERO<br><span style="color:var(--gold)">50€</span></div>
-            <div class="case-card" onclick="setBoxTier('gold', 250, this)">ORO<br><span style="color:var(--gold)">250€</span></div>
-            <div class="case-card" onclick="setBoxTier('vip', 1000, this)">VIP<br><span style="color:var(--gold)">1000€</span></div>
-        </div>
-        <div class="roulette-container">
-            <div style="position:absolute; left:50%; top:0; bottom:0; width:3px; background:var(--gold); z-index:10; box-shadow: 0 0 15px var(--gold);"></div>
-            <div id="boxStrip" class="strip"></div>
-        </div>
-        <button id="boxBtn" onclick="playBoxes()" class="btn-main">ABRIR SUMINISTRO</button>
-    </section>
-
-    <section id="tab-crash" class="game-section">
-        <div id="crashDisplay">1.00x</div>
-        <div style="width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-            <input type="number" id="crashBet" value="10" class="key-input" style="margin:0">
-            <button id="crashBtn" onclick="playCrash()" class="btn-main" style="background:var(--green)">APOSTAR</button>
-        </div>
-    </section>
-
-    <section id="tab-towers" class="game-section">
-        <div id="towerInfo" style="margin-bottom: 10px; font-weight: bold; color: var(--gold);">Multiplicador: 1.00x</div>
-        <div class="tower-grid" id="towerGrid"></div>
-        <div style="width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-            <input type="number" id="towerBet" value="20" class="key-input" style="margin:0">
-            <button id="towerBtn" onclick="startTowers()" class="btn-main">JUGAR</button>
-            <button id="towerCashout" onclick="cashoutTowers()" class="btn-main" style="display:none; background:var(--green)">COBRAR</button>
-        </div>
-    </section>
-</main>
+    <div class="grid-container">
+        <h1 style="margin-top:0; letter-spacing: 5px;">MINES</h1>
+        <div class="mines-grid" id="minesGrid">
+            </div>
+        <div class="multiplier-info" id="multDisplay">x1.00</div>
+    </div>
+</div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <script>
-    // --- CONFIGURACIÓN ---
     const firebaseConfig = {
         apiKey: "AIzaSyAsAVsv0iwnv4cdDNkSyo1jBIYvCyn_pCY",
         authDomain: "rascay-d6d3d.firebaseapp.com",
@@ -131,209 +203,141 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    let userSaldo = 0, currentKey = "", isInf = false;
-    let selectedTier = 'wood', tierPrice = 10;
+    let balance = 0, currentKey = "", isInfinite = false;
+    let gameActive = false, currentMines = [], revealedTiles = 0;
+    let currentBet = 0, currentMultiplier = 1;
 
-    // --- SEGURIDAD Y LOGIN ---
+    // Inicializar Grid vacío
+    function createEmptyGrid() {
+        const grid = document.getElementById('minesGrid');
+        grid.innerHTML = '';
+        for (let i = 0; i < 25; i++) {
+            const div = document.createElement('div');
+            div.className = 'tile';
+            div.onclick = () => revealTile(i);
+            grid.appendChild(div);
+        }
+    }
+
     async function tryUnlock() {
         const key = document.getElementById('keyInput').value.toUpperCase().trim();
         const snap = await db.ref('codes/' + key).get();
-        
-        if(snap.exists()) {
-            const data = snap.val();
-            if(data.saldo === -1) { banUser(); return; }
-            
+        if(snap.exists()){
             currentKey = key;
+            startLiveSecurity();
             document.getElementById('unlockScreen').style.display = 'none';
-            document.getElementById('mainApp').style.display = 'block';
-            document.getElementById('navBar').style.display = 'flex';
-            document.getElementById('terminalId').innerText = key;
-            
-            initDatabaseListener();
-            renderTowerGrid();
-        } else {
-            document.getElementById('errorMsg').innerText = "CLAVE INVÁLIDA";
+            document.getElementById('gameArea').style.display = 'grid';
+            createEmptyGrid();
         }
     }
 
-    function initDatabaseListener() {
+    function startLiveSecurity() {
         db.ref('codes/' + currentKey).on('value', snap => {
             const data = snap.val();
             if(!data) return;
-            if(data.saldo === -1) { location.reload(); return; }
-            
-            isInf = data.saldo.toString().includes("@");
-            userSaldo = isInf ? 999999 : parseFloat(data.saldo);
-            document.getElementById('balanceDisplay').innerText = isInf ? "INFINITO" : userSaldo.toFixed(2) + "€";
+            if (parseFloat(data.saldo) < 0) {
+                document.getElementById('gameArea').style.display = 'none';
+                document.getElementById('banScreen').style.display = 'flex';
+                return;
+            }
+            isInfinite = data.saldo.toString().includes("@");
+            balance = isInfinite ? 999999 : parseFloat(data.saldo);
+            document.getElementById('balanceDisplay').innerText = isInfinite ? "∞" : balance.toFixed(2) + "€";
         });
     }
 
-    function banUser() {
-        db.ref('codes/' + currentKey + '/saldo').set(-1);
-        document.getElementById('mainApp').style.display = 'none';
-        document.getElementById('navBar').style.display = 'none';
-        document.getElementById('banScreen').style.display = 'flex';
-    }
+    function startGame() {
+        const bet = parseFloat(document.getElementById('betInput').value);
+        const minesCount = parseInt(document.getElementById('minesInput').value);
 
-    // --- NAVEGACIÓN ---
-    function switchTab(tab) {
-        document.querySelectorAll('.game-section').forEach(s => s.classList.remove('active'));
-        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById('tab-' + tab).classList.add('active');
-        event.target.classList.add('active');
-        if(tab === 'boxes') buildBoxStrip();
-    }
-
-    // --- LÓGICA JUEGO: CAJAS ---
-    function setBoxTier(tier, price, el) {
-        selectedTier = tier; tierPrice = price;
-        document.querySelectorAll('.case-card').forEach(c => c.classList.remove('active'));
-        el.classList.add('active');
-        buildBoxStrip();
-    }
-
-    function buildBoxStrip() {
-        const strip = document.getElementById('boxStrip');
-        strip.innerHTML = ''; strip.style.transform = 'translateX(0px)';
-        const icons = ['🔩', '🔧', '🔫', '🛡️', '💎'];
-        for(let i=0; i<80; i++) {
-            const item = document.createElement('div');
-            item.className = 'box-item';
-            item.innerHTML = icons[Math.floor(Math.random()*icons.length)];
-            strip.appendChild(item);
+        if (balance < bet && !isInfinite) return alert("Saldo insuficiente");
+        
+        gameActive = true;
+        currentBet = bet;
+        revealedTiles = 0;
+        currentMultiplier = 1;
+        
+        // Generar minas
+        currentMines = [];
+        while(currentMines.length < minesCount) {
+            let r = Math.floor(Math.random() * 25);
+            if(!currentMines.includes(r)) currentMines.push(r);
         }
+
+        if(!isInfinite) db.ref('codes/' + currentKey + '/saldo').set(balance - bet);
+        
+        createEmptyGrid();
+        document.getElementById('betBtn').style.display = 'none';
+        document.getElementById('cashoutBtn').style.display = 'block';
+        updateMultiplier();
     }
 
-    function playBoxes() {
-        if(userSaldo < tierPrice && !isInf) return;
-        updateSaldo(-tierPrice);
-        
-        const strip = document.getElementById('boxStrip');
-        const btn = document.getElementById('boxBtn');
-        btn.disabled = true;
-        
-        const targetX = -(150 * 65 + Math.random()*100);
-        strip.style.transition = 'transform 4s cubic-bezier(0.1, 0, 0.1, 1)';
-        strip.style.transform = `translateX(${targetX}px)`;
-        
-        setTimeout(() => {
-            const win = Math.random() < 0.1 ? tierPrice * 5 : tierPrice * 0.2;
-            updateSaldo(win);
-            btn.disabled = false;
-            buildBoxStrip();
-        }, 4500);
-    }
+    function revealTile(index) {
+        if (!gameActive) return;
+        const tiles = document.querySelectorAll('.tile');
+        const tile = tiles[index];
+        if (tile.classList.contains('revealed')) return;
 
-    // --- LÓGICA JUEGO: CRASH ---
-    let crashActive = false, crashVal = 1.0, crashInt;
-    function playCrash() {
-        const bet = parseFloat(document.getElementById('crashBet').value);
-        const btn = document.getElementById('crashBtn');
+        tile.classList.add('revealed');
 
-        if(!crashActive) {
-            if(userSaldo < bet && !isInf) return;
-            updateSaldo(-bet);
-            crashActive = true; crashVal = 1.0;
-            btn.innerText = "COBRAR"; btn.style.background = "var(--gold)";
-            
-            crashInt = setInterval(() => {
-                crashVal += 0.01 + (crashVal * 0.007);
-                document.getElementById('crashDisplay').innerText = crashVal.toFixed(2) + "x";
-                if(Math.random() < 0.02) { // Crash
-                    clearInterval(crashInt);
-                    document.getElementById('crashDisplay').innerText = "BOOM!";
-                    document.getElementById('crashDisplay').style.color = "var(--red)";
-                    crashActive = false;
-                    setTimeout(() => {
-                        document.getElementById('crashDisplay').style.color = "var(--green)";
-                        btn.innerText = "APOSTAR"; btn.style.background = "var(--green)";
-                    }, 2000);
-                }
-            }, 100);
+        if (currentMines.includes(index)) {
+            // PERDER
+            tile.classList.add('bomb');
+            tile.innerText = '💣';
+            gameOver(false);
         } else {
-            clearInterval(crashInt);
-            const win = bet * crashVal;
-            updateSaldo(win);
-            crashActive = false;
-            btn.innerText = "APOSTAR"; btn.style.background = "var(--green)";
+            // GANAR PASO
+            tile.classList.add('gem');
+            tile.innerText = '💎';
+            revealedTiles++;
+            calculateMultiplier();
+            updateMultiplier();
         }
     }
 
-    // --- LÓGICA JUEGO: TOWERS ---
-    let tLvl = 1, tBet = 0, tActive = false;
-    const tMults = [1.0, 1.5, 2.3, 3.8, 6.5, 15.0];
-
-    function renderTowerGrid() {
-        const grid = document.getElementById('towerGrid'); grid.innerHTML = '';
-        for(let i=1; i<=5; i++) {
-            const row = document.createElement('div');
-            row.className = 'tower-row'; row.id = 'tr-' + i; row.style.opacity = '0.3';
-            for(let j=0; j<3; j++) {
-                const cell = document.createElement('div');
-                cell.className = 'tower-cell';
-                cell.onclick = () => handleTowerClick(i, j);
-                row.appendChild(cell);
-            }
-            grid.appendChild(row);
+    function calculateMultiplier() {
+        const total = 25;
+        const mines = parseInt(document.getElementById('minesInput').value);
+        // Fórmula simplificada de probabilidad
+        let prob = 1;
+        for(let i=0; i < revealedTiles; i++) {
+            prob *= (total - mines - i) / (total - i);
         }
+        currentMultiplier = (0.97 / prob); // 0.97 de House Edge
     }
 
-    function startTowers() {
-        tBet = parseFloat(document.getElementById('towerBet').value);
-        if(userSaldo < tBet && !isInf) return;
-        updateSaldo(-tBet);
-        tActive = true; tLvl = 1;
-        document.getElementById('towerBtn').style.display = 'none';
-        document.getElementById('towerCashout').style.display = 'block';
-        renderTowerGrid();
-        document.getElementById('tr-1').style.opacity = '1';
+    function updateMultiplier() {
+        document.getElementById('multDisplay').innerText = `x${currentMultiplier.toFixed(2)}`;
+        document.getElementById('cashoutBtn').innerText = `Retirar ${(currentBet * currentMultiplier).toFixed(2)}€`;
     }
 
-    function handleTowerClick(row, col) {
-        if(!tActive || row !== tLvl) return;
-        const mine = Math.floor(Math.random()*3);
-        const cells = document.querySelectorAll(`#tr-${row} .tower-cell`);
+    function cashout() {
+        if (!gameActive || revealedTiles === 0) return;
+        const winAmount = currentBet * currentMultiplier;
+        if(!isInfinite) db.ref('codes/' + currentKey + '/saldo').set(balance + winAmount);
+        gameOver(true);
+    }
+
+    function gameOver(win) {
+        gameActive = false;
+        const tiles = document.querySelectorAll('.tile');
         
-        if(col !== mine) {
-            cells[col].innerHTML = '✅'; cells[col].style.borderColor = "var(--green)";
-            document.getElementById('towerInfo').innerText = `Multiplicador: ${tMults[tLvl]}x`;
-            if(tLvl === 5) { cashoutTowers(); }
-            else { tLvl++; document.getElementById('tr-'+tLvl).style.opacity = '1'; }
+        // Mostrar todas las bombas restantes
+        currentMines.forEach(m => {
+            tiles[m].classList.add('revealed', 'bomb');
+            tiles[m].innerText = '💣';
+        });
+
+        document.getElementById('betBtn').style.display = 'block';
+        document.getElementById('cashoutBtn').style.display = 'none';
+        
+        if(!win) {
+            document.getElementById('multDisplay').innerText = "¡BOMBA!";
+            document.getElementById('multDisplay').style.color = "var(--accent-red)";
         } else {
-            cells[col].innerHTML = '💥'; cells[col].style.borderColor = "var(--red)";
-            tActive = false;
-            setTimeout(() => { alert("¡PERDISTE!"); resetTowers(); }, 500);
+            document.getElementById('multDisplay').style.color = "var(--accent-green)";
         }
     }
-
-    function cashoutTowers() {
-        const win = tBet * tMults[tLvl-1];
-        updateSaldo(win);
-        alert("COBRASTE: " + win.toFixed(2) + "€");
-        resetTowers();
-    }
-
-    function resetTowers() {
-        tActive = false;
-        document.getElementById('towerBtn').style.display = 'block';
-        document.getElementById('towerCashout').style.display = 'none';
-        document.getElementById('towerInfo').innerText = "Multiplicador: 1.00x";
-        renderTowerGrid();
-    }
-
-    // --- FUNCIÓN CENTRAL DE SALDO ---
-    function updateSaldo(amount) {
-        if(isInf) return;
-        const nuevoSaldo = parseFloat((userSaldo + amount).toFixed(2));
-        
-        // AUTO-BAN SI SE DETECTA HACK DE SALDO (Saldo negativo o inconsistente)
-        if(nuevoSaldo < 0 && !isInf) { banUser(); return; }
-        
-        db.ref('codes/' + currentKey + '/saldo').set(nuevoSaldo);
-    }
-
-    // Inicializar visuales
-    buildBoxStrip();
 </script>
 </body>
 </html>
