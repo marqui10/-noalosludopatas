@@ -116,6 +116,23 @@
     let balance = 0, currentKey = "", currentBet = 10, spinning = false;
     const multipliers = { '💎': 40, '7️⃣': 20, '🔔': 10, '🍒': 5, '🍉': 3, '🍋': 1.5, '🍊': 1.2, '🍇': 1.1 };
 
+    // PESOS DE PROBABILIDAD (Ajustable)
+    const symbolWeights = [
+        { s: '💎', w: 0.03 }, { s: '7️⃣', w: 0.05 }, { s: '🔔', w: 0.08 },
+        { s: '🍒', w: 0.12 }, { s: '🍉', w: 0.14 }, { s: '🍋', w: 0.18 },
+        { s: '🍊', w: 0.20 }, { s: '🍇', w: 0.20 }
+    ];
+
+    function getRandomSymbol() {
+        const rand = Math.random();
+        let cumulative = 0;
+        for (const item of symbolWeights) {
+            cumulative += item.w;
+            if (rand < cumulative) return item.s;
+        }
+        return '❌';
+    }
+
     function registrarHistorial(tipo, monto) {
         if(!currentKey) return;
         const ahora = new Date().toLocaleString('es-ES', { 
@@ -123,10 +140,7 @@
             day: '2-digit', month: '2-digit', year: 'numeric'
         });
         db.ref(`codes/${currentKey}/historial`).push({
-            tipo: tipo,
-            monto: monto,
-            origen: "Slot Bar",
-            fecha: ahora
+            tipo: tipo, monto: monto, origen: "Slot Bar", fecha: ahora
         });
         db.ref(`codes/${currentKey}/ultimaMod`).set(ahora);
     }
@@ -179,41 +193,29 @@
         spinning = true;
         balance -= currentBet;
         db.ref('codes/'+currentKey).update({ saldo: balance });
-        
         registrarHistorial("Apuesta Spin", -currentBet);
-        
         document.querySelectorAll('.cell').forEach(c => c.classList.remove('win-glow'));
-
-        const symbols = ['💎', '7️⃣', '🔔', '🍒', '🍉', '🍋', '🍊', '🍇', '❌'];
-        
-        const roll = Math.random() * 100;
-        let isWin = roll < 18.0; 
 
         let t = 0;
         let si = setInterval(() => {
-            for(let i=0; i<9; i++) document.getElementById('c'+i).innerText = symbols[Math.floor(Math.random()*symbols.length)];
+            for(let i=0; i<9; i++) {
+                const tmp = ['💎', '7️⃣', '🔔', '🍒', '🍉', '🍋', '🍊', '🍇', '❌'];
+                document.getElementById('c'+i).innerText = tmp[Math.floor(Math.random()*tmp.length)];
+            }
             t++;
-            if(t > 22) { clearInterval(si); finalize(isWin); }
+            if(t > 22) { clearInterval(si); finalizeRealRandom(); }
         }, 65);
     }
 
-    function finalize(isWin) {
+    function finalizeRealRandom() {
         let winVal = 0;
-        const grid = [];
-        for(let i=0; i<9; i++) grid.push(document.getElementById('c'+i));
-
-        if (isWin) {
-            // Lógica forzada de combo
-            grid.forEach(c => c.innerText = '🍊');
-            [0, 3, 6].forEach(i => grid[i].innerText = '🍋');
-            [2, 5, 8].forEach(i => grid[i].innerText = '🍒');
-            grid[7].innerText = '🍇';
-        } else {
-            // Generación aleatoria de pérdida (pero ahora se analiza)
-            grid.forEach(c => c.innerText = ['❌', '🍊', '🍇'][Math.floor(Math.random()*3)]);
+        const gridCells = [];
+        for(let i=0; i<9; i++) {
+            const cell = document.getElementById('c'+i);
+            cell.innerText = getRandomSymbol();
+            gridCells.push(cell);
         }
 
-        // --- SISTEMA DE DETECCIÓN DE PREMIOS ---
         const lines = [
             [0, 1, 2], [3, 4, 5], [6, 7, 8], // Horizontales
             [0, 3, 6], [1, 4, 7], [2, 5, 8], // Verticales
@@ -221,27 +223,24 @@
         ];
 
         lines.forEach(line => {
-            const s1 = grid[line[0]].innerText;
-            const s2 = grid[line[1]].innerText;
-            const s3 = grid[line[2]].innerText;
-
+            const s1 = gridCells[line[0]].innerText;
+            const s2 = gridCells[line[1]].innerText;
+            const s3 = gridCells[line[2]].innerText;
             if (s1 !== '❌' && s1 === s2 && s1 === s3) {
-                winVal += (currentBet * (multipliers[s1] || 0));
-                line.forEach(idx => grid[idx].classList.add('win-glow'));
+                winVal += (currentBet * multipliers[s1]);
+                line.forEach(idx => gridCells[idx].classList.add('win-glow'));
             }
         });
 
         if (winVal > 0) {
             balance += winVal;
             db.ref('codes/'+currentKey).update({ saldo: balance });
-            registrarHistorial("Premio Slot", winVal);
-            
+            registrarHistorial("Premio Real", winVal);
             setTimeout(() => {
                 document.getElementById('resWin').innerText = winVal.toFixed(1) + "€";
                 document.getElementById('resBanner').style.display = 'block';
             }, 500);
         }
-
         spinning = false;
         updateUI();
     }
