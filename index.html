@@ -30,12 +30,31 @@
             font-size: clamp(2.5rem, 8vw, 4rem);
             text-transform: uppercase;
             letter-spacing: 4px;
-            margin: 40px 0;
+            margin: 40px 0 20px 0;
             background: linear-gradient(to bottom, var(--gold-light) 0%, var(--gold) 50%, #aa771c 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             filter: drop-shadow(0 0 10px rgba(191, 149, 63, 0.5));
             text-align: center;
+        }
+
+        /* Botón de Normas */
+        .btn-rules {
+            margin-bottom: 40px;
+            padding: 10px 25px;
+            background: transparent;
+            color: var(--gold);
+            border: 1px solid var(--gold);
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            text-transform: uppercase;
+            transition: 0.3s;
+        }
+        .btn-rules:hover {
+            background: var(--gold);
+            color: black;
+            box-shadow: 0 0 15px var(--gold);
         }
 
         .lobby {
@@ -103,6 +122,37 @@
             box-shadow: 0 0 15px var(--gold-light);
         }
 
+        /* Modal de Normas */
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
+            z-index: 20000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .modal-content {
+            background: var(--panel-bg);
+            border: 2px solid var(--gold);
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+        }
+        .close-modal {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 2rem;
+            color: var(--gold);
+            cursor: pointer;
+        }
+
         .decor {
             position: fixed;
             font-size: clamp(5rem, 15vw, 10rem);
@@ -112,13 +162,8 @@
         }
 
         @media (max-width: 600px) {
-            .lobby {
-                grid-template-columns: 1fr;
-            }
-            .game-card {
-                max-width: 100%;
-                height: 280px;
-            }
+            .lobby { grid-template-columns: 1fr; }
+            .game-card { max-width: 100%; height: 280px; }
         }
     </style>
 </head>
@@ -129,6 +174,8 @@
     <div class="decor" style="top: 45%; left: 50%; transform: translateX(-50%); opacity: 0.02;">♣</div>
 
     <h1>CASINO</h1>
+
+    <button class="btn-rules" onclick="toggleModal(true)">Ver Normas del Casino</button>
 
     <div class="lobby">
         <a href="rascaygana.html" class="game-card">
@@ -167,9 +214,9 @@
             <div class="btn-play">Jugar Ahora</div>
         </a>
 
-        <a href="tower.html" class="game-card">
-            <div class="icon">🏰</div>
-            <div class="game-title">Tower</div>
+        <a href="minas.html" class="game-card">
+            <div class="icon">💣</div>
+            <div class="game-title">Minas</div>
             <div class="btn-play">Jugar Ahora</div>
         </a>
 
@@ -180,9 +227,38 @@
         </a>
     </div>
 
+    <div id="rulesModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="toggleModal(false)">&times;</span>
+            <h2 style="color: var(--gold); border-bottom: 1px solid var(--gold); padding-bottom: 10px;">Normas de Elite v3</h2>
+            <ul style="line-height: 1.6; color: #ccc;">
+                <li><strong>Responsabilidad:</strong> Prohibido el acceso a menores de 18 años.</li>
+                <li><strong>Saldo:</strong> El saldo es virtual y se gestiona mediante tu Key de acceso.</li>
+                <li><strong>Seguridad:</strong> El uso de scripts externos o intentos de hackeo resultará en baneo automático (Saldo -1).</li>
+                <li><strong>Juego Limpio:</strong> Las probabilidades son generadas aleatoriamente por el sistema.</li>
+                <li><strong>Retiradas:</strong> En el juego de Minas, limpiar el tablero retirará automáticamente tu ganancia.</li>
+            </ul>
+            <p style="font-size: 0.8rem; text-align: center; color: var(--gold);">¡Buena suerte, jugador!</p>
+        </div>
+    </div>
+
     <p style="margin: 40px 0; color: rgba(255,255,255,0.4); font-size: 0.8rem; text-align: center;">
         Bienvenido al panel de juego elite v3 | 18+ Juega con responsabilidad
     </p>
+
+    <script>
+        function toggleModal(show) {
+            document.getElementById('rulesModal').style.display = show ? 'flex' : 'none';
+        }
+
+        // Cerrar al hacer clic fuera del contenido
+        window.onclick = function(event) {
+            let modal = document.getElementById('rulesModal');
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+    </script>
 
 </body>
 </html>
