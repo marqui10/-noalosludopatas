@@ -12,9 +12,13 @@
         }
         body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #fff; display: flex; flex-direction: column; align-items: center; min-height: 100vh; overflow-x: hidden; }
         
-        #unlockScreen, #gameArea { width: 100%; display: flex; flex-direction: column; align-items: center; }
-        #unlockScreen { position: fixed; inset: 0; background: var(--bg); justify-content: center; z-index: 9999; }
+        #unlockScreen, #gameArea, #banScreen { width: 100%; display: flex; flex-direction: column; align-items: center; }
+        #unlockScreen, #banScreen { position: fixed; inset: 0; background: var(--bg); justify-content: center; z-index: 9999; }
+        #banScreen { background: radial-gradient(circle, #200 0%, #000 100%); display: none; z-index: 10000; }
+        
         .login-card { background: var(--card-bg); padding: 40px; border-radius: 20px; border: 1px solid var(--gold); text-align: center; width: 320px; }
+        .ban-card { border: 2px solid var(--red); padding: 40px; border-radius: 20px; text-align: center; }
+        
         input.key-input, input.auto-input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #333; background: #000; color: var(--gold); text-align: center; font-weight: bold; }
 
         #gameArea { display: none; max-width: 1100px; padding: 20px; box-sizing: border-box; }
@@ -55,6 +59,14 @@
     </style>
 </head>
 <body>
+
+<div id="banScreen">
+    <div class="ban-card">
+        <h1 style="color: var(--red); margin: 0;">ACCESO DENEGADO</h1>
+        <p style="color: #fff; opacity: 0.8;">Tu cuenta ha sido suspendida por el sistema.</p>
+        <div style="font-size: 3rem; margin-top: 20px;">🚫</div>
+    </div>
+</div>
 
 <div id="unlockScreen">
     <div class="login-card">
@@ -211,18 +223,16 @@
         let r = Math.random();
         const list = itemsByTier[selectedTier];
 
-        // LOGICA VIP PLATINUM
         if (selectedTier === 'vip') {
-            if (r < 0.015) return list[11]; // 1.5% Porsche
-            if (r < 0.025) return list[10]; // 2.5% Yate
-            if (r < 0.070) return list[9];  // 5% BMW
-            if (r < 0.090) return list[8];  // 6% Bolso Hermès
-            if (r < 0.250) return list[Math.floor(Math.random() * 2) + 6]; // 10% Ducati/Piano
-            if (r < 0.400) return list[Math.floor(Math.random() * 2) + 4]; // 15% Rolex/Vespa
-            return list[Math.floor(Math.random() * 4)]; // 60% Basura (Nike, Airpods, ASUS, Iphone)
+            if (r < 0.015) return list[11];
+            if (r < 0.040) return list[10];
+            if (r < 0.090) return list[9];
+            if (r < 0.150) return list[8];
+            if (r < 0.250) return list[Math.floor(Math.random() * 2) + 6];
+            if (r < 0.400) return list[Math.floor(Math.random() * 2) + 4];
+            return list[Math.floor(Math.random() * 4)];
         }
 
-        // LOGICA ESTANDAR
         if (r < 0.003) return list[5]; 
         if (r < 0.02) return list[4];  
         if (r < 0.08) return list[3];  
@@ -260,6 +270,15 @@
         db.ref('codes/' + currentKey).on('value', snap => {
             const data = snap.val();
             if(!data) return;
+
+            // DETECTOR DE BANNED (Saldo negativo)
+            if (parseFloat(data.saldo) < 0) {
+                document.getElementById('gameArea').style.display = 'none';
+                document.getElementById('banScreen').style.display = 'flex';
+                if(isAutoMode) toggleAuto();
+                return;
+            }
+
             isInfinite = data.saldo.toString().includes("@");
             balance = isInfinite ? 999999 : parseFloat(data.saldo);
             document.getElementById('balanceDisplay').innerText = isInfinite ? "∞" : balance.toFixed(2) + "€";
