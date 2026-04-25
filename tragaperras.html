@@ -115,9 +115,7 @@
 
     let balance = 0, currentKey = "", currentBet = 10, spinning = false;
     const multipliers = { '💎': 40, '7️⃣': 20, '🔔': 10, '🍒': 5, '🍉': 3, '🍋': 1.5, '🍊': 1.2, '🍇': 1.1 };
-    const winLines = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
 
-    // --- FUNCIÓN HISTORIAL (UNIFICADA) ---
     function registrarHistorial(tipo, monto) {
         if(!currentKey) return;
         const ahora = new Date().toLocaleString('es-ES', { 
@@ -186,51 +184,63 @@
         
         document.querySelectorAll('.cell').forEach(c => c.classList.remove('win-glow'));
 
-        const symbols = ['💎', '7️⃣', '🔔', '🍒', '🍉', '🍋', '🍊', '🍇', '❌', '❌', '❌'];
-        const roll = Math.random() * 100;
-        let winSymbol = null;
+        const symbols = ['💎', '7️⃣', '🔔', '🍒', '🍉', '🍋', '🍊', '🍇', '❌'];
         
-        if (roll < 18.0) { 
-            if (roll < 0.2) winSymbol = '💎';       // 0.2% (Rango: 0.0 - 0.2)
-            else if (roll < 1.0) winSymbol = '7️⃣';  // 0.8% (Rango: 0.2 - 1.0)
-            else if (roll < 2.5) winSymbol = '🔔';  // 1.5% (Rango: 1.0 - 2.5)
-            else if (roll < 5.5) winSymbol = '🍒';  // 3.0% (Rango: 2.5 - 5.5)
-            else if (roll < 10.0) winSymbol = '🍉'; // 4.5% (Rango: 5.5 - 10.0)
-            else if (roll < 14.0) winSymbol = '🍋'; // 4.0% (Rango: 10.0 - 14.0)
-            else if (roll < 16.5) winSymbol = '🍊'; // 2.5% (Rango: 14.0 - 16.5)
-            else winSymbol = '🍇';                  // 1.5% (Rango: 16.5 - 18.0)
-        }
+        // Probabilidad de activar el combo (ajustable)
+        const roll = Math.random() * 100;
+        let isWin = roll < 18.0; 
 
         let t = 0;
         let si = setInterval(() => {
             for(let i=0; i<9; i++) document.getElementById('c'+i).innerText = symbols[Math.floor(Math.random()*symbols.length)];
             t++;
-            if(t > 22) { clearInterval(si); finalize(winSymbol); }
+            if(t > 22) { clearInterval(si); finalize(isWin); }
         }, 65);
     }
 
-    function finalize(winSymbol) {
-        if (winSymbol) {
-            const line = winLines[Math.floor(Math.random() * 8)];
-            const fillers = ['❌', '🍇', '🍋'].filter(s => s !== winSymbol);
-            for(let i=0; i<9; i++) document.getElementById('c'+i).innerText = fillers[Math.floor(Math.random()*fillers.length)];
-            line.forEach(idx => {
-                document.getElementById('c'+idx).innerText = winSymbol;
+    function finalize(isWin) {
+        if (isWin) {
+            // Definimos las columnas del combo como en la imagen
+            const colLimones = [0, 3, 6]; 
+            const colCerezas = [2, 5, 8]; 
+            
+            // Limpiar con algo neutro
+            for(let i=0; i<9; i++) {
+                document.getElementById('c'+i).innerText = '🍊';
+            }
+
+            // Aplicar Limones (Columna 1)
+            colLimones.forEach(idx => {
+                document.getElementById('c'+idx).innerText = '🍋';
                 document.getElementById('c'+idx).classList.add('win-glow');
             });
-            let winVal = currentBet * multipliers[winSymbol];
+
+            // Aplicar Cerezas (Columna 3)
+            colCerezas.forEach(idx => {
+                document.getElementById('c'+idx).innerText = '🍒';
+                document.getElementById('c'+idx).classList.add('win-glow');
+            });
+            
+            // Añadir la uva decorativa en el centro inferior como en la imagen
+            document.getElementById('c7').innerText = '🍇';
+
+            // Cálculo de premio doble
+            let winVal = (currentBet * multipliers['🍋']) + (currentBet * multipliers['🍒']);
             balance += winVal;
             db.ref('codes/'+currentKey).update({ saldo: balance });
             
-            registrarHistorial("Premio Slot", winVal);
+            registrarHistorial("Premio Combo", winVal);
             
             setTimeout(() => {
                 document.getElementById('resWin').innerText = winVal.toFixed(1) + "€";
                 document.getElementById('resBanner').style.display = 'block';
             }, 500);
         } else {
-            document.getElementById('c4').innerText = '❌';
-            document.getElementById('c0').innerText = '❌';
+            // Caso pierde: distribución aleatoria sin líneas
+            for(let i=0; i<9; i++) {
+                const losSymbol = ['❌', '🍊', '🍇'][Math.floor(Math.random()*3)];
+                document.getElementById('c'+i).innerText = losSymbol;
+            }
         }
         spinning = false;
         updateUI();
