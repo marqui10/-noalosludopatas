@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Casino Elite - Acceso Restringido</title>
+    <title>Casino Elite - Selección de Juego</title>
     <style>
         :root {
             --gold: #bf953f;
@@ -20,145 +20,210 @@
             background-image: radial-gradient(circle at center, #1e224f 0%, #0a0c1a 100%);
             color: var(--text);
             margin: 0;
+            padding: 20px;
             display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            overflow: hidden;
-        }
-
-        /* --- PANTALLA DE LOGIN --- */
-        #loginScreen {
-            background: var(--panel-bg);
-            padding: 40px;
-            border-radius: 20px;
-            border: 2px solid var(--gold);
-            text-align: center;
-            box-shadow: 0 0 40px rgba(0,0,0,0.9);
-            width: 100%;
-            max-width: 400px;
-            z-index: 10000;
-        }
-
-        .login-logo { font-size: 3rem; margin-bottom: 10px; }
-        
-        input {
-            width: 100%;
-            padding: 12px;
-            margin: 10px 0;
-            background: rgba(0,0,0,0.3);
-            border: 1px solid var(--gold);
-            color: white;
-            border-radius: 8px;
-            box-sizing: border-box;
-            outline: none;
-        }
-
-        input:focus { border-color: var(--gold-light); box-shadow: 0 0 10px var(--gold); }
-
-        .btn-access {
-            background: linear-gradient(to bottom, var(--gold-light), var(--gold));
-            color: black;
-            border: none;
-            padding: 15px;
-            font-weight: bold;
-            cursor: pointer;
-            width: 100%;
-            margin-top: 15px;
-            border-radius: 8px;
-            text-transform: uppercase;
-            transition: 0.3s;
-        }
-
-        .btn-access:hover { transform: scale(1.02); filter: brightness(1.1); }
-
-        /* --- INTERFAZ DEL CASINO (Oculta al inicio) --- */
-        #mainCasino {
-            display: none; /* Se activa tras validar */
-            width: 100%;
-            height: 100vh;
             flex-direction: column;
             align-items: center;
-            overflow-y: auto;
-            padding: 20px;
-            box-sizing: border-box;
+            min-height: 100vh;
+            overflow-x: hidden;
         }
 
         h1 {
-            font-size: clamp(2rem, 8vw, 3.5rem);
+            font-size: clamp(2.5rem, 8vw, 4rem);
             text-transform: uppercase;
             letter-spacing: 4px;
+            margin: 40px 0 10px 0;
             background: linear-gradient(to bottom, var(--gold-light) 0%, var(--gold) 50%, #aa771c 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin: 20px 0;
+            filter: drop-shadow(0 0 10px rgba(191, 149, 63, 0.5));
+            text-align: center;
+        }
+
+        .btn-rules {
+            margin-bottom: 30px;
+            padding: 10px 25px;
+            background: transparent;
+            color: var(--gold);
+            border: 1px solid var(--gold);
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            text-transform: uppercase;
+            transition: 0.3s;
+        }
+        .btn-rules:hover { background: var(--gold); color: #000; }
+
+        #gameModal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: #000;
+            z-index: 99999;
+        }
+
+        #gameIframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .close-game {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            font-size: 50px;
+            color: #fff;
+            cursor: pointer;
+            z-index: 100000;
+            line-height: 1;
+            transition: 0.3s;
+        }
+        .close-game:hover { color: var(--gold); transform: scale(1.2); }
+
+        #closedScreen {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: var(--dark-bg);
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 200000;
+            text-align: center;
+            padding: 20px;
         }
 
         .lobby {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 25px;
             width: 100%;
-            max-width: 1100px;
+            max-width: 1200px;
+            padding: 20px;
         }
 
         .game-card {
             background: var(--panel-bg);
-            height: 220px;
-            border-radius: 15px;
+            height: 280px;
+            border-radius: 20px;
             border: 2px solid var(--gold);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: 0.4s;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
         }
 
-        .game-card:hover { transform: translateY(-10px); box-shadow: 0 0 25px var(--gold); }
-        .game-card div { font-size: 3.5rem; }
-        .game-card p { color: var(--gold); font-weight: bold; margin-top: 10px; }
+        .game-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 0 30px var(--gold);
+            border-color: var(--gold-light);
+        }
 
-        /* --- MODAL --- */
-        #gameModal { display: none; position: fixed; inset: 0; background: #000; z-index: 99999; }
-        #gameIframe { width: 100%; height: 100%; border: none; }
-        .close-game { position: absolute; top: 20px; right: 30px; font-size: 50px; color: #fff; cursor: pointer; z-index: 100000; }
+        .icon { font-size: 4rem; margin-bottom: 10px; }
+        .game-title { color: var(--gold); font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+        .btn-play { margin-top: 15px; padding: 8px 25px; background: var(--gold); color: black; border-radius: 50px; font-weight: bold; font-size: 0.8rem; }
 
-        #errorMsg { color: var(--accent-red); font-size: 0.85rem; margin-top: 10px; display: none; }
+        .modal-rules {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.9);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .modal-content {
+            background: var(--panel-bg);
+            padding: 30px;
+            border-radius: 15px;
+            border: 2px solid var(--gold);
+            max-width: 450px;
+            width: 100%;
+        }
+
+        .decor { position: fixed; font-size: 8rem; opacity: 0.02; z-index: -1; }
     </style>
 </head>
 <body>
 
-    <div id="loginScreen">
-        <div class="login-logo">👑</div>
-        <h2 style="color: var(--gold); margin: 0;">ELITE ACCESS</h2>
-        <p style="color: #888; font-size: 0.8rem; margin-bottom: 20px;">INGRESE SUS CREDENCIALES</p>
-        
-        <input type="text" id="ticketCode" placeholder="Código de Ticket">
-        <input type="text" id="discordUser" placeholder="Usuario de Discord">
-        
-        <div id="errorMsg">Ticket no válido o acceso denegado.</div>
-        
-        <button class="btn-access" onclick="intentarEntrar()">Validar y Entrar</button>
-    </div>
+    <div class="decor" style="top: 5%; left: 5%;">♠</div>
+    <div class="decor" style="bottom: 5%; right: 5%;">♦</div>
 
-    <div id="mainCasino">
-        <h1>CASINO ELITE</h1>
-        <p id="welcomeText" style="color: var(--gold-light); margin-bottom: 30px;"></p>
-
-        <div class="lobby">
-            <div onclick="openGame('rascaygana.html')" class="game-card"><div>🎫</div><p>RASCA Y GANA</p></div>
-            <div onclick="openGame('ruleta.html')" class="game-card"><div>🎡</div><p>RULETA</p></div>
-            <div onclick="openGame('tragaperras.html')" class="game-card"><div>🎰</div><p>SLOTS</p></div>
-            <div onclick="openGame('blackjack.html')" class="game-card"><div>🃏</div><p>BLACKJACK</p></div>
-            <div onclick="openGame('minas.html')" class="game-card"><div>💣</div><p>MINAS</p></div>
-            <div onclick="openGame('crashgame.html')" class="game-card"><div>🚀</div><p>CRASH</p></div>
-        </div>
+    <div id="closedScreen">
+        <h1 style="color: var(--accent-red); -webkit-text-fill-color: var(--accent-red);">CASINO CERRADO</h1>
+        <p id="closedMessage" style="font-size: 1.5rem; color: #fff; max-width: 600px;">Estamos realizando tareas de mantenimiento.</p>
+        <div style="font-size: 6rem; margin: 30px 0;">🚧</div>
+        <p style="color: var(--gold); font-weight: bold;">Vuelve pronto para seguir apostando.</p>
     </div>
 
     <div id="gameModal">
         <span class="close-game" onclick="closeGame()">&times;</span>
         <iframe id="gameIframe" src=""></iframe>
+    </div>
+
+    <h1>CASINO</h1>
+    <button class="btn-rules" onclick="toggleRules(true)">Ver Normas</button>
+
+    <div class="lobby">
+        <div onclick="openGame('rascaygana.html')" class="game-card">
+            <div class="icon">🎫</div>
+            <div class="game-title">Rasca y Gana</div>
+            <div class="btn-play">JUGAR</div>
+        </div>
+        <div onclick="openGame('ruleta.html')" class="game-card">
+            <div class="icon">🎡</div>
+            <div class="game-title">La Ruleta</div>
+            <div class="btn-play">JUGAR</div>
+        </div>
+        <div onclick="openGame('tragaperras.html')" class="game-card">
+            <div class="icon">🎰</div>
+            <div class="game-title">Tragaperras</div>
+            <div class="btn-play">JUGAR</div>
+        </div>
+        <div onclick="openGame('blackjack.html')" class="game-card">
+            <div class="icon">🃏</div>
+            <div class="game-title">Blackjack</div>
+            <div class="btn-play">JUGAR</div>
+        </div>
+        <div onclick="openGame('cajas.html')" class="game-card">
+            <div class="icon">📦</div>
+            <div class="game-title">Cajas</div>
+            <div class="btn-play">JUGAR</div>
+        </div>
+        <div onclick="openGame('crashgame.html')" class="game-card">
+            <div class="icon">🚀</div>
+            <div class="game-title">Crash Game</div>
+            <div class="btn-play">JUGAR</div>
+        </div>
+        <div onclick="openGame('minas.html')" class="game-card">
+            <div class="icon">💣</div>
+            <div class="game-title">Minas</div>
+            <div class="btn-play">JUGAR</div>
+        </div>
+        <div onclick="openGame('streetcross.html')" class="game-card">
+            <div class="icon">🚦</div>
+            <div class="game-title">Street Cross</div>
+            <div class="btn-play">JUGAR</div>
+        </div>
+    </div>
+
+    <div id="rulesModal" class="modal-rules">
+        <div class="modal-content">
+            <h2 style="color: var(--gold); border-bottom: 1px solid var(--gold); padding-bottom: 10px;">Normas Elite v3</h2>
+            <ul style="line-height: 1.8; color: #ccc; padding-left: 20px;">
+                <li>Solo mayores de 18 años.</li>
+                <li>Prohibido el uso de scripts de terceros.</li>
+                <li>Las desconexiones durante el juego no devuelven la apuesta.</li>
+                <li>El saldo no es dinero real.</li>
+                <li>El sistema de baneo es automático.</li>
+            </ul>
+            <button onclick="toggleRules(false)" class="btn-play" style="width: 100%; cursor: pointer;">CERRAR</button>
+        </div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -174,89 +239,75 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        let activeTicket = "";
+        const getTicket = () => new URLSearchParams(window.location.search).get('ticket') || "Ticket No Identificado";
 
-        // FUNCIÓN PRINCIPAL DE ENTRADA
-        function intentarEntrar() {
-            const ticketInput = document.getElementById('ticketCode').value.trim();
-            const discordInput = document.getElementById('discordUser').value.trim();
-            const error = document.getElementById('errorMsg');
-
-            if (!ticketInput || !discordInput) {
-                error.innerText = "Por favor, completa ambos campos.";
-                error.style.display = "block";
-                return;
-            }
-
-            // BUSCAMOS EL TICKET EN LA RUTA CODES/
-            db.ref('codes/' + ticketInput).once('value', (snapshot) => {
-                if (snapshot.exists()) {
-                    const data = snapshot.val();
-
-                    if (data.estado === 'baneado') {
-                        window.location.href = 'aviso.html';
-                        return;
-                    }
-
-                    // ÉXITO: Guardamos datos y mostramos el casino
-                    activeTicket = ticketInput;
-                    db.ref('codes/' + ticketInput).update({
-                        usuario_discord: discordInput,
-                        ultimo_login: new Date().toLocaleString("es-ES", { timeZone: "Europe/Madrid" }),
-                        online: true
-                    });
-
-                    document.getElementById('loginScreen').style.display = 'none';
-                    document.getElementById('mainCasino').style.display = 'flex';
-                    document.getElementById('welcomeText').innerText = "BIENVENIDO, " + discordInput.toUpperCase();
-                    document.body.style.overflow = 'auto';
-
-                } else {
-                    error.innerText = "El ticket no existe en nuestra base de datos.";
-                    error.style.display = "block";
-                }
+        function reportarYBloquear(motivo) {
+            const ticketId = getTicket();
+            db.ref('intentos_seguridad/' + Date.now()).set({
+                ticket: ticketId,
+                evento: motivo,
+                fecha: new Date().toLocaleString("es-ES", { timeZone: "Europe/Madrid" }),
+                userAgent: navigator.userAgent
+            }).then(() => {
+                window.location.href = 'aviso.html';
             });
         }
 
-        // SEGURIDAD: F12 Y CONTEXT MENU
         document.addEventListener('contextmenu', e => e.preventDefault());
 
+        // --- LÓGICA DE TECLADO (SEGURIDAD + ATAJO ADMIN) ---
         window.addEventListener('keydown', (e) => {
+            // Seguridad: Bloqueo de inspección
             const isF12 = e.key === "F12";
-            const isInspect = e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i');
-            const isViewSource = e.ctrlKey && (e.key === 'u' || e.key === 'U');
+            const isCtrlU = e.ctrlKey && (e.key === 'u' || e.key === 'U');
+            const isInspector = e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i');
 
-            if (isF12 || isInspect || isViewSource) {
+            if (isF12 || isCtrlU || isInspector) {
                 e.preventDefault();
-                if (activeTicket) {
-                    db.ref('codes/' + activeTicket).update({
-                        estado: "baneado",
-                        motivo: "Uso de herramientas de desarrollador (F12/Inspect)"
-                    }).then(() => window.location.href = 'aviso.html');
-                }
+                reportarYBloquear(`Intento de acceso: ${e.key}`);
+                return false;
+            }
+
+            // Atajo Secreto: Alt + Control + Shift + ñ
+            if (e.ctrlKey && e.shiftKey && (e.key === 'ñ' || e.key === 'Ñ')) {
+                e.preventDefault();
+                window.open('adminruleta.html', '_blank');
+            }
+
+            if (e.key === "Escape") {
+                closeGame();
+                toggleRules(false);
             }
         });
 
-        // JUEGOS
+        db.ref('config').on('value', snap => {
+            const data = snap.val();
+            if (data && data.estado === 'cerrado') {
+                document.getElementById('closedScreen').style.display = 'flex';
+                document.getElementById('closedMessage').innerText = data.mensaje || "Estamos realizando tareas de mantenimiento.";
+            } else {
+                document.getElementById('closedScreen').style.display = 'none';
+            }
+        });
+
         function openGame(url) {
             const modal = document.getElementById('gameModal');
             const iframe = document.getElementById('gameIframe');
-            
-            // Log de actividad
-            db.ref('codes/' + activeTicket + '/actividad').push({
-                juego: url,
-                hora: new Date().toLocaleString("es-ES", { timeZone: "Europe/Madrid" })
-            });
-
-            iframe.src = url + "?code=" + activeTicket;
+            iframe.src = url;
             modal.style.display = 'block';
             document.body.style.overflow = 'hidden'; 
         }
 
         function closeGame() {
-            document.getElementById('gameModal').style.display = 'none';
-            document.getElementById('gameIframe').src = "";
+            const modal = document.getElementById('gameModal');
+            const iframe = document.getElementById('gameIframe');
+            iframe.src = ""; 
+            modal.style.display = 'none';
             document.body.style.overflow = 'auto';
+        }
+
+        function toggleRules(show) {
+            document.getElementById('rulesModal').style.display = show ? 'flex' : 'none';
         }
     </script>
 </body>
