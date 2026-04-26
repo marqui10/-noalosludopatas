@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceso Restringido - Casino Elite</title>
+    <style>
+        :root {
+            --accent-red: #ff3e3e;
+            --gold: #bf953f;
+            --dark-bg: #0a0c1a;
+            --panel-bg: #15183a;
+            --text: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: var(--dark-bg);
+            background-image: radial-gradient(circle at center, #1e224f 0%, #0a0c1a 100%);
+            color: var(--text);
+            height: 100vh;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        .container {
+            background: var(--panel-bg);
+            padding: 50px;
+            border-radius: 20px;
+            border: 2px solid var(--accent-red);
+            box-shadow: 0 0 50px rgba(255, 62, 62, 0.2);
+            max-width: 500px;
+        }
+
+        .icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        h1 {
+            color: var(--accent-red);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+        }
+
+        p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: #ccc;
+        }
+
+        .ticket-info {
+            margin-top: 25px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            border: 1px dashed var(--gold);
+            color: var(--gold);
+            font-weight: bold;
+        }
+
+        .btn-back {
+            margin-top: 30px;
+            padding: 12px 30px;
+            background: var(--gold);
+            color: black;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: 0.3s;
+        }
+
+        .btn-back:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px var(--gold);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <span class="icon">🚫</span>
+        <h1>ACTIVIDAD SOSPECHOSA</h1>
+        <p>Se ha detectado un intento de manipulación del código fuente o acceso a herramientas de desarrollador.</p>
+        
+        <div class="ticket-info">
+            SU TICKET HA SIDO REPORTADO POR SEGURIDAD
+        </div>
+
+        <p style="font-size: 0.9rem; margin-top: 20px;">
+            Esta acción ha sido registrada en nuestra base de datos con su ID de ticket y dirección IP. El uso de herramientas externas viola las normas de <strong>Casino Elite</strong>.
+        </p>
+
+        <a href="index.html" class="btn-back">VOLVER AL LOBBY</a>
+    </div>
+
+    <script>
+        // Bloqueamos también aquí el clic derecho para mantener la consistencia
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        
+        // Bloqueo de teclas de nuevo por si acaso
+        window.addEventListener('keydown', (e) => {
+            if (e.key === "F12" || (e.ctrlKey && e.shiftKey && e.key === 'I') || (e.ctrlKey && e.key === 'u')) {
+                e.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html>
