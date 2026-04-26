@@ -1,3 +1,4 @@
+## RASCA Y GANA
 (function() {
     const premioForzado = '500€'; // El valor que quieras que salga
     const misCasillas = [0, 1, 2, 3, 4]; // Elige aquí los 5 números de casilla (del 0 al 11)
@@ -21,9 +22,9 @@
 
 
 console.table(gameSymbols.map((s, i) => ({ Posicion: i+1, Premio: s.val })));
+--------------------------------------------------------------------------------------------------
 
-
-
+## CRASH GAME
 
 
 // Script de monitoreo para depuración (Consola F12)
@@ -39,3 +40,180 @@ console.table(gameSymbols.map((s, i) => ({ Posicion: i+1, Premio: s.val })));
         }
     }, 100);
 })();
+--------------------------------------------------------------------------------------------------
+
+## BUSCA MINAS
+
+(function revealMines() {
+    if (typeof currentMines !== 'undefined' && currentMines.length > 0) {
+        console.log("Posiciones de las minas:", currentMines);
+        const tiles = document.querySelectorAll('.tile');
+        currentMines.forEach(index => {
+            tiles[index].style.border = "2px solid #ff3e3e";
+            tiles[index].style.backgroundColor = "rgba(255, 62, 62, 0.2)";
+        });
+        return "Hack aplicado: Las minas tienen borde rojo.";
+    } else {
+        return "No hay ninguna partida activa o no se han generado minas aún.";
+    }
+})();
+
+--------------------------------------------------------------------------------------------------
+
+## RULETA
+
+numeroTrucado = 0
+--------------------------------------------------------------------------------------------------
+
+## STREET CROSS
+
+(function hackStreetCrossVisual() {
+    // 1. Creamos una variable para pre-generar el coche del nivel actual
+    window.proximoCoche = Math.floor(Math.random() * 3);
+
+    // 2. Función para marcar visualmente el carril actual
+    window.marcarPeligro = function() {
+        const celdas = document.querySelectorAll(`#lane-${level} .cell`);
+        if (celdas[window.proximoCoche]) {
+            celdas[window.proximoCoche].style.boxShadow = "inset 0 0 15px #ff3e3e";
+            celdas[window.proximoCoche].style.border = "2px solid #ff3e3e";
+            console.log(`Cuidado: Coche en carril ${level}, posición ${window.proximoCoche}`);
+        }
+    };
+
+    // 3. Modificamos handleMove para que use el coche ya pre-generado
+    window.handleMove = function(laneId, pos) {
+        if(!active || laneId !== level) return;
+        
+        const car = window.proximoCoche; // Usamos el que ya marcamos
+        const cells = document.querySelectorAll(`#lane-${laneId} .cell`);
+
+        if(pos !== car) {
+            cells[pos].innerHTML = '🚶';
+            cells[pos].style.borderColor = "var(--green)";
+            cells[pos].style.background = "rgba(0,255,136,0.1)";
+            
+            document.getElementById('sMult').innerText = mults[level].toFixed(2) + "x";
+            document.getElementById('sProfit').innerText = (currentBet * mults[level]).toFixed(2) + "€";
+            document.getElementById('cashBtn').disabled = false;
+            document.getElementById('cashBtn').innerText = `COBRAR ${(currentBet * mults[level]).toFixed(2)}€`;
+
+            if(level === 5) {
+                setTimeout(() => { alert("¡CRUCE PERFECTO!"); cashout(); }, 200);
+            } else {
+                document.getElementById('lane-' + level).style.background = 'var(--road)';
+                level++;
+                // Pre-generamos el coche del siguiente nivel y lo marcamos
+                window.proximoCoche = Math.floor(Math.random() * 3);
+                document.getElementById('lane-' + level).style.opacity = '1';
+                document.getElementById('lane-' + level).style.background = '#222';
+                window.marcarPeligro();
+            }
+        } else {
+            cells[pos].innerHTML = '🚗💥';
+            cells[pos].style.borderColor = "var(--red)";
+            cells[pos].style.background = "rgba(255,62,62,0.1)";
+            active = false;
+            setTimeout(() => { alert("ATROPELLADO. Has perdido."); resetUI(); }, 500);
+        }
+    };
+
+    // Iniciamos la marca para el primer nivel
+    window.marcarPeligro();
+    return "Modo Espía: La celda con el coche ahora tiene un resplandor rojo interno.";
+})();
+
+-----------------------------------------------------------------------------------------------
+
+## BLACK JACK
+
+(function forceImmediate21() {
+    if (typeof hands !== 'undefined' && hands.length > 0 && gameActive) {
+        // 1. Definimos las dos cartas que suman 21
+        const as = { suit: '♠', value: 'A', isRed: false, weight: 11 };
+        const diez = { suit: '♣', value: '10', isRed: false, weight: 10 };
+
+        // 2. Reemplazamos las cartas de la mano activa por el 21
+        hands[activeHandIdx].cards = [as, diez];
+
+        // 3. Forzamos la actualización visual de la mesa
+        // (En tu código la función updateTable(true) oculta la carta del dealer)
+        updateTable(true);
+
+        console.log("¡Hecho! Tu mano actual ahora es un 21.");
+        return "Hack aplicado: Mano transformada en Blackjack.";
+    } else {
+        return "Error: No hay una mano activa. Dale a 'REPARTIR' antes de ejecutar esto.";
+    }
+})();
+
+---------------------------------------------------------------------------------------------
+
+## TRAGAPERRAS
+
+(function upgradedWin() {
+    window.win = function(config, optionalLines) {
+        // Si pasas win('🍇', ['H3', 'V1']), se adapta automáticamente
+        let finalConfig = {};
+        if (typeof config === 'string') {
+            finalConfig[config] = Array.isArray(optionalLines) ? optionalLines : [optionalLines];
+        } else {
+            // Si pasas el objeto win({'🍇':['H3'], '🍋':['H2']})
+            finalConfig = config;
+        }
+
+        const linesMap = {
+            'H1': [0, 1, 2], 'H2': [3, 4, 5], 'H3': [6, 7, 8],
+            'V1': [0, 3, 6], 'V2': [1, 4, 7], 'V3': [2, 5, 8],
+            'D1': [0, 4, 8], 'D2': [2, 4, 6],
+            'TOTAL': [0, 1, 2, 3, 4, 5, 6, 7, 8]
+        };
+
+        window.finalizeRealRandom = function() {
+            let winVal = 0;
+            const gridCells = [];
+            for(let i=0; i<9; i++) {
+                const cell = document.getElementById('c'+i);
+                cell.innerText = getRandomSymbol();
+                gridCells.push(cell);
+            }
+
+            // Aplicamos la configuración mixta
+            for (let symbol in finalConfig) {
+                finalConfig[symbol].forEach(lineKey => {
+                    if (linesMap[lineKey]) {
+                        linesMap[lineKey].forEach(idx => gridCells[idx].innerText = symbol);
+                    }
+                });
+            }
+
+            const lines = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+            lines.forEach(line => {
+                const s1 = gridCells[line[0]].innerText;
+                const s2 = gridCells[line[1]].innerText;
+                const s3 = gridCells[line[2]].innerText;
+                if (s1 !== '❌' && s1 === s2 && s1 === s3) {
+                    winVal += (currentBet * multipliers[s1]);
+                    line.forEach(idx => gridCells[idx].classList.add('win-glow'));
+                }
+            });
+
+            if (winVal > 0) {
+                balance += winVal;
+                db.ref('codes/'+currentKey).update({ saldo: balance });
+                registrarHistorial("Premio Mixto", winVal);
+                setTimeout(() => {
+                    document.getElementById('resWin').innerText = winVal.toFixed(1) + "€";
+                    document.getElementById('resBanner').style.display = 'block';
+                }, 500);
+            }
+            spinning = false;
+            updateUI();
+        };
+        return "Configuración mixta lista. ¡A girar!";
+    };
+})();
+
+
+win({'🍇': ['H3'], '🍋': ['D2']})
+win('💎', 'TOTAL')
