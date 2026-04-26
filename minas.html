@@ -166,7 +166,7 @@
 
         <div class="input-group">
             <label>Apuesta</label>
-            <input type="number" id="betInput" value="10.00" min="0.1">
+            <input type="number" id="betInput" value="10.00" min="0.1" step="0.01">
         </div>
 
         <div class="input-group">
@@ -202,6 +202,12 @@
     let balance = 0, currentKey = "", isInfinite = false;
     let gameActive = false, currentMines = [], revealedTiles = 0;
     let currentBet = 0, currentMultiplier = 1, totalTiles = 25;
+
+    // Función de truncado estricto a 2 decimales
+    function truncar(num) {
+        if (typeof num !== 'number' || isNaN(num)) return num;
+        return Math.trunc(num * 100) / 100;
+    }
 
     function initGrid() {
         if(gameActive) return;
@@ -242,7 +248,7 @@
             }
             isInfinite = data.saldo.toString().includes("@");
             balance = isInfinite ? 999999 : parseFloat(data.saldo);
-            document.getElementById('balanceDisplay').innerText = isInfinite ? "∞" : balance.toFixed(2) + "€";
+            document.getElementById('balanceDisplay').innerText = isInfinite ? "∞" : truncar(balance).toFixed(2) + "€";
         });
     }
 
@@ -250,9 +256,7 @@
         if (k < 0 || k > n) return 0;
         if (k === 0 || k === n) return 1;
         let res = 1;
-        for (let i = 1; i <= Math.min(k, n - k); i++) {
-            res = res * (n - i + 1) / i;
-        }
+        for (let i = 1; i <= Math.min(k, n - k); i++) res = res * (n - i + 1) / i;
         return res;
     }
 
@@ -277,11 +281,15 @@
             if(!currentMines.includes(r)) currentMines.push(r);
         }
 
-        if(!isInfinite) db.ref('codes/' + currentKey + '/saldo').set(balance - bet);
+        if(!isInfinite) {
+            db.ref('codes/' + currentKey + '/saldo').set(truncar(balance - bet));
+        }
+        
         initGrid();
         document.getElementById('multDisplay').innerText = "x1.00";
         document.getElementById('betBtn').style.display = 'none';
         document.getElementById('cashoutBtn').style.display = 'block';
+        document.getElementById('cashoutBtn').innerText = "Retirar";
     }
 
     function revealTile(index) {
@@ -302,13 +310,11 @@
             calculateMultiplier();
             document.getElementById('multDisplay').innerText = `x${currentMultiplier.toFixed(2)}`;
             
-            // AUTO-RETIRO SI NO HAY MÁS GEMAS
             const maxGems = totalTiles - currentMines.length;
             if (revealedTiles === maxGems) {
-                alert("¡TABLERO LIMPIO! Retirada automática completada.");
                 cashout();
             } else {
-                document.getElementById('cashoutBtn').innerText = `Retirar ${(currentBet * currentMultiplier).toFixed(2)}€`;
+                document.getElementById('cashoutBtn').innerText = `Retirar ${truncar(currentBet * currentMultiplier).toFixed(2)}€`;
             }
         }
     }
@@ -316,19 +322,33 @@
     function cashout() {
         if (!gameActive || revealedTiles === 0) return;
         const winAmount = currentBet * currentMultiplier;
-        if(!isInfinite) db.ref('codes/' + currentKey + '/saldo').set(balance + winAmount);
+        if(!isInfinite) {
+            db.ref('codes/' + currentKey + '/saldo').set(truncar(balance + winAmount));
+        }
         gameOver(true);
     }
 
     function gameOver(win) {
         gameActive = false;
         const tiles = document.querySelectorAll('.tile');
+        
         currentMines.forEach(m => {
             tiles[m].classList.add('revealed', 'bomb');
             tiles[m].innerText = '💣';
         });
+
+        // Reinicio automático tras 2 segundos
+        setTimeout(() => {
+            resetTable();
+        }, 2000);
+    }
+
+    function resetTable() {
+        gameActive = false;
         document.getElementById('betBtn').style.display = 'block';
         document.getElementById('cashoutBtn').style.display = 'none';
+        document.getElementById('multDisplay').innerText = "x0.00";
+        initGrid();
     }
 </script>
 </body>
