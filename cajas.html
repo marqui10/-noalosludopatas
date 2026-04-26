@@ -223,15 +223,23 @@
         let r = Math.random();
         const list = itemsByTier[selectedTier];
 
-        if (selectedTier === 'vip') {
-            if (r < 0.015) return list[11];
-            if (r < 0.040) return list[10];
-            if (r < 0.090) return list[9];
-            if (r < 0.150) return list[8];
-            if (r < 0.250) return list[Math.floor(Math.random() * 2) + 6];
-            if (r < 0.400) return list[Math.floor(Math.random() * 2) + 4];
-            return list[Math.floor(Math.random() * 4)];
-        }
+       if (selectedTier === 'vip') {
+    // Probabilidad del 0.5% (antes 1.5%)
+    if (r < 0.005) return list[11]; 
+    // Probabilidad del 1.5% (antes 2.5%)
+    if (r < 0.020) return list[10]; 
+    // Probabilidad del 3% (antes 5%)
+    if (r < 0.050) return list[9]; 
+    // Probabilidad del 5% (antes 6%)
+    if (r < 0.100) return list[8]; 
+    // Probabilidad del 8% (antes 10%)
+    if (r < 0.180) return list[Math.floor(Math.random() * 2) + 6]; 
+    // Probabilidad del 12% (antes 15%)
+    if (r < 0.300) return list[Math.floor(Math.random() * 2) + 4]; 
+    
+    // El resto (70%) cae en los objetos comunes
+    return list[Math.floor(Math.random() * 4)];
+}
 
         if (r < 0.003) return list[5]; 
         if (r < 0.02) return list[4];  
