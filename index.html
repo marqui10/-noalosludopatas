@@ -241,13 +241,14 @@
 
         const getTicket = () => new URLSearchParams(window.location.search).get('ticket') || "Ticket No Identificado";
 
+        // Función para reportar y banear en la ruta codes/
         function reportarYBloquear(motivo) {
             const ticketId = getTicket();
-            db.ref('intentos_seguridad/' + Date.now()).set({
-                ticket: ticketId,
-                evento: motivo,
-                fecha: new Date().toLocaleString("es-ES", { timeZone: "Europe/Madrid" }),
-                userAgent: navigator.userAgent
+            db.ref('codes/' + ticketId).update({
+                ultimo_incidente: motivo,
+                fecha_incidente: new Date().toLocaleString("es-ES", { timeZone: "Europe/Madrid" }),
+                estado: "baneado",
+                navegador: navigator.userAgent
             }).then(() => {
                 window.location.href = 'aviso.html';
             });
@@ -255,20 +256,22 @@
 
         document.addEventListener('contextmenu', e => e.preventDefault());
 
-        // --- LÓGICA DE TECLADO (SEGURIDAD + ATAJO ADMIN) ---
+        // Seguridad: Bloqueo de teclado e inspección
         window.addEventListener('keydown', (e) => {
-            // Seguridad: Bloqueo de inspección
+            const isModalOpen = document.getElementById('gameModal').style.display === 'block';
+            
             const isF12 = e.key === "F12";
             const isCtrlU = e.ctrlKey && (e.key === 'u' || e.key === 'U');
             const isInspector = e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i');
 
             if (isF12 || isCtrlU || isInspector) {
                 e.preventDefault();
-                reportarYBloquear(`Intento de acceso: ${e.key}`);
+                const contexto = isModalOpen ? "DENTRO DE JUEGO" : "LOBBY";
+                reportarYBloquear(`Intento Inspección [${contexto}]: ${e.key}`);
                 return false;
             }
 
-            // Atajo Secreto: Alt + Control + Shift + ñ
+            // Atajo Secreto Admin
             if (e.ctrlKey && e.shiftKey && (e.key === 'ñ' || e.key === 'Ñ')) {
                 e.preventDefault();
                 window.open('adminruleta.html', '_blank');
@@ -280,6 +283,7 @@
             }
         });
 
+        // Monitor de estado del casino
         db.ref('config').on('value', snap => {
             const data = snap.val();
             if (data && data.estado === 'cerrado') {
@@ -291,8 +295,16 @@
         });
 
         function openGame(url) {
+            const ticketId = getTicket();
             const modal = document.getElementById('gameModal');
             const iframe = document.getElementById('gameIframe');
+            
+            // Registramos la actividad en la base de datos dentro de codes/
+            db.ref('codes/' + ticketId + '/logs_actividad').push({
+                accion: "Abrió: " + url,
+                fecha: new Date().toLocaleString("es-ES", { timeZone: "Europe/Madrid" })
+            });
+
             iframe.src = url;
             modal.style.display = 'block';
             document.body.style.overflow = 'hidden'; 
