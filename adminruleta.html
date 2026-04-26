@@ -13,7 +13,6 @@
             --blue: #3498db;
         }
         body { font-family: 'Segoe UI', sans-serif; background: var(--dark-bg); color: white; display: flex; flex-direction: column; align-items: center; padding: 30px; margin: 0; }
-        
         #loginOverlay { position: fixed; inset: 0; background: var(--dark-bg); z-index: 10000; display: flex; align-items: center; justify-content: center; }
         .login-box { background: var(--panel-bg); padding: 40px; border-radius: 15px; border: 2px solid var(--gold); text-align: center; }
         .container { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; max-width: 1200px; width: 100%; }
@@ -21,7 +20,6 @@
         .panel-large { width: 100%; max-width: 1100px; margin-top: 20px; }
         h3 { color: var(--gold); text-align: center; margin-top: 0; border-bottom: 1px solid #333; padding-bottom: 10px; }
         input, select { width: 100%; padding: 12px; margin: 10px 0; border-radius: 5px; border: 1px solid #333; box-sizing: border-box; background: #000; color: #fff; font-weight: bold; }
-        
         .btn { width: 100%; padding: 12px; border: none; font-weight: bold; cursor: pointer; border-radius: 5px; margin-top: 5px; transition: 0.3s; }
         .btn-gold { background: var(--gold); color: black; }
         .btn-outline { background: transparent; border: 1px solid var(--gold); color: var(--gold); }
@@ -29,17 +27,13 @@
         .btn-warn { background: #e17055; color: white; }
         .btn-add { background: var(--green); color: black; }
         .btn-blue { background: var(--blue); color: white; }
-
         .code-display { font-size: 1.8rem; color: var(--green); text-align: center; margin: 10px 0; font-family: monospace; }
-        
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th { background: rgba(191, 149, 63, 0.2); color: var(--gold); padding: 12px; text-align: left; font-size: 0.85rem; }
         td { padding: 10px; border-bottom: 1px solid #222; font-size: 0.9rem; }
         .ban-row { color: #ff4d4d; text-decoration: line-through; opacity: 0.6; }
-
         #historialContenedor { margin-top: 15px; max-height: 150px; overflow-y: auto; background: rgba(0,0,0,0.4); border-radius: 8px; padding: 10px; border: 1px solid #444; }
         .hist-item { border-bottom: 1px solid #222; padding: 6px 0; font-size: 0.75rem; }
-
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 10001; padding: 20px; overflow-y: auto; }
         .modal-content { background: var(--panel-bg); max-width: 900px; margin: 0 auto; border: 2px solid var(--gold); border-radius: 15px; padding: 25px; }
         .filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 20px; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px; }
@@ -64,9 +58,8 @@
         <h3>NUEVO TICKET</h3>
         <button class="btn btn-outline" onclick="generateRandomCode()">GENERAR CÓDIGO</button>
         <div id="generatedCode" class="code-display">----</div>
-        <input type="number" id="monto" placeholder="SALDO INICIAL (€)">
+        <input type="number" id="monto" placeholder="SALDO INICIAL (€)" step="0.01">
         <button class="btn btn-gold" onclick="crearTicket()">ACTIVAR TICKET</button>
-        
         <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #333;">
             <h4 style="text-align: center; color: var(--gold); margin: 0 0 10px 0;">CREACIÓN MANUAL</h4>
             <input type="text" id="customCode" placeholder="CÓDIGO PERSONALIZADO" style="text-transform: uppercase;">
@@ -78,23 +71,18 @@
     <div class="panel">
         <h3>GESTIÓN EN VIVO</h3>
         <input type="text" id="manageId" placeholder="ESCRIBIR CÓDIGO..." style="text-transform: uppercase;" oninput="escucharTicketEnVivo()">
-        
         <div id="infoTicket" style="margin: 15px 0; display: none; background: rgba(0,0,0,0.5); padding: 15px; border-radius: 10px; border-left: 4px solid var(--gold);">
             <p>Saldo Actual: <b id="currentBal" style="font-size: 1.2rem; color:var(--green);">0</b>€</p>
             <p>Estado: <b id="currentState">---</b></p>
-            
             <div id="addMoneySection" style="margin-top: 10px; border-top: 1px dashed #444; padding-top: 10px;">
-                <input type="number" id="extraMoney" placeholder="CANTIDAD A SUMAR (€)">
+                <input type="number" id="extraMoney" placeholder="CANTIDAD A SUMAR (€)" step="0.01">
                 <button class="btn btn-add" onclick="añadirDinero()">+ SUMAR SALDO</button>
             </div>
-
             <div id="historialContenedor">
                 <div id="listaHistorial"></div>
             </div>
-            
             <button class="btn btn-blue" onclick="abrirModalHistorial()">🔎 VER HISTORIAL COMPLETO</button>
         </div>
-
         <button class="btn btn-warn" onclick="retirarEfectivo()">CASH OUT (VACIAR)</button>
         <button class="btn btn-danger" onclick="banearTicket()">BANEAR TICKET</button>
         <button class="btn btn-outline" onclick="desbanearTicket()" style="margin-top: 5px;">DESBANEAR</button>
@@ -119,7 +107,6 @@
             <button class="btn btn-danger" style="width: auto; padding: 5px 15px;" onclick="cerrarModal()">X</button>
         </div>
         <p id="modalCodigoTit" style="color:var(--blue); font-weight: bold;"></p>
-
         <div class="filter-grid">
             <div>
                 <label style="font-size: 0.7rem;">FILTRAR ORIGEN</label>
@@ -144,12 +131,10 @@
                 <input type="number" id="filtroMonto" placeholder="0" oninput="aplicarFiltros()">
             </div>
         </div>
-
         <div class="resumen-caja">
             <div style="text-align: center;">Movimientos: <br><b id="resMovs" style="color:var(--blue);">0</b></div>
             <div style="text-align: center;">Balance Netos: <br><b id="resBalance" style="color:var(--green);">0€</b></div>
         </div>
-
         <div style="max-height: 400px; overflow-y: auto; background: #000; border-radius: 10px;">
             <table id="tablaHistorialCompleto">
                 <thead>
@@ -177,10 +162,15 @@
     let historialGlobal = [];
     let currentTicketRef = null;
 
+    function truncar(num) {
+        if (typeof num !== 'number' || isNaN(num)) return num;
+        return Math.trunc(num * 100) / 100;
+    }
+
     function getTime() { return new Date().toLocaleString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit', day: '2-digit', month: '2-digit' }); }
 
     function registrarMovimiento(id, tipo, monto, origen = "Caja") {
-        db.ref(`codes/${id}/historial`).push({ tipo: tipo, monto: monto, origen: origen, fecha: getTime() });
+        db.ref(`codes/${id}/historial`).push({ tipo: tipo, monto: truncar(monto), origen: origen, fecha: getTime() });
     }
 
     async function checkPass() {
@@ -199,7 +189,6 @@
             document.getElementById('infoTicket').style.display = 'none';
             return;
         }
-
         currentTicketRef = db.ref('codes/' + id);
         currentTicketRef.on('value', snap => {
             if(snap.exists()) {
@@ -207,17 +196,15 @@
                 document.getElementById('infoTicket').style.display = 'block';
                 let esInf = data.saldo.toString().includes("@");
                 let esBan = data.saldo === -1;
-                
-                document.getElementById('currentBal').innerText = esInf ? "∞" : (esBan ? "0" : data.saldo);
+                document.getElementById('currentBal').innerText = esInf ? "∞" : (esBan ? "0" : truncar(data.saldo).toFixed(2));
                 document.getElementById('currentState').innerText = esBan ? "⛔ BANEADO" : "✅ ACTIVO";
                 document.getElementById('currentState').style.color = esBan ? "var(--red)" : "var(--green)";
                 document.getElementById('addMoneySection').style.display = esBan ? 'none' : 'block';
-
                 const histDiv = document.getElementById('listaHistorial');
                 histDiv.innerHTML = "";
                 historialGlobal = data.historial ? Object.values(data.historial).reverse() : [];
                 historialGlobal.slice(0, 5).forEach(mov => {
-                    histDiv.innerHTML += `<div class="hist-item"><b>${mov.origen}</b>: <span style="color:${mov.monto>0?'var(--green)':'var(--red)'}">${mov.monto}€</span></div>`;
+                    histDiv.innerHTML += `<div class="hist-item"><b>${mov.origen}</b>: <span style="color:${mov.monto>0?'var(--green)':'var(--red)'}">${truncar(mov.monto).toFixed(2)}€</span></div>`;
                 });
                 if(document.getElementById('modalHistorial').style.display === 'block') aplicarFiltros();
             } else { document.getElementById('infoTicket').style.display = 'none'; }
@@ -236,9 +223,9 @@
 
     function crearTicket() {
         const id = document.getElementById('generatedCode').innerText;
-        const monto = parseFloat(document.getElementById('monto').value);
-        if(id === "----" || isNaN(monto)) return;
-        saveTicket(id, monto);
+        const montoRaw = parseFloat(document.getElementById('monto').value);
+        if(id === "----" || isNaN(montoRaw)) return;
+        saveTicket(id, truncar(montoRaw));
         document.getElementById('monto').value = "";
         document.getElementById('generatedCode').innerText = "----";
     }
@@ -247,16 +234,17 @@
         const id = document.getElementById('customCode').value.toUpperCase().trim();
         const rawMonto = document.getElementById('customMonto').value.trim();
         if(!id || rawMonto === "") return;
-        let montoFinal = rawMonto.includes("@") ? rawMonto : parseFloat(rawMonto);
+        let montoFinal = rawMonto.includes("@") ? rawMonto : truncar(parseFloat(rawMonto));
         saveTicket(id, montoFinal);
     }
 
     function saveTicket(id, monto) {
         const ahora = getTime();
-        const saldoReal = (typeof monto === 'string' && monto.includes("@")) ? 999999 : monto;
+        const saldoAGuardar = (typeof monto === 'string' && monto.includes("@")) ? monto : truncar(monto);
+        const saldoHist = (typeof saldoAGuardar === 'string') ? 999999 : saldoAGuardar;
         db.ref('codes/' + id).set({
-            saldo: monto, fecha: ahora, ultimaMod: ahora, saldoAnterior: saldoReal
-        }).then(() => { registrarMovimiento(id, "Carga Inicial", saldoReal, "Admin"); });
+            saldo: saldoAGuardar, fecha: ahora, ultimaMod: ahora, saldoAnterior: saldoHist
+        }).then(() => { registrarMovimiento(id, "Carga Inicial", saldoHist, "Admin"); });
     }
 
     async function añadirDinero() {
@@ -265,9 +253,10 @@
         if(!id || isNaN(extra)) return;
         const snap = await db.ref('codes/' + id).get();
         if(snap.exists()) {
-            const nuevo = snap.val().saldo + extra;
+            const actual = typeof snap.val().saldo === 'number' ? snap.val().saldo : 0;
+            const nuevo = truncar(actual + extra);
             await db.ref('codes/' + id).update({ saldo: nuevo, ultimaMod: getTime() });
-            registrarMovimiento(id, "Recarga", extra, "Caja");
+            registrarMovimiento(id, "Recarga", truncar(extra), "Caja");
             document.getElementById('extraMoney').value = "";
         }
     }
@@ -295,12 +284,7 @@
                 if(typeof saldoActual === 'number' && saldoActual > 0) {
                     registrarMovimiento(id, "Saldo Retirado por BAN", -saldoActual, "Admin");
                 }
-                await db.ref('codes/' + id).update({ 
-                    saldoAnterior: saldoActual, 
-                    saldo: -1, 
-                    motivoBan: mot, 
-                    ultimaMod: ahora 
-                });
+                await db.ref('codes/' + id).update({ saldoAnterior: saldoActual, saldo: -1, motivoBan: mot, ultimaMod: ahora });
                 registrarMovimiento(id, "TICKET BANEADO", 0, "Admin");
             }
         }
@@ -313,7 +297,7 @@
         if(snap.exists()) {
             const data = snap.val();
             if(data.saldo === -1) {
-                const restaurado = data.saldoAnterior || 0;
+                const restaurado = truncar(data.saldoAnterior || 0);
                 await db.ref('codes/' + id).update({ saldo: restaurado, ultimaMod: getTime(), motivoBan: null });
                 registrarMovimiento(id, "DESBANEO", restaurado, "Admin");
             } else { alert("No está baneado"); }
@@ -329,7 +313,8 @@
             items.sort((a,b) => new Date(b.ultimaMod) - new Date(a.ultimaMod));
             items.slice(0, 15).forEach(i => {
                 const isBan = i.saldo === -1;
-                list.innerHTML += `<tr class="${isBan?'ban-row':''}"><td>${i.id}</td><td>${isBan?'0':i.saldo}€</td><td>${i.fecha}</td><td>${i.ultimaMod}</td><td>${isBan?'🚫 BAN':'✅ OK'}</td></tr>`;
+                const saldoDisp = isBan ? '0.00' : (typeof i.saldo === 'number' ? truncar(i.saldo).toFixed(2) : i.saldo);
+                list.innerHTML += `<tr class="${isBan?'ban-row':''}"><td>${i.id}</td><td>${saldoDisp}€</td><td>${i.fecha}</td><td>${i.ultimaMod}</td><td>${isBan?'🚫 BAN':'✅ OK'}</td></tr>`;
             });
         });
     }
@@ -350,23 +335,20 @@
         const body = document.getElementById('bodyHistorialCompleto');
         body.innerHTML = "";
         let sumNeto = 0, count = 0;
-
         historialGlobal.forEach(mov => {
             const cumpleJuego = (fJuego === "TODOS" || mov.origen === fJuego);
             const cumpleTipo = (fTipo === "TODOS" || (fTipo === "GANANCIA" && mov.monto > 0) || (fTipo === "PERDIDA" && mov.monto < 0));
             const cumpleMonto = Math.abs(mov.monto) >= fMontoMin;
-
             if (cumpleJuego && cumpleTipo && cumpleMonto) {
                 sumNeto += mov.monto;
                 count++;
-                body.innerHTML += `<tr><td style="font-size:0.7rem;">${mov.fecha}</td><td style="color:var(--gold);">${mov.origen}</td><td>${mov.tipo}</td><td style="color:${mov.monto>0?'var(--green)':'var(--red)'};">${mov.monto}€</td></tr>`;
+                body.innerHTML += `<tr><td style="font-size:0.7rem;">${mov.fecha}</td><td style="color:var(--gold);">${mov.origen}</td><td>${mov.tipo}</td><td style="color:${mov.monto>0?'var(--green)':'var(--red)'};">${truncar(mov.monto).toFixed(2)}€</td></tr>`;
             }
         });
         document.getElementById('resMovs').innerText = count;
-        document.getElementById('resBalance').innerText = sumNeto.toFixed(2) + "€";
+        document.getElementById('resBalance').innerText = truncar(sumNeto).toFixed(2) + "€";
     }
 
-    // --- NUEVA FUNCIÓN PARA BORRAR ---
     async function borrarTicket() {
         const id = document.getElementById('manageId').value.toUpperCase().trim();
         if(!id) return;
