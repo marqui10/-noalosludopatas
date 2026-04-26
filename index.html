@@ -54,7 +54,6 @@
         }
         .btn-rules:hover { background: var(--gold); color: #000; }
 
-        /* --- MODAL DE JUEGO (FULLSCREEN) --- */
         #gameModal {
             display: none;
             position: fixed;
@@ -82,7 +81,6 @@
         }
         .close-game:hover { color: var(--gold); transform: scale(1.2); }
 
-        /* --- PANTALLA DE CASINO CERRADO --- */
         #closedScreen {
             display: none;
             position: fixed;
@@ -96,7 +94,6 @@
             padding: 20px;
         }
 
-        /* --- GRID DE JUEGOS --- */
         .lobby {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -130,7 +127,6 @@
         .game-title { color: var(--gold); font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
         .btn-play { margin-top: 15px; padding: 8px 25px; background: var(--gold); color: black; border-radius: 50px; font-weight: bold; font-size: 0.8rem; }
 
-        /* --- MODAL NORMAS --- */
         .modal-rules {
             display: none;
             position: fixed;
@@ -223,8 +219,8 @@
                 <li>Solo mayores de 18 años.</li>
                 <li>Prohibido el uso de scripts de terceros.</li>
                 <li>Las desconexiones durante el juego no devuelven la apuesta.</li>
-                <li>El saldo no es dinero real, no pierda la cabeza. Si se detecta un excesivo juego con actitud adictiva estamos en el derecho de banear temporalmente ese ticket, a beneficio de la salud mental del jugador.</li>
-                <li>El sistema de baneo es automático, pero puede ser manual. En caso de estarlo abra ticket para que le expliquen, si no se reclama en 1 semana se borrará el ticket y por consiguiente su saldo.</li>
+                <li>El saldo no es dinero real.</li>
+                <li>El sistema de baneo es automático.</li>
             </ul>
             <button onclick="toggleRules(false)" class="btn-play" style="width: 100%; cursor: pointer;">CERRAR</button>
         </div>
@@ -243,32 +239,26 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // --- SISTEMA DE SEGURIDAD Y REPORTE ---
-        
-        // Función para obtener el ticket desde la URL (ej. pagina.html?ticket=123)
         const getTicket = () => new URLSearchParams(window.location.search).get('ticket') || "Ticket No Identificado";
 
         function reportarYBloquear(motivo) {
             const ticketId = getTicket();
-            
-            // Enviamos el aviso a Firebase en una nueva rama 'seguridad'
             db.ref('intentos_seguridad/' + Date.now()).set({
                 ticket: ticketId,
                 evento: motivo,
                 fecha: new Date().toLocaleString("es-ES", { timeZone: "Europe/Madrid" }),
                 userAgent: navigator.userAgent
             }).then(() => {
-                // Redirigir y abrir pestaña nueva
                 window.open('https://google.com', '_blank');
                 window.location.href = 'https://google.com';
             });
         }
 
-        // Bloqueo de Clic Derecho
         document.addEventListener('contextmenu', e => e.preventDefault());
 
-        // Bloqueo de Teclas e Inspección
+        // --- LÓGICA DE TECLADO (SEGURIDAD + ATAJO ADMIN) ---
         window.addEventListener('keydown', (e) => {
+            // Seguridad: Bloqueo de inspección
             const isF12 = e.key === "F12";
             const isCtrlU = e.ctrlKey && (e.key === 'u' || e.key === 'U');
             const isInspector = e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i');
@@ -279,14 +269,18 @@
                 return false;
             }
 
-            // Mantener funcionalidad de Escape para cerrar modales
+            // Atajo Secreto: Alt + Control + Shift + ñ
+            if (e.altKey && e.ctrlKey && e.shiftKey && (e.key === 'ñ' || e.key === 'Ñ')) {
+                e.preventDefault();
+                window.open('adminruleta.html', '_blank');
+            }
+
             if (e.key === "Escape") {
                 closeGame();
                 toggleRules(false);
             }
         });
 
-        // --- SISTEMA DE CIERRE REMOTO ---
         db.ref('config').on('value', snap => {
             const data = snap.val();
             if (data && data.estado === 'cerrado') {
@@ -297,7 +291,6 @@
             }
         });
 
-        // --- GESTIÓN DE MODAL DE JUEGOS ---
         function openGame(url) {
             const modal = document.getElementById('gameModal');
             const iframe = document.getElementById('gameIframe');
