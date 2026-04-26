@@ -3,116 +3,153 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Acceso Restringido - Casino Elite</title>
+    <title>TERMINAL DE SEGURIDAD - VIOLACIÓN DETECTADA</title>
     <style>
         :root {
-            --accent-red: #ff3e3e;
-            --gold: #bf953f;
-            --dark-bg: #0a0c1a;
-            --panel-bg: #15183a;
-            --text: #ffffff;
+            --red-alert: #ff0000;
+            --deep-bg: #050505;
+            --panel: #0a0a0a;
+            --gold-muted: #8a6d3b;
         }
 
         body {
-            font-family: 'Segoe UI', sans-serif;
-            background: var(--dark-bg);
-            background-image: radial-gradient(circle at center, #1e224f 0%, #0a0c1a 100%);
-            color: var(--text);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--deep-bg);
+            color: #e0e0e0;
             height: 100vh;
             margin: 0;
             display: flex;
             justify-content: center;
             align-items: center;
-            text-align: center;
-            overflow: hidden;
+            text-transform: uppercase;
         }
 
-        .container {
-            background: var(--panel-bg);
-            padding: 50px;
-            border-radius: 20px;
-            border: 2px solid var(--accent-red);
-            box-shadow: 0 0 50px rgba(255, 62, 62, 0.2);
-            max-width: 500px;
+        .security-container {
+            width: 100%;
+            max-width: 550px;
+            background: var(--panel);
+            border: 2px solid var(--red-alert);
+            padding: 40px;
+            box-shadow: 0 0 100px rgba(255, 0, 0, 0.15);
+            position: relative;
         }
 
-        .icon {
-            font-size: 80px;
-            margin-bottom: 20px;
+        .header {
+            border-bottom: 2px solid var(--red-alert);
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+        }
+
+        .alert-icon {
+            font-size: 60px;
+            color: var(--red-alert);
             display: block;
+            margin-bottom: 10px;
         }
 
         h1 {
-            color: var(--accent-red);
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-bottom: 15px;
+            font-size: 1.8rem;
+            margin: 0;
+            letter-spacing: 4px;
+            color: var(--red-alert);
         }
 
-        p {
-            font-size: 1.1rem;
+        .message-body {
             line-height: 1.6;
-            color: #ccc;
+            letter-spacing: 1px;
+            font-size: 0.95rem;
         }
 
-        .ticket-info {
-            margin-top: 25px;
-            padding: 15px;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 10px;
-            border: 1px dashed var(--gold);
-            color: var(--gold);
-            font-weight: bold;
+        .status-box {
+            background: #111;
+            border-left: 5px solid var(--red-alert);
+            padding: 20px;
+            margin: 25px 0;
+            text-align: left;
         }
 
-        .btn-back {
-            margin-top: 30px;
-            padding: 12px 30px;
-            background: var(--gold);
+        .status-line {
+            display: block;
+            margin-bottom: 8px;
+            font-family: 'Consolas', monospace;
+            font-size: 0.85rem;
+        }
+
+        .danger-label {
+            background: var(--red-alert);
             color: black;
-            border: none;
-            border-radius: 5px;
-            font-weight: bold;
-            cursor: pointer;
-            text-decoration: none;
+            padding: 5px 10px;
+            font-weight: 900;
             display: inline-block;
+            margin-top: 10px;
+        }
+
+        .footer-note {
+            color: #666;
+            font-size: 0.8rem;
+            margin-top: 30px;
+            border-top: 1px solid #222;
+            padding-top: 15px;
+        }
+
+        .btn-exit {
+            display: inline-block;
+            margin-top: 25px;
+            padding: 12px 40px;
+            border: 1px solid var(--gold-muted);
+            color: var(--gold-muted);
+            text-decoration: none;
+            font-weight: bold;
             transition: 0.3s;
         }
 
-        .btn-back:hover {
-            transform: scale(1.05);
-            box-shadow: 0 0 20px var(--gold);
+        .btn-exit:hover {
+            background: var(--gold-muted);
+            color: black;
         }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <span class="icon">🚫</span>
-        <h1>ACTIVIDAD SOSPECHOSA</h1>
-        <p>Se ha detectado un intento de manipulación del código fuente o acceso a herramientas de desarrollador.</p>
-        
-        <div class="ticket-info">
-            SU TICKET HA SIDO REPORTADO POR SEGURIDAD
+    <div class="security-container">
+        <div class="header">
+            <span class="alert-icon">⚠</span>
+            <h1>ACCESO RESTRINGIDO</h1>
         </div>
 
-        <p style="font-size: 0.9rem; margin-top: 20px;">
-            Esta acción ha sido registrada en nuestra base de datos con su ID de ticket y dirección IP. El uso de herramientas externas viola las normas de <strong>Casino Elite</strong>.
-        </p>
+        <div class="message-body">
+            <p>Se ha activado el <strong>Protocolo de Defensa Activa</strong> tras detectar un intento de intrusión en las herramientas de desarrollador.</p>
 
-        <a href="index.html" class="btn-back">VOLVER AL LOBBY</a>
+            <div class="status-box">
+                <span class="status-line">> EVENTO: Manipulación de DOM/Debugger</span>
+                <span class="status-line">> REGISTRO: Guardado en log de Auditoría</span>
+                <span class="status-line">> TICKET ID: <span style="color:white;">RECOPILANDO DATOS...</span></span>
+                <span class="status-line">> ESTADO: <span style="color:var(--red-alert);">BLOQUEO PREVENTIVO</span></span>
+                <div class="danger-label">CUENTA BAJO REVISIÓN TÉCNICA</div>
+            </div>
+
+            <p style="color: #888;">Cualquier intento de evadir este bloqueo resultará en la inhabilitación permanente de sus credenciales y la confiscación de activos vinculados al ticket.</p>
+        </div>
+
+        <div class="footer-note">
+            SISTEMA DE SEGURIDAD CENTRALIZADO - CASINO ELITE V4.3
+        </div>
+
+        <a href="index.html" class="btn-exit">VOLVER AL INICIO</a>
     </div>
 
     <script>
-        // Bloqueamos también aquí el clic derecho para mantener la consistencia
+        // Bloqueo total de interacción
         document.addEventListener('contextmenu', e => e.preventDefault());
         
-        // Bloqueo de teclas de nuevo por si acaso
         window.addEventListener('keydown', (e) => {
             if (e.key === "F12" || (e.ctrlKey && e.shiftKey && e.key === 'I') || (e.ctrlKey && e.key === 'u')) {
                 e.preventDefault();
             }
         });
+
+        // Simular que el sistema sigue "trabajando" en segundo plano
+        console.log("%cSEGURIDAD: Intento de inspección registrado.", "color: red; font-size: 20px; font-weight: bold;");
     </script>
 </body>
 </html>
