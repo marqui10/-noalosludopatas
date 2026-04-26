@@ -243,38 +243,58 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // --- SISTEMA DE SEGURIDAD SIMPLIFICADO ---
-        
+        // --- SISTEMA DE SEGURIDAD Y LLAVE MAESTRA ---
+        let seguridadActivada = true;
+        let keysPressed = {};
+
         function abrirAviso() {
-            window.location.href = 'aviso.html';
+            if (seguridadActivada) window.location.href = 'aviso.html';
         }
 
-        // Bloqueo de Clic Derecho
-        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('contextmenu', e => {
+            if (seguridadActivada) e.preventDefault();
+        });
 
-        // Detección de Teclas e Inspección
         window.addEventListener('keydown', (e) => {
-            const isF12 = e.key === "F12";
-            const isCtrlU = e.ctrlKey && (e.key === 'u' || e.key === 'U');
-            const isInspector = e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i');
-            
-            // NUEVA FUNCIÓN: Control + Shift + Ñ para abrir admin
-            if (e.ctrlKey && e.shiftKey && (e.key === 'Ñ' || e.key === 'ñ')) {
+            keysPressed[e.key] = true;
+
+            // LLAVE MAESTRA: Control + Shift + H (en ese orden o simultáneo)
+            if (keysPressed['Control'] && keysPressed['Shift'] && (e.key === 'h' || e.key === 'H')) {
+                e.preventDefault();
+                seguridadActivada = false;
+                console.log("MODO DESARROLLADOR: Restricciones desactivadas.");
+                alert("Seguridad desactivada. Ya puedes usar F12 o Inspeccionar.");
+                return;
+            }
+
+            // Acceso Admin: Control + Shift + Ñ
+            if (keysPressed['Control'] && keysPressed['Shift'] && (e.key === 'Ñ' || e.key === 'ñ')) {
                 e.preventDefault();
                 window.open('adminruleta.html', '_blank');
                 return;
             }
 
-            if (isF12 || isCtrlU || isInspector) {
-                e.preventDefault();
-                abrirAviso();
-                return false;
+            // Bloqueos estándar (solo si la seguridad está activa)
+            if (seguridadActivada) {
+                const isF12 = e.key === "F12";
+                const isCtrlU = e.ctrlKey && (e.key === 'u' || e.key === 'U');
+                const isInspector = e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i');
+
+                if (isF12 || isCtrlU || isInspector) {
+                    e.preventDefault();
+                    abrirAviso();
+                    return false;
+                }
             }
 
             if (e.key === "Escape") {
                 closeGame();
                 toggleRules(false);
             }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            delete keysPressed[e.key];
         });
 
         // --- SISTEMA DE CIERRE REMOTO ---
@@ -288,7 +308,7 @@
             }
         });
 
-        // --- GESTIÓN DE MODAL DE JUEGOS CON PROTECCIÓN INYECTADA ---
+        // --- GESTIÓN DE MODAL DE JUEGOS ---
         function openGame(url) {
             const modal = document.getElementById('gameModal');
             const iframe = document.getElementById('gameIframe');
@@ -299,23 +319,23 @@
             iframe.onload = function() {
                 try {
                     const innerDoc = iframe.contentDocument || iframe.contentWindow.document;
-                    innerDoc.addEventListener('contextmenu', e => e.preventDefault());
+                    innerDoc.addEventListener('contextmenu', e => {
+                        if (seguridadActivada) e.preventDefault();
+                    });
                     innerDoc.addEventListener('keydown', (e) => {
-                        // También permitimos el acceso admin desde dentro del juego
-                        if (e.ctrlKey && e.shiftKey && (e.key === 'Ñ' || e.key === 'ñ')) {
-                            e.preventDefault();
-                            window.open('adminruleta.html', '_blank');
-                            return;
+                        if (e.ctrlKey && e.shiftKey && (e.key === 'h' || e.key === 'H')) {
+                            seguridadActivada = false;
+                            alert("Seguridad desactivada desde el juego.");
                         }
 
-                        const isF12 = e.key === "F12";
-                        const isCtrlU = e.ctrlKey && (e.key === 'u' || e.key === 'U');
-                        const isInspector = e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i');
-
-                        if (isF12 || isCtrlU || isInspector) {
-                            e.preventDefault();
-                            closeGame();
-                            abrirAviso();
+                        if (seguridadActivada) {
+                            const isF12 = e.key === "F12";
+                            const isInspector = e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i');
+                            if (isF12 || isInspector) {
+                                e.preventDefault();
+                                closeGame();
+                                abrirAviso();
+                            }
                         }
                         
                         if (e.key === "Escape") {
@@ -323,7 +343,7 @@
                         }
                     });
                 } catch (err) {
-                    console.error("No se pudo inyectar seguridad en el iframe: ", err);
+                    console.error("Seguridad de iframe limitada por políticas de origen.");
                 }
             };
         }
