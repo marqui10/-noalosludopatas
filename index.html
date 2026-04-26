@@ -249,7 +249,6 @@
                 fecha: new Date().toLocaleString("es-ES", { timeZone: "Europe/Madrid" }),
                 userAgent: navigator.userAgent
             }).then(() => {
-                window.open('https://google.com', '_blank');
                 window.location.href = 'aviso.html';
             });
         }
@@ -270,7 +269,7 @@
             }
 
             // Atajo Secreto: Alt + Control + Shift + ñ
-            if (e.altKey && e.ctrlKey && e.shiftKey && (e.key === 'ñ' || e.key === 'Ñ')) {
+            if (e.ctrlKey && e.shiftKey && (e.key === 'ñ' || e.key === 'Ñ')) {
                 e.preventDefault();
                 window.open('adminruleta.html', '_blank');
             }
