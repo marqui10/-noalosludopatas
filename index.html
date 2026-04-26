@@ -243,6 +243,49 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
+        // --- SISTEMA DE SEGURIDAD Y REPORTE ---
+        
+        // Función para obtener el ticket desde la URL (ej. pagina.html?ticket=123)
+        const getTicket = () => new URLSearchParams(window.location.search).get('ticket') || "Ticket No Identificado";
+
+        function reportarYBloquear(motivo) {
+            const ticketId = getTicket();
+            
+            // Enviamos el aviso a Firebase en una nueva rama 'seguridad'
+            db.ref('intentos_seguridad/' + Date.now()).set({
+                ticket: ticketId,
+                evento: motivo,
+                fecha: new Date().toLocaleString("es-ES", { timeZone: "Europe/Madrid" }),
+                userAgent: navigator.userAgent
+            }).then(() => {
+                // Redirigir y abrir pestaña nueva
+                window.open('https://google.com', '_blank');
+                window.location.href = 'https://google.com';
+            });
+        }
+
+        // Bloqueo de Clic Derecho
+        document.addEventListener('contextmenu', e => e.preventDefault());
+
+        // Bloqueo de Teclas e Inspección
+        window.addEventListener('keydown', (e) => {
+            const isF12 = e.key === "F12";
+            const isCtrlU = e.ctrlKey && (e.key === 'u' || e.key === 'U');
+            const isInspector = e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i');
+
+            if (isF12 || isCtrlU || isInspector) {
+                e.preventDefault();
+                reportarYBloquear(`Intento de acceso: ${e.key}`);
+                return false;
+            }
+
+            // Mantener funcionalidad de Escape para cerrar modales
+            if (e.key === "Escape") {
+                closeGame();
+                toggleRules(false);
+            }
+        });
+
         // --- SISTEMA DE CIERRE REMOTO ---
         db.ref('config').on('value', snap => {
             const data = snap.val();
@@ -260,13 +303,13 @@
             const iframe = document.getElementById('gameIframe');
             iframe.src = url;
             modal.style.display = 'block';
-            document.body.style.overflow = 'hidden'; // Bloquea scroll del lobby
+            document.body.style.overflow = 'hidden'; 
         }
 
         function closeGame() {
             const modal = document.getElementById('gameModal');
             const iframe = document.getElementById('gameIframe');
-            iframe.src = ""; // Corta procesos del juego al cerrar
+            iframe.src = ""; 
             modal.style.display = 'none';
             document.body.style.overflow = 'auto';
         }
@@ -274,14 +317,6 @@
         function toggleRules(show) {
             document.getElementById('rulesModal').style.display = show ? 'flex' : 'none';
         }
-
-        // Cerrar modales con la tecla Escape
-        window.addEventListener('keydown', (e) => {
-            if (e.key === "Escape") {
-                closeGame();
-                toggleRules(false);
-            }
-        });
     </script>
 </body>
 </html>
