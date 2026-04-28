@@ -22,6 +22,7 @@
             justify-content: center;
             align-items: center;
             text-transform: uppercase;
+            overflow: hidden;
         }
 
         .security-container {
@@ -101,6 +102,7 @@
             text-decoration: none;
             font-weight: bold;
             transition: 0.3s;
+            cursor: pointer;
         }
 
         .btn-exit:hover {
@@ -123,35 +125,87 @@
             <div class="status-box">
                 <span class="status-line">> EVENTO: Manipulación de DOM/Debugger</span>
                 <span class="status-line">> REGISTRO: Guardado en log de Auditoría</span>
-                <span class="status-line">> TICKET ID: <span style="color:white;">RECOPILANDO DATOS...</span></span>
+                <span class="status-line">> TICKET ID: <span id="ticket-id" style="color:white; font-weight: bold;">GENERANDO...</span></span>
                 <span class="status-line">> ESTADO: <span style="color:var(--red-alert);">AVISO DE SOPORTE</span></span>
                 <div class="danger-label">CUENTA BAJO REVISIÓN TÉCNICA</div>
             </div>
 
             <p style="color: #888;">Cualquier intento de evadir este bloqueo resultará en la inhabilitación permanente de sus credenciales y la confiscación de activos vinculados al ticket.</p>      
 
-            <p style="color:var(--red-alert);">Contacte con soporte de inmediato para recurrir a este aviso, por errores o otros o será baneado.<span class="danger-label">(Todos nos equivocamos, por una no pasa nada)</span></p>
+            <p style="color:var(--red-alert);">Contacte con soporte de inmediato para recurrir a este aviso, por errores u otros o será baneado.<span class="danger-label">(Todos nos equivocamos, por una no pasa nada)</span></p>
         </div>
 
         <div class="footer-note">
             SISTEMA DE SEGURIDAD CENTRALIZADO - CASINO ELITE V4.3
         </div>
 
-        <a href="index.html" class="btn-exit">VOLVER AL INICIO</a>
+        <a href="https://marqui10.github.io/-noalosludopatas/index.html" class="btn-exit">VOLVER AL INICIO</a>
     </div>
 
-    <script>
-        // Bloqueo total de interacción
-        document.addEventListener('contextmenu', e => e.preventDefault());
-        
-        window.addEventListener('keydown', (e) => {
-            if (e.key === "F12" || (e.ctrlKey && e.shiftKey && e.key === 'I') || (e.ctrlKey && e.key === 'u')) {
-                e.preventDefault();
-            }
-        });
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 
-        // Simular que el sistema sigue "trabajando" en segundo plano
-        console.log("%cSEGURIDAD: Intento de inspección registrado.", "color: red; font-size: 20px; font-weight: bold;");
+    <script>
+        // --- CONFIGURACIÓN DE FIREBASE ---
+        const firebaseConfig = {
+            apiKey: "TU_API_KEY",
+            databaseURL: "https://TU_PROYECTO.firebaseio.com",
+            projectId: "TU_PROYECTO_ID",
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        (function() {
+            // 1. Generar o recuperar el código BAN-XXX
+            let userBanCode = localStorage.getItem('user_ban_code');
+            if (!userBanCode) {
+                const randomNum = Math.floor(Math.random() * 900) + 100;
+                userBanCode = 'BAN-' + randomNum;
+                localStorage.setItem('user_ban_code', userBanCode);
+            }
+
+            // 2. Mostrar código en pantalla
+            const ticketDisplay = document.getElementById('ticket-id');
+            if (ticketDisplay) ticketDisplay.innerText = userBanCode;
+
+            // 3. Forzar estado de baneo en LocalStorage
+            localStorage.setItem('status', 'ban');
+
+            // 4. Registrar en Firebase (Hora de España)
+            const ahora = new Date().toLocaleString("es-ES", {timeZone: "Europe/Madrid"});
+            db.ref('infracciones/' + userBanCode).set({
+                fecha: ahora,
+                url: window.location.href,
+                navegador: navigator.userAgent,
+                estado: "bloqueado"
+            });
+
+            // 5. Escuchar desbaneo remoto
+            db.ref('lista_negra/' + userBanCode).on('value', (snapshot) => {
+                if (snapshot.val() === false) {
+                    localStorage.removeItem('status');
+                    localStorage.removeItem('user_ban_code');
+                    alert("Tu acceso ha sido restaurado por el equipo técnico.");
+                    window.location.href = "https://marqui10.github.io/-noalosludopatas/index.html";
+                }
+            });
+
+            // --- PROTECCIONES DE LA PÁGINA ---
+            document.addEventListener('contextmenu', e => e.preventDefault());
+            window.addEventListener('keydown', (e) => {
+                const forbidden = [
+                    'F12', 
+                    (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')),
+                    (e.ctrlKey && e.key === 'u')
+                ];
+                if (forbidden.some(cond => cond === true || (typeof cond === 'boolean' && cond))) {
+                    e.preventDefault();
+                }
+            });
+
+            console.log("%cSEGURIDAD: Acceso restringido para " + userBanCode, "color: red; font-size: 18px;");
+        })();
     </script>
 </body>
 </html>
