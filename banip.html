@@ -2,29 +2,29 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Sistema de Baneo - Corregido</title>
+    <title>Seguridad Avanzada</title>
     <style>
-        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: #f0f2f5; margin: 0; }
-        .card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 8px 16px rgba(0,0,0,0.1); text-align: center; }
-        button { padding: 12px 24px; background-color: #dc3545; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #eef2f3; margin: 0; }
+        .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; }
+        button { background: #2f3542; color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; }
     </style>
 </head>
 <body>
 
     <div class="card">
-        <h1>Control de Acceso</h1>
-        <p>Tu IP: <span id="ip">Detectando...</span></p>
-        <button id="btn">Banear mi IP</button>
+        <h1>Protección de Acceso</h1>
+        <p>ID de Dispositivo: <br><small id="device-id">Generando...</small></p>
+        <button id="btnBan">Banear este dispositivo</button>
     </div>
 
-    <!-- CARGA DE LIBRERÍAS CON RUTAS COMPLETAS (v8 COMPAT) -->
-    <script src="https://gstatic.com"></script>
-    <script src="https://gstatic.com"></script>
+    <!-- Firebase v8 Compat -->
+    <script src="https://cloudflare.com"></script>
+    <script src="https://cloudflare.com"></script>
 
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyAsAVsv0iwnv4cdDNkSyo1jBIYvCyn_pCY",
-            authDomain: "rascay-d6d3d.firebaseapp.com",
+            authDomain: "://firebaseapp.com",
             databaseURL: "https://firebasedatabase.app",
             projectId: "rascay-d6d3d",
             storageBucket: "rascay-d6d3d.firebasestorage.app",
@@ -32,42 +32,43 @@
             appId: "1:991120220829:web:15c8dfa4677f701e582a74"
         };
 
-        // Inicializar
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
+        firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        async function init() {
-            try {
-                const res = await fetch('https://ipify.org');
-                const data = await res.json();
-                const userIp = data.ip;
-                const safeIp = userIp.split('.').join('_');
-                
-                document.getElementById('ip').innerText = userIp;
-
-                // 1. Verificar si está baneado
-                db.ref('baneados/' + safeIp).once('value', (snapshot) => {
-                    if (snapshot.val() === true) {
-                        alert("Acceso denegado.");
-                        window.location.replace("https://www.google.com");
-                    }
-                });
-
-                // 2. Acción de baneo
-                document.getElementById('btn').onclick = function() {
-                    db.ref('baneados/' + safeIp).set(true).then(() => {
-                        alert("IP Baneada correctamente.");
-                        location.reload();
-                    });
-                };
-            } catch (e) {
-                console.error("Error crítico:", e);
+        // --- FUNCIÓN PARA OBTENER O CREAR UN ID ÚNICO ---
+        function getDeviceId() {
+            let id = localStorage.getItem('mi_identificador_unico');
+            if (!id) {
+                // Generamos un ID aleatorio si no existe
+                id = 'dev_' + Math.random().toString(36).substr(2, 9) + Date.now();
+                localStorage.setItem('mi_identificador_unico', id);
             }
+            return id;
         }
 
-        init();
+        const deviceId = getDeviceId();
+        document.getElementById('device-id').innerText = deviceId;
+
+        async function checkBan() {
+            // Revisamos en la carpeta 'dispositivos_baneados' de Firebase
+            db.ref('dispositivos_baneados/' + deviceId).once('value', (snapshot) => {
+                if (snapshot.val() === true) {
+                    alert("Este dispositivo ha sido bloqueado permanentemente.");
+                    window.location.replace("https://google.com");
+                }
+            });
+        }
+
+        // --- ACCIÓN DE BANEO ---
+        document.getElementById('btnBan').onclick = () => {
+            db.ref('dispositivos_baneados/' + deviceId).set(true).then(() => {
+                alert("Dispositivo baneado.");
+                location.reload();
+            });
+        };
+
+        // Ejecutar al cargar
+        checkBan();
     </script>
 </body>
 </html>
