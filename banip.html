@@ -2,27 +2,31 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Seguridad de Dispositivo</title>
+    <title>Sistema de Baneo por ID</title>
     <style>
-        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #f0f2f5; margin: 0; }
-        .card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; }
-        button { padding: 12px 24px; background: #dc3545; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #f4f7f6; margin: 0; }
+        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); text-align: center; max-width: 400px; }
+        #did { display: block; background: #eee; padding: 10px; margin: 15px 0; border-radius: 5px; font-family: monospace; word-break: break-all; color: #333; }
+        button { background: #e74c3c; color: white; border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; }
+        button:hover { background: #c0392b; }
     </style>
 </head>
 <body>
 
     <div class="card">
-        <h1>Control de Acceso</h1>
-        <p>ID Dispositivo: <br><strong id="did">Detectando...</strong></p>
-        <button id="btn">Banear este dispositivo</button>
+        <h2>Control de Acceso</h2>
+        <p>Tu identificador único es:</p>
+        <span id="did">Generando ID...</span>
+        <button id="btnBan">Banear este dispositivo</button>
+        <p id="status" style="font-size: 12px; margin-top: 10px; color: #666;"></p>
     </div>
 
-    <!-- CARGA DESDE JSDELIVR (EVITA ERRORES MIME Y CORS DE GSTATIC/CLOUDFLARE) -->
+    <!-- Carga desde JSDelivr para máxima compatibilidad -->
     <script src="https://jsdelivr.net"></script>
     <script src="https://jsdelivr.net"></script>
 
     <script>
-        // Tu configuración
+        // Tu configuración de Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyAsAVsv0iwnv4cdDNkSyo1jBIYvCyn_pCY",
             authDomain: "://firebaseapp.com",
@@ -34,36 +38,45 @@
         };
 
         // Inicializar Firebase
-        firebase.initializeApp(firebaseConfig);
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
         const db = firebase.database();
 
-        // Obtener o crear ID único en el navegador
-        function obtenerID() {
-            let id = localStorage.getItem('id_seguridad');
+        // Función para obtener ID persistente
+        function obtenerIdentificador() {
+            let id = localStorage.getItem('user_token');
             if (!id) {
-                id = 'user-' + Math.random().toString(36).substring(2, 15);
-                localStorage.setItem('id_seguridad', id);
+                // Si no hay ID, creamos uno nuevo con marca de tiempo
+                id = 'ID-' + Math.random().toString(36).substr(2, 10) + '-' + Date.now();
+                localStorage.setItem('user_token', id);
             }
             return id;
         }
 
-        const miID = obtenerID();
+        const miID = obtenerIdentificador();
         document.getElementById('did').innerText = miID;
 
-        // Verificar baneo
-        db.ref('baneados/' + miID).once('value', (snapshot) => {
+        // 1. Verificar Baneo al cargar
+        db.ref('baneados/' + miID).on('value', (snapshot) => {
             if (snapshot.val() === true) {
-                alert("ACCESO BLOQUEADO");
-                window.location.replace("https://google.com");
+                alert("LO SENTIMOS: Este dispositivo tiene el acceso prohibido.");
+                window.location.replace("https://www.google.com");
             }
         });
 
-        // Función del botón
-        document.getElementById('btn').onclick = function() {
-            db.ref('baneados/' + miID).set(true).then(() => {
-                alert("Dispositivo baneado.");
-                location.reload();
-            });
+        // 2. Acción del botón para banear
+        document.getElementById('btnBan').onclick = function() {
+            document.getElementById('status').innerText = "Procesando baneo...";
+            db.ref('baneados/' + miID).set(true)
+                .then(() => {
+                    alert("ID registrada en la lista negra.");
+                    location.reload();
+                })
+                .catch((error) => {
+                    console.error(error);
+                    document.getElementById('status').innerText = "Error: Verifica las reglas de Firebase.";
+                });
         };
     </script>
 </body>
