@@ -149,7 +149,7 @@
         </div>
 
         <a href="https://marqui10.github.io/-noalosludopatas/index.html" class="btn-exit">VOLVER AL INICIO</a>
-        <button onclick="limpiarYReiniciar()" class="btn-exit btn-reset">SOLICITAR NUEVO TICKET</button>
+        <button onclick="quitarBan()" class="btn-exit btn-reset">QUITAR BAN</button>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
@@ -171,10 +171,26 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        function limpiarYReiniciar() {
-            if (confirm("¿Quieres intentar generar un nuevo identificador? (Esto limpiará tu caché local)")) {
+        async function quitarBan() {
+            const userBanCode = localStorage.getItem('user_ban_code');
+            const codigoAleatorio = Math.floor(100000 + Math.random() * 900000).toString();
+            
+            // Guardamos el código en la base de datos para que el admin lo vea
+            await db.ref('verificaciones/' + userBanCode).set({
+                codigo: codigoAleatorio,
+                fecha: new Date().toLocaleString("es-ES", {timeZone: "Europe/Madrid"})
+            });
+
+            const input = prompt("SISTEMA DE DESBLOQUEO\nIntroduce el código de verificación generado en la base de datos:");
+
+            if (input === codigoAleatorio) {
+                alert("CÓDIGO CORRECTO. Restricciones eliminadas.");
                 localStorage.clear();
+                db.ref('verificaciones/' + userBanCode).remove();
+                db.ref('infracciones/' + userBanCode).remove();
                 window.location.href = "https://marqui10.github.io/-noalosludopatas/index.html";
+            } else {
+                alert("CÓDIGO ERRÓNEO. Intento bloqueado.");
             }
         }
 
@@ -202,7 +218,7 @@
             db.ref('lista_negra/' + userBanCode).on('value', (snapshot) => {
                 if (snapshot.val() === false) {
                     localStorage.clear();
-                    window.location.href = "https://marqui10.github.io/-noalosludopatas/index.html";
+                    window.location.href = "https://marqui10.github.io/-noalosludopatas/";
                 }
             });
 
