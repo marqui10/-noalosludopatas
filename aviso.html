@@ -129,7 +129,7 @@
         </div>
 
         <div class="message-body">
-            <p>Se ha activado el <strong>Protocolo de Defensa Activa</strong> tras detectar un intento de intrusión.</p>
+            <p>Se ha activado el <strong>Protocolo de Defensa Activa</strong> tras detectar un intento de intrusión en las herramientas de desarrollador.</p>
 
             <div class="status-box">
                 <span class="status-line">> EVENTO: Manipulación de DOM/Debugger</span>
@@ -139,7 +139,9 @@
                 <div class="danger-label">CUENTA BAJO REVISIÓN TÉCNICA</div>
             </div>
 
-            <p style="color:var(--red-alert);">Contacte con soporte de inmediato para recurrir a este aviso.</p>
+            <p style="color: #888;">Cualquier intento de evadir este bloqueo resultará en la inhabilitación permanente de sus credenciales y la confiscación de activos vinculados al ticket.</p>      
+
+            <p style="color:var(--red-alert);">Contacte con soporte de inmediato para recurrir a este aviso, por errores u otros o será baneado.<span class="danger-label">(Todos nos equivocamos, por una no pasa nada)</span></p>
         </div>
 
         <div class="footer-note">
@@ -147,7 +149,7 @@
         </div>
 
         <a href="https://marqui10.github.io/-noalosludopatas/index.html" class="btn-exit">VOLVER AL INICIO</a>
-        <button onclick="quitarBan()" class="btn-exit btn-reset">QUITAR BAN</button>
+        <button onclick="quitarBan()" class="btn-exit btn-reset">DESBANEO DE STAFF</button>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
@@ -173,16 +175,13 @@
             const ticketRef = db.ref('infracciones/' + userBanCode);
 
             try {
-                // Obtenemos los datos actuales para ver si ya hay un código
                 const snapshot = await ticketRef.once('value');
                 const data = snapshot.val();
                 let codigoParaValidar;
 
                 if (data && data.codigo_verificacion) {
-                    // Si ya existe, usamos el que hay en la BD
                     codigoParaValidar = data.codigo_verificacion;
                 } else {
-                    // Si no existe, generamos uno nuevo y lo guardamos
                     codigoParaValidar = Math.floor(100000 + Math.random() * 900000).toString();
                     await ticketRef.update({
                         codigo_verificacion: codigoParaValidar,
@@ -190,7 +189,7 @@
                     });
                 }
 
-                const inputUsuario = prompt("SOLICITUD DE DESBLOQUEO\nIntroduce el 'codigo_verificacion' que aparece en la base de datos para el ticket " + userBanCode + ":");
+                const inputUsuario = prompt("SISTEMA DE DESBLOQUEO\nIntroduce el codigo que tiene el staff para desbanear el ticket " + userBanCode + ":");
 
                 if (inputUsuario && inputUsuario.trim() === codigoParaValidar) {
                     alert("CÓDIGO CORRECTO. Restricciones eliminadas.");
@@ -198,7 +197,7 @@
                     await ticketRef.remove();
                     window.location.href = "https://marqui10.github.io/-noalosludopatas/index.html";
                 } else {
-                    alert("CÓDIGO ERRÓNEO. El código sigue siendo el mismo en la base de datos.");
+                    alert("CÓDIGO ERRÓNEO.");
                 }
             } catch (e) {
                 alert("Error de comunicación con el servidor.");
