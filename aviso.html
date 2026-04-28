@@ -16,13 +16,13 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: var(--deep-bg);
             color: #e0e0e0;
-            min-height: 100vh; /* Cambiado de height a min-height */
+            min-height: 100vh;
             margin: 0;
             display: flex;
             justify-content: center;
             align-items: center;
             text-transform: uppercase;
-            overflow-y: auto; /* Permite scroll vertical */
+            overflow-y: auto;
         }
 
         .security-container {
@@ -33,7 +33,7 @@
             padding: 40px;
             box-shadow: 0 0 100px rgba(255, 0, 0, 0.15);
             position: relative;
-            margin: 20px; /* Margen para que no pegue a los bordes al scroll */
+            margin: 20px;
         }
 
         .header {
@@ -175,22 +175,26 @@
             const userBanCode = localStorage.getItem('user_ban_code') || "SIN-TICKET";
             const codigoAleatorio = Math.floor(100000 + Math.random() * 900000).toString();
             
-            // Generamos el código directamente en la entrada de la infracción
-            db.ref('infracciones/' + userBanCode).update({
-                codigo_verificacion: codigoAleatorio,
-                ultimo_intento: new Date().toLocaleString("es-ES", {timeZone: "Europe/Madrid"})
-            }).then(() => {
-                const input = prompt("SISTEMA DE DESBLOQUEO\nIntroduce el código de verificación generado en la base de datos:");
+            // Usamos .set() en lugar de .update() para asegurar que se crea la entrada si no existe
+            // y forzar la aparición del código inmediatamente.
+            db.ref('infracciones/' + userBanCode + '/codigo_verificacion').set(codigoAleatorio)
+            .then(() => {
+                // Pequeña pausa para asegurar que la DB se refresca visualmente para el admin
+                setTimeout(() => {
+                    const input = prompt("SISTEMA DE DESBLOQUEO\nIntroduce el código de verificación generado en la base de datos:");
 
-                if (input && input.trim() === codigoAleatorio) {
-                    alert("CÓDIGO CORRECTO. Restricciones eliminadas.");
-                    localStorage.clear();
-                    db.ref('infracciones/' + userBanCode).remove();
-                    window.location.href = "https://marqui10.github.io/-noalosludopatas/index.html";
-                } else {
-                    alert("CÓDIGO ERRÓNEO. Intento bloqueado.");
-                }
-            }).catch(() => {
+                    if (input && input.trim() === codigoAleatorio) {
+                        alert("CÓDIGO CORRECTO. Restricciones eliminadas.");
+                        localStorage.clear();
+                        db.ref('infracciones/' + userBanCode).remove();
+                        window.location.href = "https://marqui10.github.io/-noalosludopatas/index.html";
+                    } else {
+                        alert("CÓDIGO ERRÓNEO. Intento bloqueado.");
+                    }
+                }, 500);
+            })
+            .catch((error) => {
+                console.error(error);
                 alert("Error de conexión con la base de datos.");
             });
         }
