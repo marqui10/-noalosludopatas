@@ -2,28 +2,27 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Baneo</title>
+    <title>Sistema de Baneo - GitHub Pages</title>
     <style>
-        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; background-color: #f0f2f5; }
-        .card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 8px 16px rgba(0,0,0,0.1); text-align: center; }
-        #btnBanear { padding: 12px 24px; background-color: #dc3545; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: #f0f2f5; }
+        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center; }
+        button { padding: 10px 20px; background: red; color: white; border: none; border-radius: 5px; cursor: pointer; }
     </style>
 </head>
 <body>
 
     <div class="card">
         <h1>Control de Acceso</h1>
-        <p>Tu IP: <span id="display-ip">Detectando...</span></p>
-        <button id="btnBanear">Banear mi IP</button>
-        <p id="msg" style="color: red;"></p>
+        <p>Tu IP: <span id="ip">Detectando...</span></p>
+        <button id="btn">Banear mi IP</button>
     </div>
 
-    <!-- USAMOS CLOUDFLARE CDN PARA EVITAR ERRORES DE RUTA -->
-    <script type="module">
-        import { initializeApp } from "https://gstatic.com";
-        import { getDatabase, ref, get, child, set } from "https://gstatic.com";
+    <!-- Scripts de Firebase VERSION COMPAT (Más estables para navegadores) -->
+    <script src="https://gstatic.com"></script>
+    <script src="https://gstatic.com"></script>
 
+    <script>
+        // Tu configuración
         const firebaseConfig = {
             apiKey: "AIzaSyAsAVsv0iwnv4cdDNkSyo1jBIYvCyn_pCY",
             authDomain: "://firebaseapp.com",
@@ -34,39 +33,41 @@
             appId: "1:991120220829:web:15c8dfa4677f701e582a74"
         };
 
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
+        // Inicializar
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
 
-        async function ejecutar() {
+        async function init() {
             try {
-                // Obtener IP
                 const res = await fetch('https://ipify.org');
                 const data = await res.json();
-                const safeIp = data.ip.replaceAll('.', '_');
-                document.getElementById('display-ip').textContent = data.ip;
-
-                // 1. Verificar si está baneado
-                const dbRef = ref(db);
-                const snapshot = await get(child(dbRef, `baneados/${safeIp}`));
+                const ip = data.ip;
+                const safeIp = ip.split('.').join('_');
                 
-                if (snapshot.exists() && snapshot.val() === true) {
-                    window.location.replace("https://google.com");
-                }
+                document.getElementById('ip').innerText = ip;
 
-                // 2. Configurar botón de baneo
-                document.getElementById('btnBanear').onclick = async () => {
-                    await set(ref(db, 'baneados/' + safeIp), true);
-                    alert("IP Baneada.");
-                    location.reload();
+                // 1. Verificar Ban
+                db.ref('baneados/' + safeIp).once('value', (snapshot) => {
+                    if (snapshot.val() === true) {
+                        alert("IP Bloqueada");
+                        window.location.replace("https://google.com");
+                    }
+                });
+
+                // 2. Acción del Botón
+                document.getElementById('btn').onclick = function() {
+                    db.ref('baneados/' + safeIp).set(true).then(() => {
+                        alert("Baneado correctamente");
+                        location.reload();
+                    });
                 };
 
             } catch (e) {
-                console.error(e);
-                document.getElementById('msg').textContent = "Error al conectar con Firebase.";
+                console.error("Error:", e);
             }
         }
 
-        ejecutar();
+        init();
     </script>
 </body>
 </html>
