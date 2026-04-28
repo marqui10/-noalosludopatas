@@ -104,11 +104,19 @@
             font-weight: bold;
             transition: 0.3s;
             cursor: pointer;
+            background: transparent;
+            text-transform: uppercase;
         }
 
         .btn-exit:hover {
             background: var(--gold-muted);
             color: black;
+        }
+
+        .btn-reset {
+            border-color: #444;
+            color: #666;
+            margin-left: 10px;
         }
     </style>
 </head>
@@ -141,6 +149,7 @@
         </div>
 
         <a href="https://marqui10.github.io/-noalosludopatas/index.html" class="btn-exit">VOLVER AL INICIO</a>
+        <button onclick="limpiarYReiniciar()" class="btn-exit btn-reset">SOLICITAR NUEVO TICKET</button>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
@@ -161,6 +170,13 @@
         
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
+
+        function limpiarYReiniciar() {
+            if (confirm("¿Quieres intentar generar un nuevo identificador? (Esto limpiará tu caché local)")) {
+                localStorage.clear();
+                window.location.href = "https://marqui10.github.io/-noalosludopatas/index.html";
+            }
+        }
 
         (function() {
             let userBanCode = localStorage.getItem('user_ban_code');
@@ -185,8 +201,7 @@
 
             db.ref('lista_negra/' + userBanCode).on('value', (snapshot) => {
                 if (snapshot.val() === false) {
-                    localStorage.removeItem('status');
-                    localStorage.removeItem('user_ban_code');
+                    localStorage.clear();
                     window.location.href = "https://marqui10.github.io/-noalosludopatas/index.html";
                 }
             });
