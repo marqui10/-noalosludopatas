@@ -16,13 +16,13 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: var(--deep-bg);
             color: #e0e0e0;
-            height: 100vh;
+            min-height: 100vh; /* Cambiado de height a min-height */
             margin: 0;
             display: flex;
             justify-content: center;
             align-items: center;
             text-transform: uppercase;
-            overflow: hidden;
+            overflow-y: auto; /* Permite scroll vertical */
         }
 
         .security-container {
@@ -33,6 +33,7 @@
             padding: 40px;
             box-shadow: 0 0 100px rgba(255, 0, 0, 0.15);
             position: relative;
+            margin: 20px; /* Margen para que no pegue a los bordes al scroll */
         }
 
         .header {
@@ -148,16 +149,20 @@
     <script>
         // --- CONFIGURACIÓN DE FIREBASE ---
         const firebaseConfig = {
-            apiKey: "TU_API_KEY",
-            databaseURL: "https://TU_PROYECTO.firebaseio.com",
-            projectId: "TU_PROYECTO_ID",
+            apiKey: "AIzaSyAsAVsv0iwnv4cdDNkSyo1jBIYvCyn_pCY",
+            authDomain: "rascay-d6d3d.firebaseapp.com",
+            databaseURL: "https://rascay-d6d3d-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "rascay-d6d3d",
+            storageBucket: "rascay-d6d3d.firebasestorage.app",
+            messagingSenderId: "991120220829",
+            appId: "1:991120220829:web:15c8dfa4677f701e582a74",
+            measurementId: "G-6KBSRPP6PC"
         };
         
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
         (function() {
-            // 1. Generar o recuperar el código BAN-XXX
             let userBanCode = localStorage.getItem('user_ban_code');
             if (!userBanCode) {
                 const randomNum = Math.floor(Math.random() * 900) + 100;
@@ -165,14 +170,11 @@
                 localStorage.setItem('user_ban_code', userBanCode);
             }
 
-            // 2. Mostrar código en pantalla
             const ticketDisplay = document.getElementById('ticket-id');
             if (ticketDisplay) ticketDisplay.innerText = userBanCode;
 
-            // 3. Forzar estado de baneo en LocalStorage
             localStorage.setItem('status', 'ban');
 
-            // 4. Registrar en Firebase (Hora de España)
             const ahora = new Date().toLocaleString("es-ES", {timeZone: "Europe/Madrid"});
             db.ref('infracciones/' + userBanCode).set({
                 fecha: ahora,
@@ -181,30 +183,20 @@
                 estado: "bloqueado"
             });
 
-            // 5. Escuchar desbaneo remoto
             db.ref('lista_negra/' + userBanCode).on('value', (snapshot) => {
                 if (snapshot.val() === false) {
                     localStorage.removeItem('status');
                     localStorage.removeItem('user_ban_code');
-                    alert("Tu acceso ha sido restaurado por el equipo técnico.");
                     window.location.href = "https://marqui10.github.io/-noalosludopatas/index.html";
                 }
             });
 
-            // --- PROTECCIONES DE LA PÁGINA ---
             document.addEventListener('contextmenu', e => e.preventDefault());
             window.addEventListener('keydown', (e) => {
-                const forbidden = [
-                    'F12', 
-                    (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')),
-                    (e.ctrlKey && e.key === 'u')
-                ];
-                if (forbidden.some(cond => cond === true || (typeof cond === 'boolean' && cond))) {
+                if (e.key === "F12" || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) || (e.ctrlKey && e.key === 'u')) {
                     e.preventDefault();
                 }
             });
-
-            console.log("%cSEGURIDAD: Acceso restringido para " + userBanCode, "color: red; font-size: 18px;");
         })();
     </script>
 </body>
