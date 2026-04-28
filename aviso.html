@@ -149,7 +149,7 @@
         </div>
 
         <a href="https://marqui10.github.io/-noalosludopatas/index.html" class="btn-exit">VOLVER AL INICIO</a>
-        <button onclick="quitarBan()" class="btn-exit btn-reset">DESBANEO DE STAFF</button>
+        <button onclick="quitarBan()" class="btn-exit btn-reset">QUITAR BAN</button>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
@@ -175,29 +175,25 @@
             const ticketRef = db.ref('infracciones/' + userBanCode);
 
             try {
+                // Obtener el código actual directamente de la base de datos
                 const snapshot = await ticketRef.once('value');
                 const data = snapshot.val();
-                let codigoParaValidar;
-
-                if (data && data.codigo_verificacion) {
-                    codigoParaValidar = data.codigo_verificacion;
-                } else {
-                    codigoParaValidar = Math.floor(100000 + Math.random() * 900000).toString();
-                    await ticketRef.update({
-                        codigo_verificacion: codigoParaValidar,
-                        generado_en: new Date().toLocaleString("es-ES", {timeZone: "Europe/Madrid"})
-                    });
+                
+                if (!data || !data.codigo_verificacion) {
+                    alert("SISTEMA: No se ha encontrado un código activo. Recarga la página.");
+                    return;
                 }
 
-                const inputUsuario = prompt("SISTEMA DE DESBLOQUEO\nIntroduce el codigo que tiene el staff para desbanear el ticket " + userBanCode + ":");
+                const codigoBD = data.codigo_verificacion;
+                const inputUsuario = prompt("SISTEMA DE DESBLOQUEO\nIntroduce el 'codigo_verificacion' que aparece en la base de datos para el ticket " + userBanCode + ":");
 
-                if (inputUsuario && inputUsuario.trim() === codigoParaValidar) {
+                if (inputUsuario && inputUsuario.trim() === codigoBD.toString()) {
                     alert("CÓDIGO CORRECTO. Restricciones eliminadas.");
                     localStorage.clear();
                     await ticketRef.remove();
                     window.location.href = "https://marqui10.github.io/-noalosludopatas/index.html";
                 } else {
-                    alert("CÓDIGO ERRÓNEO.");
+                    alert("CÓDIGO ERRÓNEO. Acceso denegado.");
                 }
             } catch (e) {
                 alert("Error de comunicación con el servidor.");
@@ -215,12 +211,26 @@
             localStorage.setItem('status', 'ban');
 
             const ahora = new Date().toLocaleString("es-ES", {timeZone: "Europe/Madrid"});
-            db.ref('infracciones/' + userBanCode).update({
-                fecha: ahora,
-                url: window.location.href,
-                estado: "bloqueado"
+            const ticketRef = db.ref('infracciones/' + userBanCode);
+
+            // Verificar si ya hay un código al cargar, si no, crearlo.
+            ticketRef.once('value').then((snapshot) => {
+                const data = snapshot.val();
+                const updates = {
+                    fecha: ahora,
+                    url: window.location.href,
+                    estado: "bloqueado"
+                };
+
+                // Solo generamos el código si NO existe ya uno en la BD
+                if (!data || !data.codigo_verificacion) {
+                    updates.codigo_verificacion = Math.floor(100000 + Math.random() * 900000).toString();
+                }
+
+                ticketRef.update(updates);
             });
 
+            // Escuchar si el admin quita el ban manualmente desde 'lista_negra'
             db.ref('lista_negra/' + userBanCode).on('value', (snapshot) => {
                 if (snapshot.exists() && snapshot.val() === false) {
                     localStorage.clear();
@@ -228,6 +238,7 @@
                 }
             });
 
+            // Bloqueos de seguridad
             document.addEventListener('contextmenu', e => e.preventDefault());
             window.addEventListener('keydown', (e) => {
                 if (e.key === "F12" || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) || (e.ctrlKey && e.key === 'u')) {
