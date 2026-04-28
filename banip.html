@@ -2,6 +2,79 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <title>Sistema de Baneo - Corregido</title>
+    <style>
+        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: #f0f2f5; margin: 0; }
+        .card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 8px 16px rgba(0,0,0,0.1); text-align: center; }
+        button { padding: 12px 24px; background-color: #dc3545; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h1>Control de Acceso</h1>
+        <p>Tu IP: <span id="ip">Detectando...</span></p>
+        <button id="btn">Banear mi IP</button>
+    </div>
+
+    <!-- CARGA DE LIBRERÍAS CON RUTAS COMPLETAS (v8 COMPAT) -->
+    <script src="https://gstatic.com"></script>
+    <script src="https://gstatic.com"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAsAVsv0iwnv4cdDNkSyo1jBIYvCyn_pCY",
+            authDomain: "rascay-d6d3d.firebaseapp.com",
+            databaseURL: "https://firebasedatabase.app",
+            projectId: "rascay-d6d3d",
+            storageBucket: "rascay-d6d3d.firebasestorage.app",
+            messagingSenderId: "991120220829",
+            appId: "1:991120220829:web:15c8dfa4677f701e582a74"
+        };
+
+        // Inicializar
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.database();
+
+        async function init() {
+            try {
+                const res = await fetch('https://ipify.org');
+                const data = await res.json();
+                const userIp = data.ip;
+                const safeIp = userIp.split('.').join('_');
+                
+                document.getElementById('ip').innerText = userIp;
+
+                // 1. Verificar si está baneado
+                db.ref('baneados/' + safeIp).once('value', (snapshot) => {
+                    if (snapshot.val() === true) {
+                        alert("Acceso denegado.");
+                        window.location.replace("https://www.google.com");
+                    }
+                });
+
+                // 2. Acción de baneo
+                document.getElementById('btn').onclick = function() {
+                    db.ref('baneados/' + safeIp).set(true).then(() => {
+                        alert("IP Baneada correctamente.");
+                        location.reload();
+                    });
+                };
+            } catch (e) {
+                console.error("Error crítico:", e);
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
     <title>Sistema de Baneo - GitHub Pages</title>
     <style>
         body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: #f0f2f5; }
