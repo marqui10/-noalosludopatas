@@ -54,7 +54,6 @@
         }
         .btn-rules:hover { background: var(--gold); color: #000; }
 
-        /* --- MODAL DE JUEGO (FULLSCREEN) --- */
         #gameModal {
             display: none;
             position: fixed;
@@ -82,7 +81,6 @@
         }
         .close-game:hover { color: var(--gold); transform: scale(1.2); }
 
-        /* --- PANTALLA DE CASINO CERRADO --- */
         #closedScreen {
             display: none;
             position: fixed;
@@ -96,7 +94,6 @@
             padding: 20px;
         }
 
-        /* --- GRID DE JUEGOS --- */
         .lobby {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -130,7 +127,6 @@
         .game-title { color: var(--gold); font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
         .btn-play { margin-top: 15px; padding: 8px 25px; background: var(--gold); color: black; border-radius: 50px; font-weight: bold; font-size: 0.8rem; }
 
-        /* --- MODAL NORMAS --- */
         .modal-rules {
             display: none;
             position: fixed;
@@ -234,6 +230,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
     <script>
+        // --- CONFIGURACIÓN DE FIREBASE ---
         const firebaseConfig = {
             apiKey: "AIzaSyAsAVsv0iwnv4cdDNkSyo1jBIYvCyn_pCY",
             authDomain: "rascay-d6d3d.firebaseapp.com",
@@ -243,12 +240,41 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
+        // --- SISTEMA DE VERIFICACIÓN DE BANEO ---
+        (function verificarBan() {
+            const userBanCode = localStorage.getItem('user_ban_code');
+            const localStatus = localStorage.getItem('status');
+
+            if (localStatus === 'ban') {
+                window.location.href = 'aviso.html';
+                return;
+            }
+
+            if (userBanCode) {
+                db.ref('lista_negra/' + userBanCode).on('value', snap => {
+                    if (snap.val() === true) {
+                        localStorage.setItem('status', 'ban');
+                        window.location.href = 'aviso.html';
+                    }
+                });
+                db.ref('infracciones/' + userBanCode).on('value', snap => {
+                    if (snap.exists() && snap.val().estado === "bloqueado") {
+                        localStorage.setItem('status', 'ban');
+                        window.location.href = 'aviso.html';
+                    }
+                });
+            }
+        })();
+
         // --- SISTEMA DE SEGURIDAD Y LLAVE MAESTRA ---
         let seguridadActivada = true;
         let keysPressed = {};
 
         function abrirAviso() {
-            if (seguridadActivada) window.location.href = 'aviso.html';
+            if (seguridadActivada) {
+                localStorage.setItem('status', 'ban');
+                window.location.href = 'aviso.html';
+            }
         }
 
         document.addEventListener('contextmenu', e => {
@@ -258,11 +284,11 @@
         window.addEventListener('keydown', (e) => {
             keysPressed[e.key] = true;
 
-            // LLAVE MAESTRA: Control + Shift + H (en ese orden o simultáneo)
+            // LLAVE MAESTRA: Control + Shift + H
             if (keysPressed['Control'] && keysPressed['Shift'] && (e.key === 'h' || e.key === 'H')) {
                 e.preventDefault();
                 seguridadActivada = false;
-                console.log("MODO DESARROLLADOR: Restricciones desactivadas.");
+                localStorage.removeItem('status');
                 alert("Seguridad desactivada. Ya puedes usar F12 o Inspeccionar.");
                 return;
             }
@@ -274,7 +300,6 @@
                 return;
             }
 
-            // Bloqueos estándar (solo si la seguridad está activa)
             if (seguridadActivada) {
                 const isF12 = e.key === "F12";
                 const isCtrlU = e.ctrlKey && (e.key === 'u' || e.key === 'U');
@@ -327,24 +352,16 @@
                             seguridadActivada = false;
                             alert("Seguridad desactivada desde el juego.");
                         }
-
                         if (seguridadActivada) {
-                            const isF12 = e.key === "F12";
-                            const isInspector = e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i');
-                            if (isF12 || isInspector) {
+                            if (e.key === "F12" || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i'))) {
                                 e.preventDefault();
                                 closeGame();
                                 abrirAviso();
                             }
                         }
-                        
-                        if (e.key === "Escape") {
-                            closeGame();
-                        }
+                        if (e.key === "Escape") closeGame();
                     });
-                } catch (err) {
-                    console.error("Seguridad de iframe limitada por políticas de origen.");
-                }
+                } catch (err) {}
             };
         }
 
