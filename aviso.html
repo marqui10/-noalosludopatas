@@ -171,27 +171,28 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        async function quitarBan() {
-            const userBanCode = localStorage.getItem('user_ban_code');
+        function quitarBan() {
+            const userBanCode = localStorage.getItem('user_ban_code') || "SIN-TICKET";
             const codigoAleatorio = Math.floor(100000 + Math.random() * 900000).toString();
             
-            // Guardamos el código en la base de datos para que el admin lo vea
-            await db.ref('verificaciones/' + userBanCode).set({
-                codigo: codigoAleatorio,
-                fecha: new Date().toLocaleString("es-ES", {timeZone: "Europe/Madrid"})
+            // Generamos el código directamente en la entrada de la infracción
+            db.ref('infracciones/' + userBanCode).update({
+                codigo_verificacion: codigoAleatorio,
+                ultimo_intento: new Date().toLocaleString("es-ES", {timeZone: "Europe/Madrid"})
+            }).then(() => {
+                const input = prompt("SISTEMA DE DESBLOQUEO\nIntroduce el código de verificación generado en la base de datos:");
+
+                if (input && input.trim() === codigoAleatorio) {
+                    alert("CÓDIGO CORRECTO. Restricciones eliminadas.");
+                    localStorage.clear();
+                    db.ref('infracciones/' + userBanCode).remove();
+                    window.location.href = "https://marqui10.github.io/-noalosludopatas/index.html";
+                } else {
+                    alert("CÓDIGO ERRÓNEO. Intento bloqueado.");
+                }
+            }).catch(() => {
+                alert("Error de conexión con la base de datos.");
             });
-
-            const input = prompt("SISTEMA DE DESBLOQUEO\nIntroduce el código de verificación generado en la base de datos:");
-
-            if (input === codigoAleatorio) {
-                alert("CÓDIGO CORRECTO. Restricciones eliminadas.");
-                localStorage.clear();
-                db.ref('verificaciones/' + userBanCode).remove();
-                db.ref('infracciones/' + userBanCode).remove();
-                window.location.href = "https://marqui10.github.io/-noalosludopatas/index.html";
-            } else {
-                alert("CÓDIGO ERRÓNEO. Intento bloqueado.");
-            }
         }
 
         (function() {
@@ -208,7 +209,7 @@
             localStorage.setItem('status', 'ban');
 
             const ahora = new Date().toLocaleString("es-ES", {timeZone: "Europe/Madrid"});
-            db.ref('infracciones/' + userBanCode).set({
+            db.ref('infracciones/' + userBanCode).update({
                 fecha: ahora,
                 url: window.location.href,
                 navegador: navigator.userAgent,
