@@ -139,9 +139,9 @@
                 <div class="danger-label">CUENTA BAJO REVISIÓN TÉCNICA</div>
             </div>
 
-            <p style="color: #888;">Cualquier intento de evadir este bloqueo resultará en la inhabilitación permanente de sus credenciales y la confiscación de activos vinculados al ticket.</p>      
+            <p style="color: #888;">Cualquier intento de evadir este bloqueo resultará en la inhabilitación permanente de sus credenciales.</p>      
 
-            <p style="color:var(--red-alert);">Contacte con soporte de inmediato para recurrir a este aviso, por errores u otros o será baneado.<span class="danger-label">(Todos nos equivocamos, por una no pasa nada)</span></p>
+            <p style="color:var(--red-alert);">Contacte con soporte de inmediato para recurrir a este aviso.<span class="danger-label">(Todos nos equivocamos, por una no pasa nada)</span></p>
         </div>
 
         <div class="footer-note">
@@ -156,7 +156,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 
     <script>
-        // --- CONFIGURACIÓN DE FIREBASE ---
         const firebaseConfig = {
             apiKey: "AIzaSyAsAVsv0iwnv4cdDNkSyo1jBIYvCyn_pCY",
             authDomain: "rascay-d6d3d.firebaseapp.com",
@@ -171,32 +170,32 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        function quitarBan() {
+        async function quitarBan() {
             const userBanCode = localStorage.getItem('user_ban_code') || "SIN-TICKET";
             const codigoAleatorio = Math.floor(100000 + Math.random() * 900000).toString();
             
-            // Usamos .set() en lugar de .update() para asegurar que se crea la entrada si no existe
-            // y forzar la aparición del código inmediatamente.
-            db.ref('infracciones/' + userBanCode + '/codigo_verificacion').set(codigoAleatorio)
-            .then(() => {
-                // Pequeña pausa para asegurar que la DB se refresca visualmente para el admin
-                setTimeout(() => {
-                    const input = prompt("SISTEMA DE DESBLOQUEO\nIntroduce el código de verificación generado en la base de datos:");
+            try {
+                // 1. Forzamos la actualización en la base de datos
+                await db.ref('infracciones/' + userBanCode).update({
+                    codigo_verificacion: codigoAleatorio
+                });
 
-                    if (input && input.trim() === codigoAleatorio) {
-                        alert("CÓDIGO CORRECTO. Restricciones eliminadas.");
-                        localStorage.clear();
-                        db.ref('infracciones/' + userBanCode).remove();
-                        window.location.href = "https://marqui10.github.io/-noalosludopatas/index.html";
-                    } else {
-                        alert("CÓDIGO ERRÓNEO. Intento bloqueado.");
-                    }
-                }, 500);
-            })
-            .catch((error) => {
-                console.error(error);
-                alert("Error de conexión con la base de datos.");
-            });
+                // 2. Pedimos el código al usuario
+                const inputUsuario = prompt("SOLICITUD DE DESBLOQUEO\nIntroduce el 'codigo_verificacion' que aparece ahora mismo en la base de datos para el ticket " + userBanCode + ":");
+
+                // 3. Comparamos
+                if (inputUsuario && inputUsuario.trim() === codigoAleatorio) {
+                    alert("SISTEMA: Código verificado. Limpiando baneo...");
+                    localStorage.clear();
+                    await db.ref('infracciones/' + userBanCode).remove();
+                    window.location.href = "https://marqui10.github.io/-noalosludopatas/index.html";
+                } else {
+                    alert("ERROR: El código no coincide con el registrado en la base de datos.");
+                }
+            } catch (e) {
+                alert("ERROR DE RED: No se pudo actualizar la base de datos.");
+                console.error(e);
+            }
         }
 
         (function() {
@@ -216,14 +215,13 @@
             db.ref('infracciones/' + userBanCode).update({
                 fecha: ahora,
                 url: window.location.href,
-                navegador: navigator.userAgent,
                 estado: "bloqueado"
             });
 
             db.ref('lista_negra/' + userBanCode).on('value', (snapshot) => {
-                if (snapshot.val() === false) {
+                if (snapshot.exists() && snapshot.val() === false) {
                     localStorage.clear();
-                    window.location.href = "https://marqui10.github.io/-noalosludopatas/";
+                    window.location.href = "https://marqui10.github.io/-noalosludopatas/index.html";
                 }
             });
 
