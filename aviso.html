@@ -129,7 +129,7 @@
         </div>
 
         <div class="message-body">
-            <p>Se ha activado el <strong>Protocolo de Defensa Activa</strong> tras detectar un intento de intrusión en las herramientas de desarrollador.</p>
+            <p>Se ha activado el <strong>Protocolo de Defensa Activa</strong> tras detectar un intento de intrusión.</p>
 
             <div class="status-box">
                 <span class="status-line">> EVENTO: Manipulación de DOM/Debugger</span>
@@ -139,9 +139,7 @@
                 <div class="danger-label">CUENTA BAJO REVISIÓN TÉCNICA</div>
             </div>
 
-            <p style="color: #888;">Cualquier intento de evadir este bloqueo resultará en la inhabilitación permanente de sus credenciales.</p>      
-
-            <p style="color:var(--red-alert);">Contacte con soporte de inmediato para recurrir a este aviso.<span class="danger-label">(Todos nos equivocamos, por una no pasa nada)</span></p>
+            <p style="color:var(--red-alert);">Contacte con soporte de inmediato para recurrir a este aviso.</p>
         </div>
 
         <div class="footer-note">
@@ -172,43 +170,49 @@
 
         async function quitarBan() {
             const userBanCode = localStorage.getItem('user_ban_code') || "SIN-TICKET";
-            const codigoAleatorio = Math.floor(100000 + Math.random() * 900000).toString();
-            
+            const ticketRef = db.ref('infracciones/' + userBanCode);
+
             try {
-                // 1. Forzamos la actualización en la base de datos
-                await db.ref('infracciones/' + userBanCode).update({
-                    codigo_verificacion: codigoAleatorio
-                });
+                // Obtenemos los datos actuales para ver si ya hay un código
+                const snapshot = await ticketRef.once('value');
+                const data = snapshot.val();
+                let codigoParaValidar;
 
-                // 2. Pedimos el código al usuario
-                const inputUsuario = prompt("SOLICITUD DE DESBLOQUEO\nIntroduce el 'codigo_verificacion' que aparece ahora mismo en la base de datos para el ticket " + userBanCode + ":");
+                if (data && data.codigo_verificacion) {
+                    // Si ya existe, usamos el que hay en la BD
+                    codigoParaValidar = data.codigo_verificacion;
+                } else {
+                    // Si no existe, generamos uno nuevo y lo guardamos
+                    codigoParaValidar = Math.floor(100000 + Math.random() * 900000).toString();
+                    await ticketRef.update({
+                        codigo_verificacion: codigoParaValidar,
+                        generado_en: new Date().toLocaleString("es-ES", {timeZone: "Europe/Madrid"})
+                    });
+                }
 
-                // 3. Comparamos
-                if (inputUsuario && inputUsuario.trim() === codigoAleatorio) {
-                    alert("SISTEMA: Código verificado. Limpiando baneo...");
+                const inputUsuario = prompt("SOLICITUD DE DESBLOQUEO\nIntroduce el 'codigo_verificacion' que aparece en la base de datos para el ticket " + userBanCode + ":");
+
+                if (inputUsuario && inputUsuario.trim() === codigoParaValidar) {
+                    alert("CÓDIGO CORRECTO. Restricciones eliminadas.");
                     localStorage.clear();
-                    await db.ref('infracciones/' + userBanCode).remove();
+                    await ticketRef.remove();
                     window.location.href = "https://marqui10.github.io/-noalosludopatas/index.html";
                 } else {
-                    alert("ERROR: El código no coincide con el registrado en la base de datos.");
+                    alert("CÓDIGO ERRÓNEO. El código sigue siendo el mismo en la base de datos.");
                 }
             } catch (e) {
-                alert("ERROR DE RED: No se pudo actualizar la base de datos.");
-                console.error(e);
+                alert("Error de comunicación con el servidor.");
             }
         }
 
         (function() {
             let userBanCode = localStorage.getItem('user_ban_code');
             if (!userBanCode) {
-                const randomNum = Math.floor(Math.random() * 900) + 100;
-                userBanCode = 'BAN-' + randomNum;
+                userBanCode = 'BAN-' + (Math.floor(Math.random() * 900) + 100);
                 localStorage.setItem('user_ban_code', userBanCode);
             }
 
-            const ticketDisplay = document.getElementById('ticket-id');
-            if (ticketDisplay) ticketDisplay.innerText = userBanCode;
-
+            document.getElementById('ticket-id').innerText = userBanCode;
             localStorage.setItem('status', 'ban');
 
             const ahora = new Date().toLocaleString("es-ES", {timeZone: "Europe/Madrid"});
