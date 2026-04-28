@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Baneo</title>
+    <style>
+        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; background-color: #f0f2f5; }
+        .card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 8px 16px rgba(0,0,0,0.1); text-align: center; }
+        #btnBanear { padding: 12px 24px; background-color: #dc3545; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h1>Control de Acceso</h1>
+        <p>Tu IP: <span id="display-ip">Detectando...</span></p>
+        <button id="btnBanear">Banear mi IP</button>
+        <p id="msg" style="color: red;"></p>
+    </div>
+
+    <!-- USAMOS CLOUDFLARE CDN PARA EVITAR ERRORES DE RUTA -->
+    <script type="module">
+        import { initializeApp } from "https://gstatic.com";
+        import { getDatabase, ref, get, child, set } from "https://gstatic.com";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAsAVsv0iwnv4cdDNkSyo1jBIYvCyn_pCY",
+            authDomain: "://firebaseapp.com",
+            databaseURL: "https://firebasedatabase.app",
+            projectId: "rascay-d6d3d",
+            storageBucket: "rascay-d6d3d.firebasestorage.app",
+            messagingSenderId: "991120220829",
+            appId: "1:991120220829:web:15c8dfa4677f701e582a74"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        async function ejecutar() {
+            try {
+                // Obtener IP
+                const res = await fetch('https://ipify.org');
+                const data = await res.json();
+                const safeIp = data.ip.replaceAll('.', '_');
+                document.getElementById('display-ip').textContent = data.ip;
+
+                // 1. Verificar si está baneado
+                const dbRef = ref(db);
+                const snapshot = await get(child(dbRef, `baneados/${safeIp}`));
+                
+                if (snapshot.exists() && snapshot.val() === true) {
+                    window.location.replace("https://google.com");
+                }
+
+                // 2. Configurar botón de baneo
+                document.getElementById('btnBanear').onclick = async () => {
+                    await set(ref(db, 'baneados/' + safeIp), true);
+                    alert("IP Baneada.");
+                    location.reload();
+                };
+
+            } catch (e) {
+                console.error(e);
+                document.getElementById('msg').textContent = "Error al conectar con Firebase.";
+            }
+        }
+
+        ejecutar();
+    </script>
+</body>
+</html>
