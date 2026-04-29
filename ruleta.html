@@ -425,6 +425,8 @@
                       (b.val==='3rd 12' && winNum>=25 && winNum<=36) ||
                       (b.val==='col1' && winNum % 3 === 1) ||
                       (b.val==='col2' && winNum % 3 === 2) ||
+                      (b.val === '1-18' && winNum >= 1 && winNum <= 18) ||
+                      (b.val === '19-36' && winNum >= 19 && winNum <= 36) ||
                       (b.val==='col3' && winNum % 3 === 0 && winNum !== 0);
 
             if(win) winSum += (b.amount * b.payout);
@@ -433,8 +435,7 @@
         if(!isInfinite) {
             balance += winSum;
             if (balance == 0) {
-                db.ref('codes/' + currentKey).remove();
-                showBan("Sin saldo, se procede a borrar el ticket");
+                showBan("Sin saldo, meta más dinero y hable con staff");
                 spinning = false;
                 return;
             } else {
