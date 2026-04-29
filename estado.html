@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Casino Control</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #0a0c1a;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .admin-card {
+            background: #15183a;
+            padding: 40px;
+            border-radius: 20px;
+            border: 2px solid #bf953f;
+            text-align: center;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+            width: 350px;
+        }
+        h1 { color: #bf953f; font-size: 1.5rem; margin-bottom: 30px; }
+        
+        .status-indicator {
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .online { background: rgba(0, 230, 118, 0.2); color: #00e676; border: 1px solid #00e676; }
+        .offline { background: rgba(255, 62, 62, 0.2); color: #ff3e3e; border: 1px solid #ff3e3e; }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: 0.3s;
+        }
+        .btn-open { background: #00e676; color: #000; }
+        .btn-close { background: #ff3e3e; color: #fff; }
+        .btn:hover { opacity: 0.8; transform: scale(1.02); }
+
+        #currentMsg { font-size: 0.8rem; opacity: 0.6; margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+    <div class="admin-card">
+        <h1>CONTROL DE CASINO</h1>
+        
+        <div id="statusBox" class="status-indicator">Cargando estado...</div>
+
+        <button class="btn btn-open" onclick="setEstado('abierto')">Abrir Casino</button>
+        <button class="btn btn-close" onclick="pedirCierre()">Cerrar Casino</button>
+
+        <p id="currentMsg">Mensaje actual: Ninguno</p>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAsAVsv0iwnv4cdDNkSyo1jBIYvCyn_pCY",
+            authDomain: "rascay-d6d3d.firebaseapp.com",
+            databaseURL: "https://rascay-d6d3d-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "rascay-d6d3d"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // Escuchar cambios en tiempo real
+        db.ref('config').on('value', snap => {
+            const data = snap.val() || {};
+            const estado = data.estado || 'abierto';
+            const mensaje = data.mensaje || 'Mantenimiento en curso';
+
+            const box = document.getElementById('statusBox');
+            box.innerText = "ESTADO: " + estado;
+            box.className = "status-indicator " + (estado === 'abierto' ? 'online' : 'offline');
+            document.getElementById('currentMsg').innerText = "Mensaje: " + mensaje;
+        });
+
+        function setEstado(nuevoEstado, mensaje = "") {
+            db.ref('config').update({
+                estado: nuevoEstado,
+                mensaje: mensaje
+            }).then(() => {
+                alert("Casino " + nuevoEstado.toUpperCase());
+            });
+        }
+
+        function pedirCierre() {
+            const msg = prompt("Introduce el motivo del cierre (ej: Mantenimiento v3, Cerrado hasta las 20:00...):");
+            if (msg !== null) {
+                setEstado('cerrado', msg);
+            }
+        }
+    </script>
+</body>
+</html>
