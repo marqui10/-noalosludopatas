@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: transparent; color: white; margin: 0; padding: 10px; }
+        table { width: 100%; border-collapse: collapse; background: rgba(21, 24, 58, 0.95); border: 1px solid #bf953f; font-size: 0.85rem; }
+        th { background: rgba(191, 149, 63, 0.2); color: #bf953f; padding: 10px; text-align: left; border-bottom: 2px solid #bf953f; }
+        td { padding: 8px; border-bottom: 1px solid #333; }
+        
+        .btn-group { display: flex; gap: 5px; }
+        .status-btn { 
+            padding: 5px 8px; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            font-size: 0.7rem; 
+            font-weight: bold; 
+            transition: 0.3s;
+            color: white;
+            text-transform: uppercase;
+        }
+
+        /* Colores de estado */
+        .btn-no-reclamado { background: #d63031; } /* Rojo */
+        .btn-revision { background: #e17055; }     /* Naranja */
+        .btn-mandado { background: #4ade80; color: black; } /* Verde */
+        .btn-inactive { background: #444 !important; color: #888 !important; }
+        
+        .status-btn:hover { opacity: 0.8; transform: scale(1.05); }
+    </style>
+</head>
+<body>
+
+    <table>
+        <thead>
+            <tr>
+                <th>TICKET</th>
+                <th>FECHA/HORA</th>
+                <th>VERIFICACIÓN</th>
+                <th>ACCIONES / ESTADO</th>
+            </tr>
+        </thead>
+        <tbody id="tablaCuerpo">
+            </tbody>
+    </table>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+    <script>
+        // Tu configuración de Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyAsAVsv0iwnv4cdDNkSyo1jBIYvCyn_pCY",
+            authDomain: "rascay-d6d3d.firebaseapp.com",
+            databaseURL: "https://rascay-d6d3d-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "rascay-d6d3d"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // Escuchar cambios en la rama infracciones
+        db.ref('infracciones').on('value', (snapshot) => {
+            const tbody = document.getElementById('tablaCuerpo');
+            tbody.innerHTML = "";
+            
+            snapshot.forEach((childSnapshot) => {
+                const ticketId = childSnapshot.key; // Ejemplo: BAN-669
+                const data = childSnapshot.val();
+                const estadoActual = data.estado_gestion || "no_reclamado";
+
+                const fila = document.createElement('tr');
+                fila.innerHTML = `
+                    <td style="color: #bf953f; font-weight: bold;">${ticketId}</td>
+                    <td>${data.fecha || '---'}</td>
+                    <td style="font-family: monospace; font-size: 1rem; color: #4ade80;">${data.codigo_verificacion || '---'}</td>
+                    <td>
+                        <div class="btn-group">
+                            <button onclick="actualizarEstado('${ticketId}', 'no_reclamado')" 
+                                class="status-btn ${estadoActual === 'no_reclamado' ? 'btn-no-reclamado' : 'btn-inactive'}">
+                                No Reclamado
+                            </button>
+                            <button onclick="actualizarEstado('${ticketId}', 'revision')" 
+                                class="status-btn ${estadoActual === 'revision' ? 'btn-revision' : 'btn-inactive'}">
+                                Revisión
+                            </button>
+                            <button onclick="actualizarEstado('${ticketId}', 'mandado')" 
+                                class="status-btn ${estadoActual === 'mandado' ? 'btn-mandado' : 'btn-inactive'}">
+                                Mandado
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(fila);
+            });
+        });
+
+        // Función para cambiar el estado en Firebase
+        function actualizarEstado(id, nuevoEstado) {
+            db.ref(`infracciones/${id}`).update({
+                estado_gestion: nuevoEstado
+            });
+        }
+    </script>
+</body>
+</html>
