@@ -223,10 +223,12 @@
 
         .btn-clear { background: #333; color: #fff; }
 
+        /* MODAL DE RESULTADO */
         #resBanner {
             display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
             background: white; color: black; padding: 40px; border-radius: 20px; z-index: 10000;
-            text-align: center; border: 6px solid var(--gold); width: 300px;
+            text-align: center; border: 6px solid var(--gold); width: 320px;
+            box-shadow: 0 0 50px rgba(0,0,0,0.8);
         }
     </style>
 </head>
@@ -277,6 +279,7 @@
         <canvas id="rouletteWheel"></canvas>
     </div>
 
+    <!-- PANEL DE HISTORIAL -->
     <div class="history-container" id="sessionHistory">
         <span style="font-size: 0.8rem; color: #8b949e; margin-right: 10px;">HISTORIAL:</span>
     </div>
@@ -314,11 +317,12 @@
     </div>
 </div>
 
+<!-- EL MODAL DE RESULTADO -->
 <div id="resBanner">
-    <h2 id="resTitle" style="margin:0;"></h2>
-    <div id="resBall" style="width:70px; height:70px; border-radius:50%; margin:20px auto; display:flex; align-items:center; justify-content:center; color:white; font-size:2rem; font-weight:bold;"></div>
-    <h1 id="resWin"></h1>
-    <button onclick="closeRes()" class="btn btn-spin" style="width:100%;">CERRAR</button>
+    <h2 id="resTitle" style="margin:0; font-size: 1.5rem;"></h2>
+    <div id="resBall" style="width:70px; height:70px; border-radius:50%; margin:20px auto; display:flex; align-items:center; justify-content:center; color:white; font-size:2rem; font-weight:bold; border: 2px solid gold;"></div>
+    <h1 id="resWin" style="margin-bottom: 20px;"></h1>
+    <button onclick="closeRes()" class="btn btn-spin" style="width:100%; padding: 12px;">CERRAR</button>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -529,11 +533,13 @@
             }
         }
 
+        // MOSTRAR BANNER MODAL
         document.getElementById('resBanner').style.display = 'block';
         document.getElementById('resBall').innerText = winNum;
         document.getElementById('resBall').style.background = winNum===0?'#0a8444':(isRed?'#be1931':'#1a1a1a');
-        document.getElementById('resWin').innerText = isInfinite ? "∞" : `+${winSum}€`;
+        document.getElementById('resWin').innerText = isInfinite ? "GANANCIA: ∞" : `+${winSum}€`;
         document.getElementById('resTitle').innerText = (winSum > 0 || isInfinite) ? '¡HAS GANADO!' : 'MALA SUERTE';
+        
         activeBets = [];
         spinning = false;
         document.querySelectorAll('.disabled-bet').forEach(e => e.classList.remove('disabled-bet'));
