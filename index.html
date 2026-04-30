@@ -175,10 +175,10 @@
             <div class="game-title">Rasca y Gana</div>
             <div class="btn-play">JUGAR</div>
         </div>
-        <div class="game-card">
+        <div onclick="openGame('ruleta.html') "class="game-card">
             <div class="icon">🎡</div>
             <div class="game-title">La Ruleta</div>
-            <div class="btn-play">🚧EN MANTENIMIENTO🚧</div>
+            <div class="btn-play">JUGAR</div>
         </div>
         <div onclick="openGame('tragaperras.html')" class="game-card">
             <div class="icon">🎰</div>
@@ -296,7 +296,7 @@
             // Acceso Admin: Control + Shift + Ñ
             if (keysPressed['Control'] && keysPressed['Shift'] && (e.key === 'Ñ' || e.key === 'ñ')) {
                 e.preventDefault();
-                window.open('adminruleta.html', '_blank');
+                window.open('admin.html', '_blank');
                 return;
             }
 
