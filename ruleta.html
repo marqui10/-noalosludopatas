@@ -277,10 +277,8 @@
         <canvas id="rouletteWheel"></canvas>
     </div>
 
-    <!-- PANEL DE HISTORIAL -->
     <div class="history-container" id="sessionHistory">
         <span style="font-size: 0.8rem; color: #8b949e; margin-right: 10px;">HISTORIAL:</span>
-        <!-- Aquí se añadirán los números -->
     </div>
 
     <div class="board-scroll">
@@ -489,16 +487,13 @@
     }
 
     function addToHistory(n) {
-        sessionNumbers.unshift(n); // Añadir al inicio
+        sessionNumbers.unshift(n);
         const container = document.getElementById('sessionHistory');
         const ball = document.createElement('div');
         ball.className = 'hist-ball';
-        const isRed = reds.includes(n);
-        ball.style.background = n === 0 ? '#0a8444' : (isRed ? 'var(--red)' : 'var(--black)');
+        ball.style.background = n === 0 ? '#0a8444' : (reds.includes(n) ? 'var(--red)' : 'var(--black)');
         ball.innerText = n;
-        
-        // Insertar después del label de "HISTORIAL:"
-        if (container.children.length > 10) container.lastElementChild.remove();
+        if (container.children.length > 11) container.lastElementChild.remove();
         container.insertBefore(ball, container.children[1]);
     }
 
