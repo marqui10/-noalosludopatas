@@ -11,6 +11,7 @@
             --red: #d63031;
             --green: #4ade80;
             --blue: #3498db;
+            --yellow: #f1c40f;
         }
         body { font-family: 'Segoe UI', sans-serif; background: var(--dark-bg); color: white; display: flex; flex-direction: column; align-items: center; padding: 30px; margin: 0; }
         #loginOverlay { position: fixed; inset: 0; background: var(--dark-bg); z-index: 10000; display: flex; align-items: center; justify-content: center; }
@@ -19,7 +20,7 @@
         .panel { background: var(--panel-bg); padding: 25px; border-radius: 15px; border: 2px solid var(--gold); width: 350px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         .panel-large { width: 100%; max-width: 1100px; margin-top: 20px; }
         h3 { color: var(--gold); text-align: center; margin-top: 0; border-bottom: 1px solid #333; padding-bottom: 10px; }
-        input, select { width: 100%; padding: 12px; margin: 10px 0; border-radius: 5px; border: 1px solid #333; box-sizing: border-box; background: #000; color: #fff; font-weight: bold; }
+        input, select, textarea { width: 100%; padding: 12px; margin: 10px 0; border-radius: 5px; border: 1px solid #333; box-sizing: border-box; background: #000; color: #fff; font-weight: bold; }
         .btn { width: 100%; padding: 12px; border: none; font-weight: bold; cursor: pointer; border-radius: 5px; margin-top: 5px; transition: 0.3s; }
         .btn-gold { background: var(--gold); color: black; }
         .btn-outline { background: transparent; border: 1px solid var(--gold); color: var(--gold); }
@@ -27,11 +28,13 @@
         .btn-warn { background: #e17055; color: white; }
         .btn-add { background: var(--green); color: black; }
         .btn-blue { background: var(--blue); color: white; }
+        .btn-ludo { background: var(--yellow); color: black; }
         .code-display { font-size: 1.8rem; color: var(--green); text-align: center; margin: 10px 0; font-family: monospace; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th { background: rgba(191, 149, 63, 0.2); color: var(--gold); padding: 12px; text-align: left; font-size: 0.85rem; }
         td { padding: 10px; border-bottom: 1px solid #222; font-size: 0.9rem; }
         .ban-row { color: #ff4d4d; text-decoration: line-through; opacity: 0.6; }
+        .ludo-row { background: rgba(241, 196, 15, 0.1) !important; border: 1px solid var(--yellow); }
         #historialContenedor { margin-top: 15px; max-height: 150px; overflow-y: auto; background: rgba(0,0,0,0.4); border-radius: 8px; padding: 10px; border: 1px solid #444; }
         .hist-item { border-bottom: 1px solid #222; padding: 6px 0; font-size: 0.75rem; }
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 10001; padding: 20px; overflow-y: auto; }
@@ -39,6 +42,17 @@
         .modal-small { max-width: 600px !important; margin-top: 50px; }
         .filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 20px; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px; }
         .resumen-caja { background: #000; padding: 15px; border-radius: 10px; border: 1px solid var(--gold); display: flex; justify-content: space-around; margin-bottom: 15px; }
+        
+        /* Efecto Parpadeo Ludópata */
+        @keyframes parpadeoLudo {
+            0% { border-color: var(--gold); box-shadow: none; }
+            50% { border-color: var(--yellow); box-shadow: 0 0 20px var(--yellow); }
+            100% { border-color: var(--gold); box-shadow: none; }
+        }
+        .ludo-active {
+            animation: parpadeoLudo 0.8s infinite;
+            border: 3px solid var(--yellow) !important;
+        }
     </style>
 </head>
 <body>
@@ -75,25 +89,40 @@
         </div>
     </div>
 
-    <div class="panel">
+    <div class="panel" id="panelGestion">
         <h3>GESTIÓN EN VIVO</h3>
         <input type="text" id="manageId" placeholder="ESCRIBIR CÓDIGO..." style="text-transform: uppercase;" oninput="escucharTicketEnVivo()">
         <div id="infoTicket" style="margin: 15px 0; display: none; background: rgba(0,0,0,0.5); padding: 15px; border-radius: 10px; border-left: 4px solid var(--gold);">
             <p>Saldo Actual: <b id="currentBal" style="font-size: 1.2rem; color:var(--green);">0</b>€</p>
             <p>Estado: <b id="currentState">---</b></p>
+            
+            <div id="seccionLudo" style="display:none; background: rgba(241, 196, 15, 0.2); padding: 5px; border-radius: 5px; margin-bottom: 10px; text-align: center;">
+                <b style="color: var(--yellow);">⚠️ MODO LUDÓPATA ACTIVO</b>
+            </div>
+
             <div id="addMoneySection" style="margin-top: 10px; border-top: 1px dashed #444; padding-top: 10px;">
                 <input type="number" id="extraMoney" placeholder="CANTIDAD A SUMAR (€)" step="0.01">
                 <button class="btn btn-add" onclick="añadirDinero()">+ SUMAR SALDO</button>
             </div>
+
+            <div style="margin-top: 10px;">
+                <textarea id="adminNotas" placeholder="Notas sobre el cliente..." rows="2" style="font-size: 0.8rem;"></textarea>
+                <button class="btn btn-outline" style="font-size: 0.7rem; padding: 5px;" onclick="guardarNotas()">Guardar Notas</button>
+            </div>
+
             <div id="historialContenedor">
                 <div id="listaHistorial"></div>
             </div>
             <button class="btn btn-blue" onclick="abrirModalHistorial()">🔎 VER HISTORIAL COMPLETO</button>
         </div>
-        <button class="btn btn-warn" onclick="retirarEfectivo()">CASH OUT (VACIAR)</button>
-        <button class="btn btn-danger" onclick="banearTicket()">BANEAR TICKET</button>
-        <button class="btn btn-outline" onclick="desbanearTicket()" style="margin-top: 5px;">DESBANEAR</button>
-        <button class="btn btn-danger" onclick="borrarTicket()" style="margin-top: 15px; background: #222; border: 1px solid var(--red);">BORRAR TICKET DEFINITIVAMENTE</button>
+        
+        <div id="botonesAccion" style="display: flex; flex-direction: column; gap: 5px;">
+            <button id="btnLudoToggle" class="btn btn-ludo" onclick="toggleLudopata()">MARCAR LUDÓPATA</button>
+            <button class="btn btn-warn" onclick="retirarEfectivo()">CASH OUT (VACIAR)</button>
+            <button class="btn btn-danger" onclick="banearTicket()">BANEAR TICKET</button>
+            <button class="btn btn-outline" onclick="desbanearTicket()" style="margin-top: 5px;">DESBANEAR</button>
+            <button class="btn btn-danger" onclick="borrarTicket()" style="margin-top: 15px; background: #222; border: 1px solid var(--red);">BORRAR TICKET DEFINITIVAMENTE</button>
+        </div>
     </div>
 
     <div class="panel panel-large">
@@ -107,6 +136,7 @@
     </div>
 </div>
 
+<!-- EL RESTO DE MODALES SE MANTIENEN IGUAL (Hitorial, Estado, Desbaneo) -->
 <div id="modalHistorial" class="modal">
     <div class="modal-content">
         <div style="display:flex; justify-content: space-between; align-items: center;">
@@ -159,7 +189,7 @@
             <h2 style="color:var(--gold); margin:0; font-size: 1.2rem;">Estado Casino</h2>
             <button class="btn btn-danger" style="width: auto; padding: 2px 10px;" onclick="document.getElementById('modalEstadoCasino').style.display='none'">X</button>
         </div>
-        <div style="width: 600px; height: 600px; overflow: hidden; border-radius: 8px;">
+        <div style="width: 100%; height: 500px; overflow: hidden; border-radius: 8px;">
             <iframe src="estado.html" style="width: 100%; height: 100%; border: none; background: transparent;"></iframe>
         </div>
     </div>
@@ -171,7 +201,7 @@
             <h2 style="color:var(--gold); margin:0; font-size: 1.2rem;">Códigos Desbaneos</h2>
             <button class="btn btn-danger" style="width: auto; padding: 2px 10px;" onclick="document.getElementById('modalCodigosDesban').style.display='none'">X</button>
         </div>
-        <div style="width: 600px; height: 600px; overflow: hidden; border-radius: 8px;">
+        <div style="width: 100%; height: 500px; overflow: hidden; border-radius: 8px;">
             <iframe src="desbaneos.html" style="width: 100%; height: 100%; border: none; background: transparent;"></iframe>
         </div>
     </div>
@@ -224,6 +254,7 @@
         if(currentTicketRef) currentTicketRef.off();
         if(!id || id.length < 4) {
             document.getElementById('infoTicket').style.display = 'none';
+            document.getElementById('panelGestion').classList.remove('ludo-active');
             return;
         }
         currentTicketRef = db.ref('codes/' + id);
@@ -231,12 +262,34 @@
             if(snap.exists()) {
                 const data = snap.val();
                 document.getElementById('infoTicket').style.display = 'block';
+                
+                // Lógica Ludópata
+                const esLudo = data.ludopata === true;
+                const panel = document.getElementById('panelGestion');
+                const btnLudo = document.getElementById('btnLudoToggle');
+                const divLudo = document.getElementById('seccionLudo');
+                
+                if(esLudo) {
+                    panel.classList.add('ludo-active');
+                    btnLudo.innerText = "QUITAR LUDÓPATA";
+                    btnLudo.style.background = "white";
+                    divLudo.style.display = "block";
+                } else {
+                    panel.classList.remove('ludo-active');
+                    btnLudo.innerText = "MARCAR LUDÓPATA";
+                    btnLudo.style.background = "var(--yellow)";
+                    divLudo.style.display = "none";
+                }
+
+                document.getElementById('adminNotas').value = data.notas || "";
+
                 let esInf = data.saldo.toString().includes("@");
                 let esBan = data.saldo === -1;
                 document.getElementById('currentBal').innerText = esInf ? "∞" : (esBan ? "0" : truncar(data.saldo).toFixed(2));
                 document.getElementById('currentState').innerText = esBan ? "⛔ BANEADO" : "✅ ACTIVO";
                 document.getElementById('currentState').style.color = esBan ? "var(--red)" : "var(--green)";
                 document.getElementById('addMoneySection').style.display = esBan ? 'none' : 'block';
+                
                 const histDiv = document.getElementById('listaHistorial');
                 histDiv.innerHTML = "";
                 historialGlobal = data.historial ? Object.values(data.historial).reverse() : [];
@@ -244,8 +297,28 @@
                     histDiv.innerHTML += `<div class="hist-item"><b>${mov.origen}</b>: <span style="color:${mov.monto>0?'var(--green)':'var(--red)'}">${truncar(mov.monto).toFixed(2)}€</span></div>`;
                 });
                 if(document.getElementById('modalHistorial').style.display === 'block') aplicarFiltros();
-            } else { document.getElementById('infoTicket').style.display = 'none'; }
+            } else { 
+                document.getElementById('infoTicket').style.display = 'none'; 
+                document.getElementById('panelGestion').classList.remove('ludo-active');
+            }
         });
+    }
+
+    // NUEVAS FUNCIONES PARA LUDÓPATA Y NOTAS
+    async function toggleLudopata() {
+        const id = document.getElementById('manageId').value.toUpperCase().trim();
+        if(!id) return;
+        const snap = await db.ref('codes/' + id + '/ludopata').get();
+        const estadoActual = snap.exists() ? snap.val() : false;
+        await db.ref('codes/' + id).update({ ludopata: !estadoActual });
+    }
+
+    async function guardarNotas() {
+        const id = document.getElementById('manageId').value.toUpperCase().trim();
+        const texto = document.getElementById('adminNotas').value;
+        if(!id) return;
+        await db.ref('codes/' + id).update({ notas: texto });
+        alert("Notas guardadas.");
     }
 
     function generateRandomCode() {
@@ -280,7 +353,7 @@
         const saldoAGuardar = (typeof monto === 'string' && monto.includes("@")) ? monto : truncar(monto);
         const saldoHist = (typeof saldoAGuardar === 'string') ? 999999 : saldoAGuardar;
         db.ref('codes/' + id).set({
-            saldo: saldoAGuardar, fecha: ahora, ultimaMod: ahora, saldoAnterior: saldoHist
+            saldo: saldoAGuardar, fecha: ahora, ultimaMod: ahora, saldoAnterior: saldoHist, ludopata: false, notas: ""
         }).then(() => { registrarMovimiento(id, "Carga Inicial", saldoHist, "Admin"); });
     }
 
@@ -350,8 +423,9 @@
             items.sort((a,b) => new Date(b.ultimaMod) - new Date(a.ultimaMod));
             items.slice(0, 15).forEach(i => {
                 const isBan = i.saldo === -1;
+                const esLudo = i.ludopata === true;
                 const saldoDisp = isBan ? '0.00' : (typeof i.saldo === 'number' ? truncar(i.saldo).toFixed(2) : i.saldo);
-                list.innerHTML += `<tr class="${isBan?'ban-row':''}"><td>${i.id}</td><td>${saldoDisp}€</td><td>${i.fecha}</td><td>${i.ultimaMod}</td><td>${isBan?'🚫 BAN':'✅ OK'}</td></tr>`;
+                list.innerHTML += `<tr class="${isBan?'ban-row':''} ${esLudo?'ludo-row':''}"><td>${i.id} ${esLudo?'⚠️':''}</td><td>${saldoDisp}€</td><td>${i.fecha}</td><td>${i.ultimaMod}</td><td>${isBan?'🚫 BAN':'✅ OK'}</td></tr>`;
             });
         });
     }
@@ -397,7 +471,6 @@
         }
     }
 
-    // Cerrar modales si se hace clic fuera del contenido central
     window.onclick = function(event) {
         if (event.target.className === 'modal') {
             event.target.style.display = "none";
