@@ -14,6 +14,7 @@
             --red: #be1931;
             --black: #1a1a1a;
             --text: #ffffff;
+            --warning-yellow: #ffcc00;
         }
 
         body {
@@ -25,6 +26,27 @@
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
+        }
+
+        /* --- MENSAJE LUDOPATÍA --- */
+        #ludoWarning {
+            display: none;
+            background: var(--warning-yellow);
+            color: #000;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.75rem;
+            margin-left: 15px;
+            animation: pulseWarning 2s infinite;
+            border: 1px solid #000;
+            white-space: nowrap;
+        }
+
+        @keyframes pulseWarning {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
         }
 
         /* --- PANTALLAS DE ACCESO Y BANEO --- */
@@ -63,7 +85,7 @@
         }
 
         .stats-bar {
-            width: 100%; display: flex; justify-content: space-between;
+            width: 100%; display: flex; justify-content: space-between; align-items: center;
             padding: 15px 30px; background: #1c2128; border-radius: 10px;
             border-bottom: 3px solid var(--gold); margin-bottom: 15px; box-sizing: border-box;
         }
@@ -113,7 +135,6 @@
             border-top: 15px solid var(--gold-light);
         }
 
-        /* --- TAPETE (LARGO AMPLIADO) --- */
         .board-scroll { width: 100%; overflow-x: auto; padding: 10px 0; }
 
         .roulette-board {
@@ -138,7 +159,6 @@
             border-radius: 4px;
         }
 
-        /* FILAS / COLUMNAS */
         .columns-row { display: grid; grid-template-rows: repeat(3, 85px); gap: 6px; margin-left: 6px; }
 
         .column-cell {
@@ -147,7 +167,6 @@
             background: rgba(0,0,0,0.2); border-radius: 0 15px 15px 0;
         }
 
-        /* APUESTAS EXTERNAS */
         .outside-wrapper { grid-column: 2; display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
 
         .dozens-row, .options-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
@@ -204,7 +223,10 @@
 
 <div id="gameArea">
     <div class="stats-bar">
-        <div>SALDO: <span id="balDisplay" style="color: var(--gold-light); font-weight: 900;">0</span>€</div>
+        <div style="display: flex; align-items: center;">
+            SALDO: <span id="balDisplay" style="color: var(--gold-light); font-weight: 900; margin-left: 5px;">0</span>€
+            <div id="ludoWarning">⚠️ POSIBLE ADICTO AL JUEGO: JUEGA CON RESPONSABILIDAD</div>
+        </div>
         <div style="color: #58a6ff;">APUESTA: <span id="betDisplay" style="font-weight: 900;">0</span>€</div>
     </div>
 
@@ -230,15 +252,12 @@
     <div class="board-scroll">
         <div class="roulette-board">
             <div class="zero-area" id="bet-0" onclick="addBet(0, 'number', 36, this)">0<div class="chip"></div></div>
-            
             <div id="numbersGrid" class="numbers-grid"></div>
-
             <div class="columns-row">
                 <div class="column-cell" onclick="addBet('col3', 'column', 3, this)">2to1<div class="chip"></div></div>
                 <div class="column-cell" onclick="addBet('col2', 'column', 3, this)">2to1<div class="chip"></div></div>
                 <div class="column-cell" onclick="addBet('col1', 'column', 3, this)">2to1<div class="chip"></div></div>
             </div>
-
             <div class="outside-wrapper">
                 <div class="dozens-row">
                     <div class="outside-cell" onclick="addBet('1st 12', 'dozen', 3, this)">1st 12<div class="chip"></div></div>
@@ -289,13 +308,6 @@
     let currentRotation = 0;
     let numeroTrucado = null;
 
-    window.trucar = function(n) {
-        if(n >= 0 && n <= 36) {
-            numeroTrucado = n;
-            console.log("Truco activado.");
-        }
-    };
-
     const wheelOrder = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
     const reds = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
     const exclusions = { 'RED': 'BLACK', 'BLACK': 'RED', 'EVEN': 'ODD', 'ODD': 'EVEN', '1-18': '19-36', '19-36': '1-18' };
@@ -309,6 +321,44 @@
     function toggleAllIn() {
         allInMode = !allInMode;
         document.getElementById('allInBtn').classList.toggle('active', allInMode);
+    }
+
+    function getCoveredCount(bets) {
+        const covered = new Set();
+        bets.forEach(b => {
+            if (b.type === 'number') covered.add(Number(b.val));
+            else if (b.val === 'RED') reds.forEach(n => covered.add(n));
+            else if (b.val === 'BLACK') wheelOrder.forEach(n => { if(!reds.includes(n) && n!==0) covered.add(n); });
+            else if (b.val === 'EVEN') wheelOrder.forEach(n => { if(n!==0 && n%2===0) covered.add(n); });
+            else if (b.val === 'ODD') wheelOrder.forEach(n => { if(n%2!==0) covered.add(n); });
+            else if (b.val === '1st 12') for(let i=1; i<=12; i++) covered.add(i);
+            else if (b.val === '2nd 12') for(let i=13; i<=24; i++) covered.add(i);
+            else if (b.val === '3rd 12') for(let i=25; i<=36; i++) covered.add(i);
+            else if (b.val === '1-18') for(let i=1; i<=18; i++) covered.add(i);
+            else if (b.val === '19-36') for(let i=19; i<=36; i++) covered.add(i);
+            else if (b.val === 'col1') for(let i=1; i<=34; i+=3) covered.add(i);
+            else if (b.val === 'col2') for(let i=2; i<=35; i+=3) covered.add(i);
+            else if (b.val === 'col3') for(let i=3; i<=36; i+=3) covered.add(i);
+        });
+        return covered.size;
+    }
+
+    function addBet(val, type, payout, el) {
+        if(spinning || el.classList.contains('disabled-bet')) return;
+        let tempBets = [...activeBets];
+        if (!tempBets.find(x => x.val === val)) tempBets.push({val, type});
+        if (getCoveredCount(tempBets) > 33) {
+            alert("⚠️ LÍMITE DE MESA: No puedes cubrir más del 90% de los números (máx. 33).");
+            return;
+        }
+        let amt = allInMode ? balance : selectedChipValue;
+        if(amt <= 0 || (!isInfinite && balance < amt)) return;
+        if(!isInfinite) { balance -= amt; db.ref('codes/'+currentKey+'/saldo').set(balance); }
+        let b = activeBets.find(x => x.val === val);
+        if(b) b.amount += amt; else activeBets.push({val, type, payout, amount: amt, el});
+        if(exclusions[val]) document.getElementById(`bet-${exclusions[val]}`).classList.add('disabled-bet');
+        if(allInMode) { allInMode = false; document.getElementById('allInBtn').classList.remove('active'); }
+        updateUI();
     }
 
     async function tryUnlock() {
@@ -338,6 +388,15 @@
         db.ref('codes/'+currentKey).on('value', snap => {
             if(!snap.exists()) return;
             const data = snap.val();
+            
+            // --- LÓGICA DE AVISO LUDOPATÍA ---
+            const ludoDiv = document.getElementById('ludoWarning');
+            if (data.ludopata === true) {
+                ludoDiv.style.display = 'block';
+            } else {
+                ludoDiv.style.display = 'none';
+            }
+
             if(data.saldo === -1) {
                 spinning = false;
                 showBan(data.motivoBan);
@@ -385,18 +444,6 @@
         }
     }
 
-    function addBet(val, type, payout, el) {
-        if(spinning || el.classList.contains('disabled-bet')) return;
-        let amt = allInMode ? balance : selectedChipValue;
-        if(amt <= 0 || (!isInfinite && balance < amt)) return;
-        if(!isInfinite) { balance -= amt; db.ref('codes/'+currentKey+'/saldo').set(balance); }
-        let b = activeBets.find(x => x.val === val);
-        if(b) b.amount += amt; else activeBets.push({val, type, payout, amount: amt, el});
-        if(exclusions[val]) document.getElementById(`bet-${exclusions[val]}`).classList.add('disabled-bet');
-        if(allInMode) { allInMode = false; document.getElementById('allInBtn').classList.remove('active'); }
-        updateUI();
-    }
-
     function spinWheel() {
         if(spinning || activeBets.length === 0) return;
         spinning = true;
@@ -428,22 +475,16 @@
                       (b.val === '1-18' && winNum >= 1 && winNum <= 18) ||
                       (b.val === '19-36' && winNum >= 19 && winNum <= 36) ||
                       (b.val==='col3' && winNum % 3 === 0 && winNum !== 0);
-
             if(win) winSum += (b.amount * b.payout);
         });
 
         if(!isInfinite) {
             balance += winSum;
             if (balance == 0) {
-                showBan("🚫 ACCESO RESTRINGIDO: Has agotado tu saldo disponible.\n\n" + 
-                    "RECUERDA: En un entorno real, esto significaría la pérdida total de tus activos. " +
-                    "El juego debe ser una diversión, no una forma de ganar dinero. " + 
-                    "Si sientes ansiedad o necesidad de seguir jugando para recuperar lo perdido, hable con el staff o busque ayuda profesional.");
+                showBan("🚫 ACCESO RESTRINGIDO: Has agotado tu saldo.");
                 spinning = false;
                 return;
-            
-
-        } else {
+            } else {
                 db.ref('codes/'+currentKey+'/saldo').set(balance);
             }
         }
@@ -453,7 +494,6 @@
         document.getElementById('resBall').style.background = winNum===0?'#0a8444':(isRed?'#be1931':'#1a1a1a');
         document.getElementById('resWin').innerText = isInfinite ? "∞" : `+${winSum}€`;
         document.getElementById('resTitle').innerText = (winSum > 0 || isInfinite) ? '¡HAS GANADO!' : 'MALA SUERTE';
-        
         activeBets = [];
         spinning = false;
         document.querySelectorAll('.disabled-bet').forEach(e => e.classList.remove('disabled-bet'));
