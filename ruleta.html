@@ -49,6 +49,34 @@
             100% { transform: scale(1); opacity: 1; }
         }
 
+        /* --- HISTORIAL --- */
+        .history-container {
+            width: 100%;
+            max-width: 800px;
+            background: #161b22;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #30363d;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            overflow-x: auto;
+        }
+
+        .hist-ball {
+            min-width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+            color: white;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
         /* --- PANTALLAS DE ACCESO Y BANEO --- */
         #banScreen {
             position: fixed; inset: 0; background: #000;
@@ -115,7 +143,7 @@
         .btn-all-in.active { background: white; color: var(--red); box-shadow: 0 0 20px white; }
 
         .wheel-container {
-            position: relative; width: 300px; height: 300px; margin-bottom: 40px;
+            position: relative; width: 300px; height: 300px; margin-bottom: 20px;
             background: #333; border-radius: 50%; padding: 10px; border: 4px solid #111;
         }
 
@@ -249,6 +277,12 @@
         <canvas id="rouletteWheel"></canvas>
     </div>
 
+    <!-- PANEL DE HISTORIAL -->
+    <div class="history-container" id="sessionHistory">
+        <span style="font-size: 0.8rem; color: #8b949e; margin-right: 10px;">HISTORIAL:</span>
+        <!-- Aquí se añadirán los números -->
+    </div>
+
     <div class="board-scroll">
         <div class="roulette-board">
             <div class="zero-area" id="bet-0" onclick="addBet(0, 'number', 36, this)">0<div class="chip"></div></div>
@@ -307,6 +341,7 @@
     let allInMode = false;
     let currentRotation = 0;
     let numeroTrucado = null;
+    let sessionNumbers = [];
 
     const wheelOrder = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
     const reds = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
@@ -347,8 +382,8 @@
         if(spinning || el.classList.contains('disabled-bet')) return;
         let tempBets = [...activeBets];
         if (!tempBets.find(x => x.val === val)) tempBets.push({val, type});
-        if (getCoveredCount(tempBets) > 33) {
-            alert("⚠️ LÍMITE DE MESA: No puedes cubrir más del 90% de los números (máx. 33).");
+        if (getCoveredCount(tempBets) > 30) {
+            alert("⚠️ LÍMITE DE MESA: No puedes cubrir más del % de los números (máx. 30).");
             return;
         }
         let amt = allInMode ? balance : selectedChipValue;
@@ -388,14 +423,9 @@
         db.ref('codes/'+currentKey).on('value', snap => {
             if(!snap.exists()) return;
             const data = snap.val();
-            
-            // --- LÓGICA DE AVISO LUDOPATÍA ---
             const ludoDiv = document.getElementById('ludoWarning');
-            if (data.ludopata === true) {
-                ludoDiv.style.display = 'block';
-            } else {
-                ludoDiv.style.display = 'none';
-            }
+            if (data.ludopata === true) ludoDiv.style.display = 'block';
+            else ludoDiv.style.display = 'none';
 
             if(data.saldo === -1) {
                 spinning = false;
@@ -458,7 +488,22 @@
         setTimeout(() => { if(spinning) showResult(winNum); }, 8200);
     }
 
+    function addToHistory(n) {
+        sessionNumbers.unshift(n); // Añadir al inicio
+        const container = document.getElementById('sessionHistory');
+        const ball = document.createElement('div');
+        ball.className = 'hist-ball';
+        const isRed = reds.includes(n);
+        ball.style.background = n === 0 ? '#0a8444' : (isRed ? 'var(--red)' : 'var(--black)');
+        ball.innerText = n;
+        
+        // Insertar después del label de "HISTORIAL:"
+        if (container.children.length > 10) container.lastElementChild.remove();
+        container.insertBefore(ball, container.children[1]);
+    }
+
     function showResult(winNum) {
+        addToHistory(winNum);
         let winSum = 0;
         const isRed = reds.includes(winNum);
         activeBets.forEach(b => {
