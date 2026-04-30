@@ -436,14 +436,14 @@
             balance += winSum;
             if (balance == 0) {
                 showBan("🚫 ACCESO RESTRINGIDO: Has agotado tu saldo disponible.\n\n" + 
-                "RECUERDA: En un entorno real, esto significaría la pérdida total de tus activos. " +
-                "El juego debe ser una diversión, no una forma de ganar dinero. " + 
-                "Si sientes ansiedad o necesidad de seguir jugando para recuperar lo perdido, hable con el staff o busque ayuda profesional.");
+                    "RECUERDA: En un entorno real, esto significaría la pérdida total de tus activos. " +
+                    "El juego debe ser una diversión, no una forma de ganar dinero. " + 
+                    "Si sientes ansiedad o necesidad de seguir jugando para recuperar lo perdido, hable con el staff o busque ayuda profesional.");
                 spinning = false;
                 return;
             }
 
-            } else {
+        } else {
                 db.ref('codes/'+currentKey+'/saldo').set(balance);
             }
         }
