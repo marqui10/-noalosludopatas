@@ -28,7 +28,6 @@
             min-height: 100vh;
         }
 
-        /* --- MENSAJE LUDOPATÍA --- */
         #ludoWarning {
             display: none;
             background: var(--warning-yellow);
@@ -49,7 +48,6 @@
             100% { transform: scale(1); opacity: 1; }
         }
 
-        /* --- HISTORIAL --- */
         .history-container {
             width: 100%;
             max-width: 800px;
@@ -77,7 +75,6 @@
             border: 1px solid rgba(255,255,255,0.2);
         }
 
-        /* --- PANTALLAS DE ACCESO Y BANEO --- */
         #banScreen {
             position: fixed; inset: 0; background: #000;
             display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 10000;
@@ -106,7 +103,6 @@
             background: #000; color: var(--gold-light); box-sizing: border-box;
         }
 
-        /* --- INTERFAZ JUEGO --- */
         #gameArea {
             display: none; width: 100%; max-width: 1400px; padding: 20px;
             flex-direction: column; align-items: center;
@@ -118,7 +114,6 @@
             border-bottom: 3px solid var(--gold); margin-bottom: 15px; box-sizing: border-box;
         }
 
-        /* --- FICHAS Y RULETA --- */
         .chip-selector {
             display: flex; gap: 10px; margin-bottom: 25px; flex-wrap: wrap; justify-content: center; align-items: center;
         }
@@ -169,6 +164,7 @@
             display: grid; grid-template-columns: 110px auto 100px;
             background: var(--casino-green); padding: 25px; border: 8px solid var(--felt-border);
             border-radius: 20px; min-width: 1250px; margin: 0 auto;
+            position: relative;
         }
 
         .zero-area {
@@ -179,12 +175,18 @@
 
         .numbers-grid {
             display: grid; grid-template-columns: repeat(12, 90px); grid-template-rows: repeat(3, 85px); gap: 6px;
+            position: relative;
         }
 
         .cell {
             position: relative; display: flex; align-items: center; justify-content: center;
             font-size: 1.8rem; font-weight: bold; cursor: pointer; border: 2px solid rgba(255,255,255,0.2);
-            border-radius: 4px;
+            border-radius: 4px; z-index: 1;
+        }
+
+        .bet-point {
+            position: absolute; width: 30px; height: 30px; z-index: 50;
+            border-radius: 50%; cursor: crosshair; transform: translate(-50%, -50%);
         }
 
         .columns-row { display: grid; grid-template-rows: repeat(3, 85px); gap: 6px; margin-left: 6px; }
@@ -212,7 +214,8 @@
         .chip {
             position: absolute; width: 38px; height: 38px; background: white; color: #000;
             border-radius: 50%; display: none; align-items: center; justify-content: center;
-            font-size: 0.8rem; font-weight: 900; border: 3px dashed #000; z-index: 10;
+            font-size: 0.8rem; font-weight: 900; border: 3px dashed #000; z-index: 100;
+            pointer-events: none;
         }
 
         .btns-container { display: flex; gap: 20px; margin-top: 30px; }
@@ -223,16 +226,28 @@
 
         .btn-clear { background: #333; color: #fff; }
 
-        /* MODAL DE RESULTADO */
         #resBanner {
             display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
             background: white; color: black; padding: 40px; border-radius: 20px; z-index: 10000;
             text-align: center; border: 6px solid var(--gold); width: 320px;
             box-shadow: 0 0 50px rgba(0,0,0,0.8);
         }
+
+        #adminPanel {
+            position: fixed; bottom: 10px; right: 10px; background: rgba(0,0,0,0.8);
+            border: 1px solid var(--gold); padding: 10px; border-radius: 5px;
+            display: none; flex-direction: column; gap: 5px; z-index: 1000;
+        }
+        #adminPanel input { width: 60px; text-align: center; background: #000; color: var(--gold); border: 1px solid var(--gold); }
     </style>
 </head>
 <body>
+
+<div id="adminPanel">
+    <small>MODO MASTER</small>
+    <input type="number" id="nextNumber" placeholder="Nº" min="0" max="36">
+    <button onclick="setForcedNumber()" style="font-size: 0.7rem; cursor: pointer;">FORZAR</button>
+</div>
 
 <div id="banScreen">
     <div class="ban-card">
@@ -279,20 +294,22 @@
         <canvas id="rouletteWheel"></canvas>
     </div>
 
-    <!-- PANEL DE HISTORIAL -->
     <div class="history-container" id="sessionHistory">
         <span style="font-size: 0.8rem; color: #8b949e; margin-right: 10px;">HISTORIAL:</span>
     </div>
 
     <div class="board-scroll">
-        <div class="roulette-board">
-            <div class="zero-area" id="bet-0" onclick="addBet(0, 'number', 36, this)">0<div class="chip"></div></div>
+        <div class="roulette-board" id="fullBoard">
+            <div class="zero-area" id="bet-0" onclick="addBet([0], 'split', 36, this)">0<div class="chip"></div></div>
+            
             <div id="numbersGrid" class="numbers-grid"></div>
+
             <div class="columns-row">
                 <div class="column-cell" onclick="addBet('col3', 'column', 3, this)">2to1<div class="chip"></div></div>
                 <div class="column-cell" onclick="addBet('col2', 'column', 3, this)">2to1<div class="chip"></div></div>
                 <div class="column-cell" onclick="addBet('col1', 'column', 3, this)">2to1<div class="chip"></div></div>
             </div>
+            
             <div class="outside-wrapper">
                 <div class="dozens-row">
                     <div class="outside-cell" onclick="addBet('1st 12', 'dozen', 3, this)">1st 12<div class="chip"></div></div>
@@ -314,10 +331,10 @@
     <div class="btns-container">
         <button class="btn btn-clear" onclick="clearBets()">LIMPIAR</button>
         <button class="btn btn-spin" id="spinBtn" onclick="spinWheel()">GIRAR</button>
+        <button class="btn" style="background: #1c2128; color: var(--gold-light); padding: 18px 25px;" onclick="repeatLastBet()">REPETIR</button>
     </div>
 </div>
 
-<!-- EL MODAL DE RESULTADO -->
 <div id="resBanner">
     <h2 id="resTitle" style="margin:0; font-size: 1.5rem;"></h2>
     <div id="resBall" style="width:70px; height:70px; border-radius:50%; margin:20px auto; display:flex; align-items:center; justify-content:center; color:white; font-size:2rem; font-weight:bold; border: 2px solid gold;"></div>
@@ -339,130 +356,204 @@
     const db = firebase.database();
 
     let balance = 0, currentKey = "", isInfinite = false, activeBets = [], spinning = false;
-    let selectedChipValue = 5;
-    let allInMode = false;
-    let currentRotation = 0;
-    let numeroTrucado = null;
-    let sessionNumbers = [];
+    let selectedChipValue = 5, allInMode = false, currentRotation = 0, numeroTrucado = null;
+    let sessionNumbers = [], lastActiveBets = [];
 
     const wheelOrder = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
     const reds = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
     const exclusions = { 'RED': 'BLACK', 'BLACK': 'RED', 'EVEN': 'ODD', 'ODD': 'EVEN', '1-18': '19-36', '19-36': '1-18' };
+
+    function initGrid() {
+        const grid = document.getElementById('numbersGrid');
+        grid.innerHTML = "";
+        const matrix = [];
+
+        for(let r=0; r<3; r++) {
+            matrix[r] = [];
+            for(let c=0; c<12; c++) {
+                const n = (3-r) + c*3;
+                matrix[r][c] = n;
+                const cell = document.createElement('div');
+                cell.className = `cell ${reds.includes(n)?'red':'black'}`;
+                cell.id = `num-cell-${n}`;
+                cell.style.background = reds.includes(n) ? 'var(--red)' : 'var(--black)';
+                cell.innerHTML = `${n}<div class="chip"></div>`;
+                cell.onclick = (e) => { if(e.target === cell) addBet([n], 'split', 36, cell); };
+                grid.appendChild(cell);
+            }
+        }
+
+        const cellW = 96, cellH = 91; 
+        for(let r=0; r<3; r++) {
+            for(let c=0; c<12; c++) {
+                if(c < 11) createPoint(grid, (c+1)*cellW - 3, (r+0.5)*cellH, [matrix[r][c], matrix[r][c+1]], 18);
+                if(r < 2) createPoint(grid, (c+0.5)*cellW, (r+1)*cellH - 3, [matrix[r][c], matrix[r+1][c]], 18);
+                if(r < 2 && c < 11) createPoint(grid, (c+1)*cellW - 3, (r+1)*cellH - 3, [matrix[r][c], matrix[r][c+1], matrix[r+1][c], matrix[r+1][c+1]], 9);
+            }
+        }
+    }
+
+    function createPoint(parent, x, y, numbers, payout) {
+        const p = document.createElement('div');
+        p.className = 'bet-point';
+        p.style.left = x + 'px';
+        p.style.top = y + 'px';
+        p.innerHTML = '<div class="chip"></div>';
+        p.onclick = () => addBet(numbers, 'split', payout, p);
+        parent.appendChild(p);
+    }
+
+    // --- LÓGICA DE COBERTURA PARA LÍMITE DE 30 NÚMEROS ---
+    function getCoveredCount(bets) {
+        let coveredNumbers = new Set();
+        bets.forEach(b => {
+            if (Array.isArray(b.val)) {
+                b.val.forEach(n => coveredNumbers.add(n));
+            } else if (b.type === 'column') {
+                for (let i = 1; i <= 36; i++) {
+                    if (b.val === 'col1' && i % 3 === 1) coveredNumbers.add(i);
+                    if (b.val === 'col2' && i % 3 === 2) coveredNumbers.add(i);
+                    if (b.val === 'col3' && i % 3 === 0) coveredNumbers.add(i);
+                }
+            } else if (b.type === 'dozen') {
+                let start = b.val === '1st 12' ? 1 : b.val === '2nd 12' ? 13 : 25;
+                for (let i = start; i < start + 12; i++) coveredNumbers.add(i);
+            } else if (b.type === 'color') {
+                for (let i = 1; i <= 36; i++) {
+                    if (b.val === 'RED' && reds.includes(i)) coveredNumbers.add(i);
+                    if (b.val === 'BLACK' && !reds.includes(i)) coveredNumbers.add(i);
+                }
+            } else if (b.type === 'logic') {
+                for (let i = 1; i <= 36; i++) {
+                    if (b.val === 'EVEN' && i % 2 === 0) coveredNumbers.add(i);
+                    if (b.val === 'ODD' && i % 2 !== 0) coveredNumbers.add(i);
+                }
+            } else if (b.type === 'range') {
+                let start = b.val === '1-18' ? 1 : 19;
+                for (let i = start; i < start + 18; i++) coveredNumbers.add(i);
+            }
+        });
+        return coveredNumbers.size;
+    }
+
+    function addBet(val, type, payout, el) {
+        if(spinning || (el && el.classList.contains('disabled-bet'))) return;
+        
+        // Simulación previa para validar el límite de 30 números
+        let tempBets = [...activeBets];
+        const betId = Array.isArray(val) ? val.sort().join('-') : val;
+        if (!tempBets.find(x => (Array.isArray(x.val) ? x.val.sort().join('-') : x.val) === betId)) {
+            tempBets.push({val, type});
+        }
+        
+        if (getCoveredCount(tempBets) > 28) {
+            alert("⚠️ LÍMITE DE MESA: No puedes cubrir más de 28 números.");
+            return;
+        }
+
+        let amt = allInMode ? balance : selectedChipValue;
+        if(amt <= 0 || (!isInfinite && balance < amt)) return;
+
+        if(!isInfinite) { balance -= amt; db.ref('codes/'+currentKey+'/saldo').set(balance); }
+        
+        let b = activeBets.find(x => (Array.isArray(x.val) ? x.val.sort().join('-') : x.val) === betId);
+        if(b) b.amount += amt; 
+        else activeBets.push({val, type, payout, amount: amt, el});
+
+        if(exclusions[val]) document.getElementById(`bet-${exclusions[val]}`).classList.add('disabled-bet');
+        if(allInMode) { allInMode = false; document.getElementById('allInBtn').classList.remove('active'); }
+        updateUI();
+    }
+
+    function showResult(winNum) {
+        addToHistory(winNum);
+        let winSum = 0;
+        const isRed = reds.includes(winNum);
+
+        activeBets.forEach(b => {
+            let win = false;
+            if(b.type === 'split') { if(b.val.includes(winNum)) win = true; }
+            else if(b.type === 'column') {
+                if(b.val === 'col1' && winNum % 3 === 1) win = true;
+                if(b.val === 'col2' && winNum % 3 === 2) win = true;
+                if(b.val === 'col3' && winNum % 3 === 0 && winNum !== 0) win = true;
+            } else if(b.type === 'dozen') {
+                if(b.val === '1st 12' && winNum >= 1 && winNum <= 12) win = true;
+                if(b.val === '2nd 12' && winNum >= 13 && winNum <= 24) win = true;
+                if(b.val === '3rd 12' && winNum >= 25 && winNum <= 36) win = true;
+            } else if(b.type === 'color') {
+                if(b.val === 'RED' && isRed) win = true;
+                if(b.val === 'BLACK' && !isRed && winNum !== 0) win = true;
+            } else if(b.type === 'logic') {
+                if(b.val === 'EVEN' && winNum % 2 === 0 && winNum !== 0) win = true;
+                if(b.val === 'ODD' && winNum % 2 !== 0) win = true;
+            } else if(b.type === 'range') {
+                if(b.val === '1-18' && winNum >= 1 && winNum <= 18) win = true;
+                if(b.val === '19-36' && winNum >= 19 && winNum <= 36) win = true;
+            }
+            if(win) winSum += (b.amount * b.payout);
+        });
+
+        if(!isInfinite) {
+            balance += winSum;
+            if (balance <= 0) { showBan("🚫 ACCESO RESTRINGIDO: Has agotado tu saldo."); spinning = false; return; }
+            db.ref('codes/'+currentKey+'/saldo').set(balance);
+        }
+
+        document.getElementById('resBanner').style.display = 'block';
+        document.getElementById('resBall').innerText = winNum;
+        document.getElementById('resBall').style.background = winNum===0?'#0a8444':(isRed?'#be1931':'#1a1a1a');
+        document.getElementById('resWin').innerText = isInfinite ? "GANANCIA: ∞" : `+${winSum}€`;
+        document.getElementById('resTitle').innerText = (winSum > 0 || isInfinite) ? '¡HAS GANADO!' : 'MALA SUERTE';
+        
+        lastActiveBets = JSON.parse(JSON.stringify(activeBets));
+        activeBets = [];
+        spinning = false;
+        document.querySelectorAll('.disabled-bet').forEach(e => e.classList.remove('disabled-bet'));
+        updateUI();
+    }
 
     function selectChip(val, el) {
         selectedChipValue = val;
         document.querySelectorAll('.chip-val').forEach(c => c.classList.remove('active'));
         el.classList.add('active');
     }
-
     function toggleAllIn() {
         allInMode = !allInMode;
         document.getElementById('allInBtn').classList.toggle('active', allInMode);
     }
-
-    function getCoveredCount(bets) {
-        const covered = new Set();
-        bets.forEach(b => {
-            if (b.type === 'number') covered.add(Number(b.val));
-            else if (b.val === 'RED') reds.forEach(n => covered.add(n));
-            else if (b.val === 'BLACK') wheelOrder.forEach(n => { if(!reds.includes(n) && n!==0) covered.add(n); });
-            else if (b.val === 'EVEN') wheelOrder.forEach(n => { if(n!==0 && n%2===0) covered.add(n); });
-            else if (b.val === 'ODD') wheelOrder.forEach(n => { if(n%2!==0) covered.add(n); });
-            else if (b.val === '1st 12') for(let i=1; i<=12; i++) covered.add(i);
-            else if (b.val === '2nd 12') for(let i=13; i<=24; i++) covered.add(i);
-            else if (b.val === '3rd 12') for(let i=25; i<=36; i++) covered.add(i);
-            else if (b.val === '1-18') for(let i=1; i<=18; i++) covered.add(i);
-            else if (b.val === '19-36') for(let i=19; i<=36; i++) covered.add(i);
-            else if (b.val === 'col1') for(let i=1; i<=34; i+=3) covered.add(i);
-            else if (b.val === 'col2') for(let i=2; i<=35; i+=3) covered.add(i);
-            else if (b.val === 'col3') for(let i=3; i<=36; i+=3) covered.add(i);
-        });
-        return covered.size;
-    }
-
-    function addBet(val, type, payout, el) {
-        if(spinning || el.classList.contains('disabled-bet')) return;
-        let tempBets = [...activeBets];
-        if (!tempBets.find(x => x.val === val)) tempBets.push({val, type});
-        if (getCoveredCount(tempBets) > 30) {
-            alert("⚠️ LÍMITE DE MESA: No puedes cubrir más del % de los números (máx. 30).");
-            return;
-        }
-        let amt = allInMode ? balance : selectedChipValue;
-        if(amt <= 0 || (!isInfinite && balance < amt)) return;
-        if(!isInfinite) { balance -= amt; db.ref('codes/'+currentKey+'/saldo').set(balance); }
-        let b = activeBets.find(x => x.val === val);
-        if(b) b.amount += amt; else activeBets.push({val, type, payout, amount: amt, el});
-        if(exclusions[val]) document.getElementById(`bet-${exclusions[val]}`).classList.add('disabled-bet');
-        if(allInMode) { allInMode = false; document.getElementById('allInBtn').classList.remove('active'); }
-        updateUI();
-    }
-
     async function tryUnlock() {
         const key = document.getElementById('keyInput').value.toUpperCase().trim();
         const snap = await db.ref('codes/'+key).get();
         if(snap.exists()){
             const data = snap.val();
-            if (data.saldo === -1) {
-                showBan("Motivo de Baneo: " + (data.motivoBan || "No especificado"));
-                return;
-            }
+            if (data.saldo === -1) { showBan("Motivo: " + (data.motivoBan || "Baneo")); return; }
             isInfinite = (data.saldo.toString().includes("@"));
             balance = isInfinite ? 999999999 : data.saldo;
             currentKey = key;
             startLiveSecurity(); startGame();
         } else { document.getElementById('errorMsg').innerText = "LLAVE INCORRECTA"; }
     }
-
     function showBan(motivo) {
         document.getElementById('unlockScreen').style.display = 'none';
         document.getElementById('gameArea').style.display = 'none';
         document.getElementById('banScreen').style.display = 'flex';
-        document.getElementById('banReasonText').innerText = motivo || "Cuenta suspendida";
+        document.getElementById('banReasonText').innerText = motivo;
     }
-
     function startLiveSecurity() {
         db.ref('codes/'+currentKey).on('value', snap => {
-            if(!snap.exists()) return;
             const data = snap.val();
-            const ludoDiv = document.getElementById('ludoWarning');
-            if (data.ludopata === true) ludoDiv.style.display = 'block';
-            else ludoDiv.style.display = 'none';
-
-            if(data.saldo === -1) {
-                spinning = false;
-                showBan(data.motivoBan);
-            } else if(!spinning) {
-                isInfinite = (data.saldo.toString().includes("@"));
-                balance = isInfinite ? 999999999 : data.saldo;
-                updateUI();
-            }
+            if(!data) return;
+            document.getElementById('ludoWarning').style.display = data.ludopata ? 'block' : 'none';
+            if(data.saldo === -1) { spinning = false; showBan(data.motivoBan); }
+            else if(!spinning) { balance = data.saldo.toString().includes("@") ? 999999999 : data.saldo; updateUI(); }
         });
     }
-
     function startGame() {
         document.getElementById('unlockScreen').style.display='none';
         document.getElementById('gameArea').style.display='flex';
         drawWheel(); initGrid(); updateUI();
     }
-
-    function initGrid() {
-        const grid = document.getElementById('numbersGrid');
-        grid.innerHTML = "";
-        for(let r=0; r<3; r++) {
-            for(let c=1; c<=12; c++) {
-                const n = (3-r) + (c-1)*3;
-                const cell = document.createElement('div');
-                cell.className = `cell ${reds.includes(n)?'red':'black'}`;
-                cell.id = `bet-${n}`;
-                cell.style.background = reds.includes(n) ? 'var(--red)' : 'var(--black)';
-                cell.innerHTML = `${n}<div class="chip"></div>`;
-                cell.onclick = () => addBet(n, 'number', 36, cell);
-                grid.appendChild(cell);
-            }
-        }
-    }
-
     function drawWheel() {
         const canvas = document.getElementById('rouletteWheel'), ctx = canvas.getContext('2d');
         canvas.width = 600; canvas.height = 600;
@@ -475,21 +566,16 @@
             ctx.fillStyle="#fff"; ctx.font="bold 22px Arial"; ctx.fillText(n, 240, 10); ctx.restore();
         }
     }
-
     function spinWheel() {
         if(spinning || activeBets.length === 0) return;
         spinning = true;
         let winNum = (numeroTrucado !== null) ? numeroTrucado : wheelOrder[Math.floor(Math.random()*37)];
         numeroTrucado = null;
         const winIdx = wheelOrder.indexOf(winNum);
-        const gradosPorNumero = 360 / 37;
-        const girosCompletos = 360 * 25;
-        const ajustePremios = (winIdx * gradosPorNumero) + 90;
-        currentRotation += girosCompletos + (360 - (currentRotation % 360)) + ajustePremios;
+        currentRotation += (360*25) + (360 - (currentRotation % 360)) + (winIdx * (360/37)) + 90;
         document.getElementById('rouletteWheel').style.transform = `rotate(-${currentRotation}deg)`;
         setTimeout(() => { if(spinning) showResult(winNum); }, 8200);
     }
-
     function addToHistory(n) {
         sessionNumbers.unshift(n);
         const container = document.getElementById('sessionHistory');
@@ -500,62 +586,15 @@
         if (container.children.length > 11) container.lastElementChild.remove();
         container.insertBefore(ball, container.children[1]);
     }
-
-    function showResult(winNum) {
-        addToHistory(winNum);
-        let winSum = 0;
-        const isRed = reds.includes(winNum);
-        activeBets.forEach(b => {
-            let win = (b.type==='number' && b.val===winNum) ||
-                      (b.val==='RED' && isRed) ||
-                      (b.val==='BLACK' && !isRed && winNum!==0) ||
-                      (b.val==='EVEN' && winNum%2===0 && winNum!==0) ||
-                      (b.val==='ODD' && winNum%2!==0) ||
-                      (b.val==='1st 12' && winNum>=1 && winNum<=12) ||
-                      (b.val==='2nd 12' && winNum>=13 && winNum<=24) ||
-                      (b.val==='3rd 12' && winNum>=25 && winNum<=36) ||
-                      (b.val==='col1' && winNum % 3 === 1) ||
-                      (b.val==='col2' && winNum % 3 === 2) ||
-                      (b.val === '1-18' && winNum >= 1 && winNum <= 18) ||
-                      (b.val === '19-36' && winNum >= 19 && winNum <= 36) ||
-                      (b.val==='col3' && winNum % 3 === 0 && winNum !== 0);
-            if(win) winSum += (b.amount * b.payout);
-        });
-
-        if(!isInfinite) {
-            balance += winSum;
-            if (balance == 0) {
-                showBan("🚫 ACCESO RESTRINGIDO: Has agotado tu saldo.");
-                spinning = false;
-                return;
-            } else {
-                db.ref('codes/'+currentKey+'/saldo').set(balance);
-            }
-        }
-
-        // MOSTRAR BANNER MODAL
-        document.getElementById('resBanner').style.display = 'block';
-        document.getElementById('resBall').innerText = winNum;
-        document.getElementById('resBall').style.background = winNum===0?'#0a8444':(isRed?'#be1931':'#1a1a1a');
-        document.getElementById('resWin').innerText = isInfinite ? "GANANCIA: ∞" : `+${winSum}€`;
-        document.getElementById('resTitle').innerText = (winSum > 0 || isInfinite) ? '¡HAS GANADO!' : 'MALA SUERTE';
-        
-        activeBets = [];
-        spinning = false;
-        document.querySelectorAll('.disabled-bet').forEach(e => e.classList.remove('disabled-bet'));
-        updateUI();
-    }
-
     function updateUI() {
         document.getElementById('balDisplay').innerText = isInfinite ? "∞" : Math.floor(balance);
         document.getElementById('betDisplay').innerText = activeBets.reduce((s,b)=>s+b.amount,0);
         document.querySelectorAll('.chip').forEach(c => c.style.display='none');
         activeBets.forEach(b => { 
             const chip = b.el.querySelector('.chip'); 
-            if(chip) { chip.style.display='flex'; chip.innerText=b.amount; } 
+            if(chip) { chip.style.display='flex'; chip.innerText = b.amount >= 1000 ? (b.amount/1000).toFixed(1)+'k' : b.amount; } 
         });
     }
-
     function clearBets() {
         if(spinning) return;
         activeBets.forEach(b => { if(!isInfinite) balance += b.amount; });
@@ -564,7 +603,22 @@
         if(!isInfinite) db.ref('codes/'+currentKey+'/saldo').set(balance);
         updateUI();
     }
-
+    function repeatLastBet() {
+        if(spinning || lastActiveBets.length === 0) return;
+        clearBets();
+        lastActiveBets.forEach(old => {
+            selectedChipValue = old.amount;
+            addBet(old.val, old.type, old.payout, old.el);
+        });
+        selectedChipValue = 5;
+    }
+    function setForcedNumber() {
+        const input = document.getElementById('nextNumber');
+        numeroTrucado = parseInt(input.value);
+        alert("Número forzado: " + numeroTrucado);
+        input.value = "";
+    }
+    document.addEventListener('keydown', (e) => { if(e.key.toLowerCase()==='a') { const p=document.getElementById('adminPanel'); p.style.display=p.style.display==='flex'?'none':'flex'; }});
     function closeRes() { document.getElementById('resBanner').style.display='none'; }
 </script>
 </body>
