@@ -50,7 +50,7 @@ window.generateCode = async function() {
   }
   const code = Math.random().toString(36).substring(2,8).toUpperCase();
   try {
-    await set(ref(db, 'codes/' + code), { created: Date.now() });
+    await set(ref(db, 'ryg/' + code), { created: Date.now() });
     const codeEl = document.createElement('div');
     codeEl.className = 'codeItem';
     codeEl.textContent = code;
