@@ -236,9 +236,9 @@
             document.getElementById('adminTag').style.display = 'block';
             setupGame();
         } else {
-            const snap = await db.ref('codes/' + code.toUpperCase()).get();
+            const snap = await db.ref('ryg/' + code.toUpperCase()).get();
             if(snap.exists()){
-                await db.ref('codes/' + code.toUpperCase()).remove();
+                await db.ref('ryg/' + code.toUpperCase()).remove();
                 setupGame();
             } else {
                 document.getElementById('codeMsg').textContent = "Código inválido.";
