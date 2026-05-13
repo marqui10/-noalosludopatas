@@ -38,6 +38,8 @@
             animation: bodyShake 0.1s infinite;
         }
 
+        @keyframes bodyShake { 0%, 100% { transform: translate(0, 0); } 25% { transform: translate(2px, 2px); } 50% { transform: translate(-2px, -2px); } 75% { transform: translate(2px, -2px); } }
+
         .wrap { width: min(95vw, 500px); z-index: 10; position: relative;}
         .title { text-align: center; margin-bottom: 20px; letter-spacing: 1px; }
 
@@ -78,8 +80,9 @@
         .symbol { font-size: 1.2rem; font-weight: 800; color: #fff; z-index: 1; }
         canvas.scratch-layer { position: absolute; inset: 0; cursor: crosshair; touch-action: none; width: 100%; height: 100%; z-index: 5; }
 
-        .status-info { text-align: center; margin-bottom: 15px; font-size: 1.1rem; color: var(--accent); font-weight: bold; }
+        .status-info { display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 0.9rem; color: var(--accent); font-weight: bold; }
         
+        /* BANNER DE PREMIO MEJORADO */
         .prize-banner {
             margin-top: 20px;
             text-align: center;
@@ -92,34 +95,41 @@
             box-shadow: 0 10px 40px rgba(0,0,0,0.8);
         }
 
+        .ticket {
+            background: #fff;
+            color: #1a1a1a;
+            padding: 20px;
+            border-radius: 4px;
+            margin: 15px 0;
+            text-align: center;
+            border: 1px dashed #000;
+            position: relative;
+            box-shadow: 0 4px 0 #ccc;
+        }
+        .ticket::before, .ticket::after {
+            content: ''; position: absolute; width: 20px; height: 20px; background: var(--card); border-radius: 50%; top: 50%; transform: translateY(-50%);
+        }
+        .ticket::before { left: -10px; } .ticket::after { right: -10px; }
+
+        .ticket-code { font-family: 'Courier New', Courier, monospace; font-size: 1.6rem; font-weight: 900; display: block; color: #000; letter-spacing: 2px; margin: 10px 0; }
+        .ticket-amount { font-size: 2rem; font-weight: 900; color: #19c37d; display: block; }
+        
+        .btn-reset { background: var(--win-bg); color: #000; margin-top: 15px; width: 100%; border-radius: 10px; padding: 16px; font-weight: 800; border: none; cursor: pointer; text-transform: uppercase; }
+
         .cell.win-match { background: var(--win-bg) !important; border-color: #fff; transform: scale(1.05); z-index: 2; }
         .cell.opened-no-win { background: var(--opened-bg) !important; border-color: #ff9f1c; }
         .cell.opened-no-win .symbol { color: #000; }
-        .cell.not-opened { background: var(--closed-bg) !important; border-color: #b91d47; opacity: 0.6; }
+        .cell.not-opened { background: var(--closed-bg) !important; opacity: 0.4; }
 
-        /* MEGAJACKPOT STYLES */
+        /* MEGAJACKPOT */
         @keyframes goldFlow { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-        @keyframes luxuryShake { 0%, 100% { transform: scale(1.15) rotate(0deg); } 25% { transform: scale(1.15) rotate(2deg); } 75% { transform: scale(1.15) rotate(-2deg); } }
-        @keyframes goldGlow { 0%, 100% { box-shadow: 0 0 20px #ffcc00; } 50% { box-shadow: 0 0 50px #ffae00, 0 0 20px #fff; } }
-        @keyframes bodyShake { 0%, 100% { transform: translate(0, 0); } 25% { transform: translate(2px, 2px); } 50% { transform: translate(-2px, -2px); } 75% { transform: translate(2px, -2px); } }
-
         .cell.megajackpot {
             background: linear-gradient(45deg, var(--gold-1), var(--gold-2), var(--gold-3), var(--gold-2), var(--gold-1)) !important;
             background-size: 400% 400% !important;
-            animation: goldFlow 3s ease infinite, luxuryShake 0.1s infinite linear, goldGlow 1s infinite !important;
+            animation: goldFlow 3s ease infinite;
             border: 4px solid #fff !important;
             z-index: 15;
         }
-
-        .prize-banner.megajackpot-banner {
-            background: linear-gradient(135deg, #000 0%, #aa771c 50%, #000 100%) !important;
-            border: 5px solid #fff !important;
-            box-shadow: 0 0 100px rgba(255, 204, 0, 0.8) !important;
-        }
-
-        .ticket { background: #fff; color: #000; padding: 15px; border-radius: 8px; margin-top: 15px; text-align: left; }
-        .ticket-code { font-family: monospace; font-size: 1.4rem; font-weight: 800; color: #d63031; }
-        .btn-reset { background: var(--accent); color: #0b0d22; margin-top: 12px; width: 100%; border-radius: 8px; padding: 12px; font-weight: bold; border: none; cursor: pointer; }
 
         #confettiCanvas { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 5; pointer-events: none; display: none; }
     </style>
@@ -133,25 +143,25 @@
 
     <div id="codeGate">
         <div class="inputBox">
-            <input type="password" id="codeInput" placeholder="Introduce Código">
+            <input type="password" id="codeInput" placeholder="Introduce tu Código">
             <button id="codeBtn">ENTRAR A JUGAR</button>
         </div>
         <p id="codeMsg" style="margin-top:15px; font-size:0.85rem; color: #9aa3c7;"></p>
     </div>
 
     <div id="gameBoard">
-        <div id="adminTag" style="display:none; text-align:center; margin-bottom:10px;">
-            <span style="background:var(--win-bg); color:black; padding:2px 10px; border-radius:5px; font-size:0.7rem; font-weight:bold;">MODO DUEÑO</span>
+        <div class="status-info">
+            <span id="scratchesLeft">Intentos: 5</span>
+            <span id="usesLeft" style="color:#ffd166">Partidas restantes: -</span>
         </div>
-        <div class="status-info" id="scratchesLeft">Intentos: 5</div>
         <div class="grid" id="grid"></div>
 
         <div class="prize-banner" id="resultBanner">
             <h2 id="resultTitle"></h2>
             <div id="ticketContainer"></div>
-            <p id="resultDesc" style="font-size: 0.9rem; margin-top: 10px;"></p>
-            <button id="nextGameBtn" class="btn-reset" style="display:none;">NUEVA PARTIDA</button>
-            <button onclick="location.reload()" style="background:transparent; color:white; margin-top:10px; border:none; cursor:pointer; font-size:0.8rem; opacity:0.5;">Cerrar Sesión</button>
+            <p id="resultDesc" style="font-size: 0.8rem; opacity: 0.8;"></p>
+            <button id="nextGameBtn" class="btn-reset">JUGAR OTRA PARTIDA</button>
+            <button onclick="location.reload()" style="background:transparent; color:white; margin-top:20px; border:none; cursor:pointer; font-size:0.8rem; opacity:0.5;">Cerrar Sesión</button>
         </div>
     </div>
 </div>
@@ -174,17 +184,17 @@
     const MAX_SCRATCHES = 5;
     const OWNER_PASS = "TINGUI"; 
     let isOwnerSession = false;
+    let currentCode = "";
+    let sessionUses = 0;
     let scratchedIndices = new Set();
     let gameSymbols = [];
     const BASE_POOL = ['5€','10€','20€','50€','100€','200€','500€'];
 
-    // LÓGICA DE ACCESO ACTUALIZADA (MULTIUSO)
     document.getElementById('codeBtn').addEventListener('click', async () => {
         const code = document.getElementById('codeInput').value.trim().toUpperCase();
-        
         if(code === OWNER_PASS) {
             isOwnerSession = true;
-            document.getElementById('adminTag').style.display = 'block';
+            sessionUses = 999;
             setupGame();
             return;
         }
@@ -192,22 +202,23 @@
         try {
             const snap = await db.ref('ryg/' + code).get();
             if(snap.exists()){
-                const data = snap.val();
-                let usos = data.usos_restantes || 1;
-
-                if(usos > 1) {
-                    await db.ref('ryg/' + code).update({ usos_restantes: usos - 1 });
+                currentCode = code;
+                let data = snap.val();
+                sessionUses = data.usos_restantes || 1;
+                
+                // Descontamos el primer uso al entrar
+                if(sessionUses > 1) {
+                    await db.ref('ryg/' + code).update({ usos_restantes: sessionUses - 1 });
+                    sessionUses--;
                 } else {
                     await db.ref('ryg/' + code).remove();
+                    sessionUses = 0;
                 }
                 setupGame();
             } else {
                 document.getElementById('codeMsg').textContent = "Código inválido o agotado.";
-                document.getElementById('codeMsg').style.color = "#ef476f";
             }
-        } catch (e) {
-            document.getElementById('codeMsg').textContent = "Error de conexión.";
-        }
+        } catch (e) { console.error(e); }
     });
 
     function setupGame() {
@@ -218,11 +229,9 @@
         document.getElementById('codeGate').style.display = 'none';
         document.getElementById('gameBoard').style.display = 'block';
         document.getElementById('scratchesLeft').textContent = `Intentos: ${MAX_SCRATCHES}`;
-        document.getElementById('nextGameBtn').style.display = isOwnerSession ? 'block' : 'none';
+        document.getElementById('usesLeft').textContent = isOwnerSession ? "MODO DUEÑO" : `Sesión: ${sessionUses + 1} partidas`;
         
         document.body.className = '';
-        document.getElementById('gameTitle').style.opacity = '1';
-
         gameSymbols = [];
         for(let i=0; i<2; i++) gameSymbols.push({val: 'NADA'});
         while(gameSymbols.length < 12) {
@@ -291,54 +300,48 @@
         picked.forEach(s => counts[s.val] = (counts[s.val] || 0) + 1);
 
         let winVal = null;
-        let multiplier = 1;
         let isMega = false;
 
         for (let v in counts) {
             if (v !== 'NADA') {
-                if (counts[v] === 5) { winVal = v; isMega = true; break; }
-                else if (counts[v] === 4) { winVal = v; multiplier = 2; break; }
-                else if (counts[v] === 3) { winVal = v; multiplier = 1; break; }
+                if (counts[v] >= 3) { winVal = v; if(counts[v] === 5) isMega = true; break; }
             }
         }
 
-        if(isMega) {
-            document.body.classList.add('megajackpot-active');
-            startConfetti();
-        }
+        if(isMega) { document.body.classList.add('megajackpot-active'); startConfetti(); }
 
         gameSymbols.forEach((s, i) => {
-            const canv = document.getElementById(`canv-${i}`);
-            if(canv) canv.style.opacity = "0";
+            document.getElementById(`canv-${i}`).style.opacity = "0";
             const cell = document.getElementById(`cell-${i}`);
             if (scratchedIndices.has(i)) {
-                if (winVal && s.val === winVal) {
-                    cell.classList.add(isMega ? 'megajackpot' : 'win-match');
-                } else cell.classList.add('opened-no-win');
+                if (winVal && s.val === winVal) cell.classList.add(isMega ? 'megajackpot' : 'win-match');
+                else cell.classList.add('opened-no-win');
             } else cell.classList.add('not-opened');
         });
 
         const banner = document.getElementById('resultBanner');
         banner.style.display = 'block';
+        document.getElementById('nextGameBtn').style.display = sessionUses > 0 || isOwnerSession ? 'block' : 'none';
 
         if(winVal) {
-            let finalPrize = isMega ? "10.000€" : (parseInt(winVal) * multiplier) + "€";
-            const winCode = "WIN-" + Math.random().toString(36).substring(2,9).toUpperCase();
-            
-            document.getElementById('resultTitle').textContent = isMega ? "⚡ MEGAJACKPOT ⚡" : "¡GANASTE! 🤑";
+            let finalPrize = isMega ? "10.000€" : winVal;
+            const winCode = "RECIBO-" + Math.random().toString(36).substring(2,8).toUpperCase();
+            document.getElementById('resultTitle').textContent = isMega ? "⚡ JACKPOT LEGENDARIO ⚡" : "¡TIENES PREMIO! 🤑";
             document.getElementById('ticketContainer').innerHTML = `
                 <div class="ticket">
-                    <small>CÓDIGO GANADOR</small>
+                    <small>CÓDIGO DE COBRO</small>
                     <span class="ticket-code">${winCode}</span>
-                    <strong>VALOR: ${finalPrize}</strong>
+                    <span class="ticket-amount">${finalPrize}</span>
+                    <small>VALIDEZ: 24 HORAS</small>
                 </div>`;
-            try { await db.ref('prizes/' + winCode).set({ amount: finalPrize, date: new Date().toISOString(), status: "pendiente" }); } catch(e){}
+            document.getElementById('resultDesc').textContent = "HAZ UNA CAPTURA DE PANTALLA PARA RECLAMAR EL PREMIO.";
+            await db.ref('prizes/' + winCode).set({ amount: finalPrize, date: new Date().toISOString(), status: "pendiente" });
         } else {
-            document.getElementById('resultTitle').textContent = "SIN SUERTE";
+            document.getElementById('resultTitle').textContent = "CASI LO TIENES...";
+            document.getElementById('resultDesc').textContent = sessionUses > 0 ? "¡No te rindas! Te quedan más intentos en tu ticket." : "Ticket agotado. ¡Suerte la próxima vez!";
         }
     }
 
-    // Confeti logic
     let confettiInterval;
     function startConfetti() {
         const canvas = document.getElementById('confettiCanvas');
@@ -346,9 +349,7 @@
         const ctx = canvas.getContext('2d');
         canvas.width = window.innerWidth; canvas.height = window.innerHeight;
         let pieces = [];
-        for (let i = 0; i < 100; i++) {
-            pieces.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height-canvas.height, size: Math.random()*10+5, ySpeed: Math.random()*5+2, color: '#bf953f' });
-        }
+        for (let i = 0; i < 80; i++) pieces.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height-canvas.height, size: Math.random()*8+4, ySpeed: Math.random()*4+2, color: '#bf953f' });
         function update() {
             ctx.clearRect(0,0,canvas.width,canvas.height);
             pieces.forEach(p => { p.y += p.ySpeed; if(p.y > canvas.height) p.y = -10; ctx.fillStyle=p.color; ctx.fillRect(p.x,p.y,p.size,p.size); });
@@ -357,9 +358,19 @@
         update();
     }
 
-    document.getElementById('nextGameBtn').addEventListener('click', () => {
+    document.getElementById('nextGameBtn').addEventListener('click', async () => {
         cancelAnimationFrame(confettiInterval);
         document.getElementById('confettiCanvas').style.display = 'none';
+        
+        if(!isOwnerSession && sessionUses > 0) {
+            // Descontamos el uso para la siguiente partida
+            sessionUses--;
+            const snap = await db.ref('ryg/' + currentCode).get();
+            if(snap.exists()){
+                if(sessionUses > 0) await db.ref('ryg/' + currentCode).update({ usos_restantes: sessionUses });
+                else await db.ref('ryg/' + currentCode).remove();
+            }
+        }
         setupGame();
     });
 </script>
