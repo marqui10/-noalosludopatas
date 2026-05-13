@@ -5,21 +5,28 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Generador de Códigos - Rasca y Gana</title>
 <style>
-body {
-  margin:0; font-family:sans-serif; background:#0f1226; color:white; display:grid; place-items:center; height:100vh;
-}
-.wrap {width:min(95vw,520px); text-align:center}
-input, button {padding:10px; border-radius:8px; border:none; width:70%; margin-bottom:10px;}
-button {cursor:pointer; font-weight:600; background:#7c8cff; color:#0b0d22;}
-.codeList {margin-top:20px;}
-.codeItem {padding:6px 10px; border-radius:6px; background:#232654; margin:4px 0; display:inline-block;}
+  body { margin:0; font-family:sans-serif; background:#0f1226; color:white; display:grid; place-items:center; height:100vh; }
+  .wrap { width:min(95vw,520px); text-align:center; background: #1a1e3d; padding: 2rem; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+  input, button { padding:12px; border-radius:8px; border:none; width:80%; margin-bottom:15px; font-size: 1rem; }
+  input { background: #232654; color: white; border: 1px solid #3f4481; }
+  button { cursor:pointer; font-weight:600; background:#7c8cff; color:#0b0d22; transition: 0.3s; }
+  button:hover { background: #5a6eff; }
+  .codeList { margin-top:20px; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+  .codeItem { padding:8px 15px; border-radius:6px; background:#3f4481; border: 1px solid #7c8cff; color: white; font-family: monospace; font-weight: bold; }
+  label { display: block; margin-bottom: 5px; font-size: 0.9rem; color: #7c8cff; }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h2>🗝️ Generador de Códigos - Rasca y Gana</h2>
-  <input type="password" id="passInput" placeholder="Introduce contraseña" />
-  <button onclick="generateCode()">Generar Código</button>
+  <h2>🗝️ Generador de Códigos</h2>
+  
+  <input type="password" id="passInput" placeholder="Contraseña Maestra" />
+  
+  <label for="usesInput">Número de usos por ticket:</label>
+  <input type="number" id="usesInput" value="1" min="1" placeholder="Ej: 5" />
+  
+  <button onclick="generateCode()">Generar Ticket Multiuso</button>
+  
   <div class="codeList" id="codeList"></div>
 </div>
 
@@ -40,35 +47,56 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
-const MASTER_PASS = "135792468"; // contraseña inicial
+const MASTER_PASS = "135792468";
 
 window.generateCode = async function() {
   const pass = document.getElementById('passInput').value.trim();
+  const uses = parseInt(document.getElementById('usesInput').value);
+
   if(pass !== MASTER_PASS){
     alert('Contraseña incorrecta');
     return;
   }
+
+  if(isNaN(uses) || uses < 1) {
+    alert('Por favor, introduce un número de usos válido.');
+    return;
+  }
+
+  // Generar código aleatorio de 6 caracteres
   const code = Math.random().toString(36).substring(2,8).toUpperCase();
+  
   try {
-    await set(ref(db, 'ryg/' + code), { created: Date.now() });
+    // Guardamos el código con el número de usos permitidos
+    await set(ref(db, 'ryg/' + code), { 
+      created: Date.now(),
+      usos_permitidos: uses,
+      usos_restantes: uses
+    });
+
+    // Mostrar en la lista
     const codeEl = document.createElement('div');
     codeEl.className = 'codeItem';
-    codeEl.textContent = code;
+    codeEl.textContent = `${code} (${uses} usos)`;
     document.getElementById('codeList').appendChild(codeEl);
+    
     copyToClipboard(code);
-    alert('Código generado, guardado y copiado: ' + code);
+    alert(`Código ${code} generado con ${uses} usos.`);
   } catch (err) {
     alert('Error al guardar en Firebase: ' + err);
   }
 }
 
 function copyToClipboard(text){
-  const temp = document.createElement('input');
-  document.body.appendChild(temp);
-  temp.value = text;
-  temp.select();
-  document.execCommand('copy');
-  document.body.removeChild(temp);
+  navigator.clipboard.writeText(text).catch(() => {
+    // Fallback si navigator.clipboard falla
+    const temp = document.createElement('input');
+    document.body.appendChild(temp);
+    temp.value = text;
+    temp.select();
+    document.execCommand('copy');
+    document.body.removeChild(temp);
+  });
 }
 </script>
 </body>
