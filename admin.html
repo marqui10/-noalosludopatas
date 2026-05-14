@@ -220,6 +220,7 @@
     
     let historialGlobal = [];
     let currentTicketRef = null;
+    let cacheSaldos = {}; // NUEVO: Para detectar cambios de saldo
 
     function truncar(num) {
         if (typeof num !== 'number' || isNaN(num)) return num;
@@ -418,22 +419,33 @@
             
             snap.forEach(c => { 
                 const data = c.val();
+                const id = c.key;
                 let fechaUltimoMovimiento = data.ultimaMod; 
+
+                // NUEVO: Lógica para anotar fecha/hora automáticamente si cambia el saldo
+                if (cacheSaldos[id] !== undefined && cacheSaldos[id] !== data.saldo) {
+                    fechaUltimoMovimiento = getTime();
+                    db.ref(`codes/${id}`).update({ ultimaMod: fechaUltimoMovimiento });
+                }
+                cacheSaldos[id] = data.saldo; // Actualizar caché para la siguiente vuelta
 
                 if (data.historial) {
                     const historialArray = Object.values(data.historial);
                     if (historialArray.length > 0) {
-                        fechaUltimoMovimiento = historialArray[historialArray.length - 1].fecha;
+                        // Si hay historial, comparamos fechas para mostrar la más reciente
+                        const fechaHist = historialArray[historialArray.length - 1].fecha;
+                        fechaUltimoMovimiento = fechaHist;
                     }
                 }
 
                 items.push({ 
-                    id: c.key, 
+                    id: id, 
                     ...data, 
                     displayUltimoMov: fechaUltimoMovimiento 
                 }); 
             });
 
+            // Reordenar por la fecha de movimiento más reciente
             items.sort((a,b) => new Date(b.displayUltimoMov) - new Date(a.displayUltimoMov));
 
             items.slice(0, 15).forEach(i => {
