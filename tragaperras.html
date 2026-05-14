@@ -243,7 +243,7 @@
         if (winVal > 0) {
             balance += winVal;
             db.ref('codes/'+currentKey).update({ saldo: balance });
-            if (winVal >= (currentBet * 4)) resetLuck();
+            if (winVal >= (currentBet * 15)) resetLuck();
 
             setTimeout(() => {
                 document.getElementById('resWin').innerText = winVal.toFixed(1) + "€";
