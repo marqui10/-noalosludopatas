@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Slot Bar 2026 - Master Edition</title>
+    <title>Slot Bar 2026 - Lever & Progressive Edition</title>
     <style>
         :root {
             --bg: #05070a;
@@ -20,28 +20,38 @@
         .card { background: #1c2128; padding: 40px; border-radius: 15px; border: 2px solid var(--gold); text-align: center; width: 300px; box-shadow: 0 0 40px rgba(0,0,0,0.5); }
         .key-input { width: 100%; padding: 12px; margin: 20px 0; border-radius: 5px; border: 1px solid var(--gold); font-size: 1.1rem; text-align: center; background: #000; color: var(--gold-light); box-sizing: border-box; outline: none; }
 
-        #gameArea { display: none; width: 100%; max-width: 500px; padding: 15px; flex-direction: column; align-items: center; }
+        #gameArea { display: none; width: 100%; max-width: 600px; padding: 15px; flex-direction: column; align-items: center; }
         .stats-bar { width: 100%; display: flex; justify-content: space-between; padding: 15px 20px; background: var(--slot-bg); border-radius: 10px; border-bottom: 3px solid var(--gold); margin-bottom: 15px; box-sizing: border-box; font-weight: bold; font-size: 1.1rem; }
 
-        .machine-body { background: linear-gradient(180deg, #444 0%, #111 100%); padding: 15px; border-radius: 20px; border: 6px solid #555; width: 100%; box-sizing: border-box; box-shadow: 0 10px 0 #222; }
+        .machine-container { display: flex; align-items: center; gap: 20px; width: 100%; }
+        .machine-body { background: linear-gradient(180deg, #444 0%, #111 100%); padding: 15px; border-radius: 20px; border: 6px solid #555; flex-grow: 1; box-shadow: 0 10px 0 #222; }
         .grid-3x3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; background: #000; padding: 10px; border-radius: 10px; }
         .cell { height: 95px; background: #fff; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 3rem; color: #000; border-bottom: 5px solid #ccc; transition: transform 0.1s; }
         
+        /* LA PALANCA */
+        .lever-box { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+        .lever-base { width: 40px; height: 120px; background: #222; border-radius: 20px; position: relative; border: 3px solid #444; }
+        .lever-arm { width: 12px; height: 80px; background: linear-gradient(to right, #888, #eee, #888); position: absolute; left: 14px; bottom: 50%; transform-origin: bottom center; transition: 0.3s cubic-bezier(0.45, 0.05, 0.55, 0.95); }
+        .lever-knob { width: 34px; height: 34px; background: radial-gradient(circle at 30% 30%, var(--red), #500); border-radius: 50%; position: absolute; top: -25px; left: -11px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .lever-arm.pulling { transform: rotateX(160deg); }
+
+        /* AUTO SPIN UI */
+        .auto-controls { display: flex; flex-direction: column; align-items: center; background: #1c2128; padding: 10px; border-radius: 10px; border: 1px solid #444; }
+        .auto-input { width: 50px; background: #000; color: var(--gold); border: 1px solid var(--gold); text-align: center; border-radius: 5px; margin-bottom: 5px; }
+
         .win-glow { animation: glow 0.4s infinite alternate; z-index: 10; box-shadow: inset 0 0 30px var(--gold); }
         @keyframes glow { from { background: #fff; transform: scale(1); } to { background: var(--gold-light); transform: scale(1.05); } }
 
-        .paytable { margin-top: 15px; width: 100%; background: rgba(28, 33, 40, 0.9); border: 1px solid var(--gold); border-radius: 10px; padding: 12px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; box-sizing: border-box; }
-        .pay-item { display: flex; align-items: center; justify-content: space-between; font-size: 0.8rem; border-bottom: 1px solid #333; padding: 5px 0; }
-        .pay-item span:last-child { color: var(--gold-light); font-weight: bold; }
+        .paytable { margin-top: 15px; width: 100%; background: rgba(28, 33, 40, 0.9); border: 1px solid var(--gold); border-radius: 10px; padding: 12px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; box-sizing: border-box; }
+        .pay-item { display: flex; flex-direction: column; align-items: center; font-size: 0.75rem; border: 1px solid #333; padding: 5px; border-radius: 5px; }
+        .pay-item span:last-child { color: var(--gold-light); font-weight: bold; margin-top: 2px; }
 
         .chip-box { display: flex; gap: 12px; justify-content: center; margin-top: 20px; }
         .chip { padding: 12px 22px; border: 2px solid var(--gold); border-radius: 20px; cursor: pointer; font-weight: bold; color: var(--gold); transition: 0.2s; }
         .chip.active { background: var(--gold); color: black; box-shadow: 0 0 15px var(--gold); }
         
-        .btn-spin { background: var(--red); color: white; border: none; padding: 22px; font-size: 1.6rem; font-weight: bold; border-radius: 12px; cursor: pointer; box-shadow: 0 6px 0 #700; width: 100%; margin-top: 20px; text-transform: uppercase; letter-spacing: 2px; }
-        .btn-spin:disabled { background: #555; box-shadow: none; transform: translateY(4px); cursor: default; }
-
         #resBanner { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; color: black; padding: 40px; border-radius: 25px; z-index: 10001; text-align: center; border: 6px solid var(--gold); box-shadow: 0 0 100px rgba(0,0,0,0.9); }
+        .luck-info { font-size: 0.8rem; color: #888; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -49,7 +59,7 @@
 <div id="banScreen">
     <div class="card">
         <h1 style="color: var(--red);">SISTEMA BLOQUEADO</h1>
-        <button onclick="location.reload()" class="btn-spin" style="padding:10px; font-size:1rem;">REINTENTAR</button>
+        <button onclick="location.reload()" style="background:var(--red); color:white; border:none; padding:10px; cursor:pointer;">REINTENTAR</button>
     </div>
 </div>
 
@@ -57,7 +67,7 @@
     <div class="card">
         <h2 style="color: var(--gold);">SLOT BAR 2026</h2>
         <input type="password" id="keyInput" class="key-input" placeholder="LLAVE">
-        <button onclick="tryUnlock()" class="btn-spin" style="padding:12px; font-size:1.1rem; margin:0; box-shadow:none;">ENTRAR</button>
+        <button onclick="tryUnlock()" style="background:var(--red); color:white; border:none; padding:12px; width:100%; cursor:pointer; border-radius:5px;">ENTRAR</button>
         <p id="errorMsg" style="color: var(--red); margin-top: 10px; font-size: 0.9rem;"></p>
     </div>
 </div>
@@ -68,11 +78,25 @@
         <div style="color: var(--gold);">BET: <span id="betDisplay">10</span>€</div>
     </div>
     
-    <div class="machine-body">
-        <div class="grid-3x3" id="mainGrid">
-            <div id="c0" class="cell">💎</div><div id="c1" class="cell">7️⃣</div><div id="c2" class="cell">🔔</div>
-            <div id="c3" class="cell">🍒</div><div id="c4" class="cell">🍉</div><div id="c5" class="cell">🍋</div>
-            <div id="c6" class="cell">🍊</div><div id="c7" class="cell">🍇</div><div id="c8" class="cell">❌</div>
+    <div class="machine-container">
+        <div class="machine-body">
+            <div class="grid-3x3" id="mainGrid">
+                <div id="c0" class="cell">💎</div><div id="c1" class="cell">7️⃣</div><div id="c2" class="cell">🔔</div>
+                <div id="c3" class="cell">🍒</div><div id="c4" class="cell">🍉</div><div id="c5" class="cell">🍋</div>
+                <div id="c6" class="cell">🍊</div><div id="c7" class="cell">🍇</div><div id="c8" class="cell">❌</div>
+            </div>
+        </div>
+
+        <div class="lever-box">
+            <div class="auto-controls">
+                <input type="number" id="autoCount" class="auto-input" value="0" min="0">
+                <small style="font-size: 0.6rem;">AUTO</small>
+            </div>
+            <div class="lever-base">
+                <div id="leverArm" class="lever-arm">
+                    <div class="lever-knob" onclick="handleLeverClick()"></div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -92,12 +116,13 @@
         <div class="chip" onclick="setBet(50, this)">50</div>
         <div class="chip" onclick="setBet(100, this)">100</div>
     </div>
-    <button id="spinBtn" class="btn-spin" onclick="startSpin()">GIRAR</button>
+    
+    <div id="luckMsg" class="luck-info">Probabilidades iniciales activas</div>
 </div>
 
 <div id="resBanner">
     <h1 id="resWin" style="font-size:3.5rem; margin:10px 0;">0€</h1>
-    <button onclick="document.getElementById('resBanner').style.display='none'" class="btn-spin" style="padding:10px; font-size:1.1rem; box-shadow:none;">COBRAR</button>
+    <button onclick="closeBanner()" style="background:var(--red); color:white; border:none; padding:15px; width:100%; font-weight:bold; cursor:pointer; border-radius:10px;">COBRAR PREMIO</button>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -114,35 +139,144 @@
     const db = firebase.database();
 
     let balance = 0, currentKey = "", currentBet = 10, spinning = false;
+    let sessionSpins = 0, autoSpinning = false;
+    
     const multipliers = { '💎': 40, '7️⃣': 20, '🔔': 10, '🍒': 5, '🍉': 3, '🍋': 1.5, '🍊': 1.2, '🍇': 1.1 };
-
-    // PESOS DE PROBABILIDAD (Ajustable)
-    const symbolWeights = [
-        { s: '💎', w: 0.03 }, { s: '7️⃣', w: 0.05 }, { s: '🔔', w: 0.08 },
-        { s: '🍒', w: 0.12 }, { s: '🍉', w: 0.14 }, { s: '🍋', w: 0.18 },
-        { s: '🍊', w: 0.20 }, { s: '🍇', w: 0.20 }
+    
+    // PESOS BASE
+    const baseWeights = [
+        { s: '💎', w: 0.02 }, { s: '7️⃣', w: 0.04 }, { s: '🔔', w: 0.06 },
+        { s: '🍒', w: 0.09 }, { s: '🍉', w: 0.12 }, { s: '🍋', w: 0.14 },
+        { s: '🍊', w: 0.15 }, { s: '🍇', w: 0.15 }, { s: '❌', w: 0.23 }
     ];
+    let currentWeights = JSON.parse(JSON.stringify(baseWeights));
+
+    function adjustLuck() {
+        sessionSpins++;
+        if (sessionSpins % 10 === 0) {
+            // Cada 10 giros, reducimos el peso de la '❌' en 0.02 y lo repartimos
+            const deadWeightIdx = currentWeights.findIndex(i => i.s === '❌');
+            if (currentWeights[deadWeightIdx].w > 0.05) {
+                currentWeights[deadWeightIdx].w -= 0.02;
+                // Aumentamos un poquito los 3 mejores premios
+                currentWeights[0].w += 0.005; // 💎
+                currentWeights[1].w += 0.007; // 7️⃣
+                currentWeights[2].w += 0.008; // 🔔
+                document.getElementById('luckMsg').innerText = "¡SUERTE AUMENTADA! (Nivel " + (sessionSpins/10) + ")";
+                document.getElementById('luckMsg').style.color = "var(--gold-light)";
+            }
+        }
+    }
+
+    function resetLuck() {
+        sessionSpins = 0;
+        currentWeights = JSON.parse(JSON.stringify(baseWeights));
+        document.getElementById('luckMsg').innerText = "Probabilidades iniciales activas";
+        document.getElementById('luckMsg').style.color = "#888";
+    }
 
     function getRandomSymbol() {
         const rand = Math.random();
         let cumulative = 0;
-        for (const item of symbolWeights) {
+        for (const item of currentWeights) {
             cumulative += item.w;
             if (rand < cumulative) return item.s;
         }
         return '❌';
     }
 
-    function registrarHistorial(tipo, monto) {
-        if(!currentKey) return;
-        const ahora = new Date().toLocaleString('es-ES', { 
-            hour: '2-digit', minute: '2-digit', second: '2-digit', 
-            day: '2-digit', month: '2-digit', year: 'numeric'
+    function handleLeverClick() {
+        if (spinning || balance < currentBet) return;
+        const arm = document.getElementById('leverArm');
+        arm.classList.add('pulling');
+        setTimeout(() => {
+            arm.classList.remove('pulling');
+            startSpin();
+        }, 300);
+    }
+
+    function startSpin() {
+        if (spinning || balance < currentBet) {
+            autoSpinning = false;
+            return;
+        }
+        
+        spinning = true;
+        balance -= currentBet;
+        db.ref('codes/'+currentKey).update({ saldo: balance });
+        
+        adjustLuck(); // Aplicar lógica de progresión
+
+        document.querySelectorAll('.cell').forEach(c => c.classList.remove('win-glow'));
+
+        let t = 0;
+        let si = setInterval(() => {
+            for(let i=0; i<9; i++) {
+                const tmp = ['💎', '7️⃣', '🔔', '🍒', '🍉', '🍋', '🍊', '🍇', '❌'];
+                document.getElementById('c'+i).innerText = tmp[Math.floor(Math.random()*tmp.length)];
+            }
+            t++;
+            if(t > 15) { clearInterval(si); finalizeRealRandom(); }
+        }, 70);
+    }
+
+    function finalizeRealRandom() {
+        let winVal = 0;
+        const gridCells = [];
+        for(let i=0; i<9; i++) {
+            const cell = document.getElementById('c'+i);
+            cell.innerText = getRandomSymbol();
+            gridCells.push(cell);
+        }
+
+        const lines = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8],
+            [0, 3, 6], [1, 4, 7], [2, 5, 8],
+            [0, 4, 8], [2, 4, 6]
+        ];
+
+        lines.forEach(line => {
+            const s1 = gridCells[line[0]].innerText;
+            const s2 = gridCells[line[1]].innerText;
+            const s3 = gridCells[line[2]].innerText;
+            if (s1 !== '❌' && s1 === s2 && s1 === s3) {
+                winVal += (currentBet * multipliers[s1]);
+                line.forEach(idx => gridCells[idx].classList.add('win-glow'));
+            }
         });
-        db.ref(`codes/${currentKey}/historial`).push({
-            tipo: tipo, monto: monto, origen: "Slot Bar", fecha: ahora
-        });
-        db.ref(`codes/${currentKey}/ultimaMod`).set(ahora);
+
+        if (winVal > 0) {
+            balance += winVal;
+            db.ref('codes/'+currentKey).update({ saldo: balance });
+            
+            // Si el premio es mayor a 5 veces la apuesta, reseteamos la suerte
+            if (winVal >= (currentBet * 5)) {
+                resetLuck();
+            }
+
+            setTimeout(() => {
+                document.getElementById('resWin').innerText = winVal.toFixed(1) + "€";
+                document.getElementById('resBanner').style.display = 'block';
+                if(autoSpinning) autoSpinning = false; // Parar auto en premios
+            }, 500);
+        }
+
+        spinning = false;
+        updateUI();
+
+        // Lógica de Auto Spin
+        const autoInp = document.getElementById('autoCount');
+        let autoVal = parseInt(autoInp.value);
+        if (autoVal > 0 && winVal === 0) {
+            autoVal--;
+            autoInp.value = autoVal;
+            setTimeout(handleLeverClick, 1000);
+        }
+    }
+
+    function closeBanner() {
+        document.getElementById('resBanner').style.display = 'none';
+        updateUI();
     }
 
     async function tryUnlock() {
@@ -159,7 +293,6 @@
                     document.getElementById('banScreen').style.display='flex'; 
                 } else {
                     balance = d.saldo;
-                    document.getElementById('balDisplay').innerText = Math.floor(balance);
                     updateUI();
                 }
             });
@@ -178,7 +311,6 @@
         document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
         el.classList.add('active');
         updatePaytable();
-        updateUI();
     }
 
     function updatePaytable() {
@@ -188,66 +320,8 @@
         }
     }
 
-    function startSpin() {
-        if (spinning || balance < currentBet) return;
-        spinning = true;
-        balance -= currentBet;
-        db.ref('codes/'+currentKey).update({ saldo: balance });
-        registrarHistorial("Apuesta Spin", -currentBet);
-        document.querySelectorAll('.cell').forEach(c => c.classList.remove('win-glow'));
-
-        let t = 0;
-        let si = setInterval(() => {
-            for(let i=0; i<9; i++) {
-                const tmp = ['💎', '7️⃣', '🔔', '🍒', '🍉', '🍋', '🍊', '🍇', '❌'];
-                document.getElementById('c'+i).innerText = tmp[Math.floor(Math.random()*tmp.length)];
-            }
-            t++;
-            if(t > 22) { clearInterval(si); finalizeRealRandom(); }
-        }, 65);
-    }
-
-    function finalizeRealRandom() {
-        let winVal = 0;
-        const gridCells = [];
-        for(let i=0; i<9; i++) {
-            const cell = document.getElementById('c'+i);
-            cell.innerText = getRandomSymbol();
-            gridCells.push(cell);
-        }
-
-        const lines = [
-            [0, 1, 2], [3, 4, 5], [6, 7, 8], // Horizontales
-            [0, 3, 6], [1, 4, 7], [2, 5, 8], // Verticales
-            [0, 4, 8], [2, 4, 6]             // Diagonales
-        ];
-
-        lines.forEach(line => {
-            const s1 = gridCells[line[0]].innerText;
-            const s2 = gridCells[line[1]].innerText;
-            const s3 = gridCells[line[2]].innerText;
-            if (s1 !== '❌' && s1 === s2 && s1 === s3) {
-                winVal += (currentBet * multipliers[s1]);
-                line.forEach(idx => gridCells[idx].classList.add('win-glow'));
-            }
-        });
-
-        if (winVal > 0) {
-            balance += winVal;
-            db.ref('codes/'+currentKey).update({ saldo: balance });
-            registrarHistorial("Premio Real", winVal);
-            setTimeout(() => {
-                document.getElementById('resWin').innerText = winVal.toFixed(1) + "€";
-                document.getElementById('resBanner').style.display = 'block';
-            }, 500);
-        }
-        spinning = false;
-        updateUI();
-    }
-
     function updateUI() {
         document.getElementById('balDisplay').innerText = Math.floor(balance);
-        document.getElementById('spinBtn').disabled = spinning || balance < currentBet;
     }
 </script>
 </body>
