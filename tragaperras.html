@@ -50,6 +50,11 @@
         
         #resBanner { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; color: black; padding: 40px; border-radius: 25px; z-index: 10001; text-align: center; border: 6px solid var(--gold); box-shadow: 0 0 100px rgba(0,0,0,0.9); }
         .luck-info { font-size: 0.8rem; color: #888; margin-top: 10px; font-style: italic; }
+
+        /* ESTILOS NUEVOS PANEL AJUSTE */
+        .admin-panel { margin-top: 20px; background: #1c2128; border: 1px dashed var(--gold); padding: 15px; border-radius: 10px; font-size: 0.8rem; width: 100%; box-sizing: border-box; }
+        .admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .profit-tracker { text-align: center; margin-bottom: 10px; border-bottom: 1px solid #333; padding-bottom: 5px; font-size: 1rem; }
     </style>
 </head>
 <body>
@@ -116,6 +121,27 @@
         <div class="chip" onclick="setBet(50, this)">50</div>
         <div class="chip" onclick="setBet(100, this)">100</div>
     </div>
+
+    <!-- NUEVO: PANEL DE AJUSTES -->
+    <div class="admin-panel">
+        <div class="profit-tracker">
+            SESIÓN: <span id="sessionProfit" style="font-weight: bold;">0.00€</span>
+        </div>
+        <div class="admin-grid">
+            <div>
+                <label>VELOCIDAD (ms):</label><br>
+                <input type="number" id="cfgSpeed" class="auto-input" value="60" style="width: 60px;">
+            </div>
+            <div>
+                <label>AUTO-COBRO (1s):</label>
+                <input type="checkbox" id="cfgAutoClose" checked>
+            </div>
+            <div style="grid-column: span 2;">
+                <label>STOP SI SALDO < :</label>
+                <input type="number" id="cfgStopLimit" class="auto-input" value="0" style="width: 80px;">
+            </div>
+        </div>
+    </div>
     
     <div id="luckMsg" class="luck-info">RNG Estándar</div>
 </div>
@@ -140,14 +166,13 @@
 
     let balance = 0, currentKey = "", currentBet = 10, spinning = false;
     let sessionSpins = 0;
+    let initialBalance = -1; // Para el balance en directo
     
-    // Multiplicadores ajustados: Manzana y Fresa son premios muy bajos para relleno
     const multipliers = { 
         '💎': 50, '7️⃣': 25, '🔔': 15, '🍒': 8, '🍉': 5, 
         '🍋': 3, '🍊': 2, '🍇': 1.5, '🍎': 0.8, '🍓': 0.5 
     };
     
-    // Pesos iniciales (Suma 1.0)
     const baseWeights = [
         { s: '💎', w: 0.02 }, { s: '7️⃣', w: 0.04 }, { s: '🔔', w: 0.06 },
         { s: '🍒', w: 0.08 }, { s: '🍉', w: 0.10 }, { s: '🍋', w: 0.12 },
@@ -159,15 +184,12 @@
     function adjustLuck() {
         sessionSpins++;
         if (sessionSpins % 10 === 0) {
-            // Bajamos la probabilidad de los frutos bajos (🍎🍓) para subir los altos
             let weightToTake = 0.03;
-            currentWeights[8].w -= weightToTake/2; // Baja Manzana
-            currentWeights[9].w -= weightToTake/2; // Baja Fresa
-            
-            currentWeights[0].w += 0.01; // Sube Diamante
-            currentWeights[1].w += 0.01; // Sube Siete
-            currentWeights[2].w += 0.01; // Sube Campana
-            
+            currentWeights[8].w -= weightToTake/2;
+            currentWeights[9].w -= weightToTake/2;
+            currentWeights[0].w += 0.01;
+            currentWeights[1].w += 0.01;
+            currentWeights[2].w += 0.01;
             document.getElementById('luckMsg').innerText = "CALENTANDO MÁQUINA... 🔥";
             document.getElementById('luckMsg').style.color = "#ff9800";
         }
@@ -192,6 +214,14 @@
 
     function handleLeverClick() {
         if (spinning || balance < currentBet) return;
+        
+        // Comprobación de límite de balance
+        const stopLimit = parseInt(document.getElementById('cfgStopLimit').value) || 0;
+        if (balance <= stopLimit) {
+            document.getElementById('autoCount').value = 0;
+            return;
+        }
+
         document.getElementById('leverArm').classList.add('pulling');
         setTimeout(() => {
             document.getElementById('leverArm').classList.remove('pulling');
@@ -209,13 +239,15 @@
 
         let t = 0;
         const allSymbols = Object.keys(multipliers);
+        const speed = parseInt(document.getElementById('cfgSpeed').value) || 60;
+
         let si = setInterval(() => {
             for(let i=0; i<9; i++) {
                 document.getElementById('c'+i).innerText = allSymbols[Math.floor(Math.random()*allSymbols.length)];
             }
             t++;
             if(t > 18) { clearInterval(si); finalizeRealRandom(); }
-        }, 60);
+        }, speed);
     }
 
     function finalizeRealRandom() {
@@ -228,11 +260,7 @@
             grid.push(sym);
         }
 
-        const lines = [
-            [0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], 
-            [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]
-        ];
-
+        const lines = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]];
         lines.forEach(line => {
             if (grid[line[0]] === grid[line[1]] && grid[line[1]] === grid[line[2]]) {
                 winVal += (currentBet * multipliers[grid[line[0]]]);
@@ -245,19 +273,27 @@
             db.ref('codes/'+currentKey).update({ saldo: balance });
             if (winVal >= (currentBet * 40)) resetLuck();
 
-            setTimeout(() => {
-                document.getElementById('resWin').innerText = winVal.toFixed(1) + "€";
-                document.getElementById('resBanner').style.display = 'block';
-            }, 500);
+            document.getElementById('resWin').innerText = winVal.toFixed(1) + "€";
+            document.getElementById('resBanner').style.display = 'block';
+
+            // AUTO-COBRO EN 1 SEGUNDO
+            if (document.getElementById('cfgAutoClose').checked) {
+                setTimeout(() => {
+                    closeBanner();
+                }, 1000);
+            }
+        } else {
+            checkAutoNext();
         }
 
         spinning = false;
         updateUI();
+    }
 
-        // Auto Spin
+    function checkAutoNext() {
         const autoInp = document.getElementById('autoCount');
         let autoVal = parseInt(autoInp.value);
-        if (autoVal > 0 && winVal === 0) {
+        if (autoVal > 0) {
             autoVal--;
             autoInp.value = autoVal;
             setTimeout(handleLeverClick, 800);
@@ -267,6 +303,7 @@
     function closeBanner() {
         document.getElementById('resBanner').style.display = 'none';
         updateUI();
+        checkAutoNext(); // Seguir tirando tras cobrar
     }
 
     async function tryUnlock() {
@@ -275,6 +312,9 @@
         const snap = await db.ref('codes/'+key).get();
         if(snap.exists()){
             currentKey = key;
+            const data = snap.val();
+            if(initialBalance === -1) initialBalance = data.saldo;
+
             db.ref('codes/'+currentKey).on('value', s => {
                 const d = s.val();
                 if(d && d.saldo !== -1) { balance = d.saldo; updateUI(); }
@@ -304,6 +344,14 @@
 
     function updateUI() {
         document.getElementById('balDisplay').innerText = Math.floor(balance);
+        
+        // Actualizar balance de sesión en directo
+        if (initialBalance !== -1) {
+            const profit = balance - initialBalance;
+            const pEl = document.getElementById('sessionProfit');
+            pEl.innerText = (profit >= 0 ? "+" : "") + profit.toFixed(2) + "€";
+            pEl.style.color = profit >= 0 ? "#4caf50" : "#be1931";
+        }
     }
 </script>
 </body>
