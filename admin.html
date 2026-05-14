@@ -43,7 +43,6 @@
         .filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 20px; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px; }
         .resumen-caja { background: #000; padding: 15px; border-radius: 10px; border: 1px solid var(--gold); display: flex; justify-content: space-around; margin-bottom: 15px; }
         
-        /* Efecto Parpadeo Ludópata */
         @keyframes parpadeoLudo {
             0% { border-color: var(--gold); box-shadow: none; }
             50% { border-color: var(--yellow); box-shadow: 0 0 20px var(--yellow); }
@@ -136,7 +135,6 @@
     </div>
 </div>
 
-<!-- EL RESTO DE MODALES SE MANTIENEN IGUAL (Hitorial, Estado, Desbaneo) -->
 <div id="modalHistorial" class="modal">
     <div class="modal-content">
         <div style="display:flex; justify-content: space-between; align-items: center;">
@@ -263,7 +261,6 @@
                 const data = snap.val();
                 document.getElementById('infoTicket').style.display = 'block';
                 
-                // Lógica Ludópata
                 const esLudo = data.ludopata === true;
                 const panel = document.getElementById('panelGestion');
                 const btnLudo = document.getElementById('btnLudoToggle');
@@ -304,7 +301,6 @@
         });
     }
 
-    // NUEVAS FUNCIONES PARA LUDÓPATA Y NOTAS
     async function toggleLudopata() {
         const id = document.getElementById('manageId').value.toUpperCase().trim();
         if(!id) return;
@@ -419,13 +415,39 @@
             const list = document.getElementById('topList');
             list.innerHTML = "";
             let items = [];
-            snap.forEach(c => { items.push({ id: c.key, ...c.val() }); });
-            items.sort((a,b) => new Date(b.ultimaMod) - new Date(a.ultimaMod));
+            
+            snap.forEach(c => { 
+                const data = c.val();
+                let fechaUltimoMovimiento = data.ultimaMod; 
+
+                if (data.historial) {
+                    const historialArray = Object.values(data.historial);
+                    if (historialArray.length > 0) {
+                        fechaUltimoMovimiento = historialArray[historialArray.length - 1].fecha;
+                    }
+                }
+
+                items.push({ 
+                    id: c.key, 
+                    ...data, 
+                    displayUltimoMov: fechaUltimoMovimiento 
+                }); 
+            });
+
+            items.sort((a,b) => new Date(b.displayUltimoMov) - new Date(a.displayUltimoMov));
+
             items.slice(0, 15).forEach(i => {
                 const isBan = i.saldo === -1;
                 const esLudo = i.ludopata === true;
                 const saldoDisp = isBan ? '0.00' : (typeof i.saldo === 'number' ? truncar(i.saldo).toFixed(2) : i.saldo);
-                list.innerHTML += `<tr class="${isBan?'ban-row':''} ${esLudo?'ludo-row':''}"><td>${i.id} ${esLudo?'⚠️':''}</td><td>${saldoDisp}€</td><td>${i.fecha}</td><td>${i.ultimaMod}</td><td>${isBan?'🚫 BAN':'✅ OK'}</td></tr>`;
+                
+                list.innerHTML += `<tr class="${isBan?'ban-row':''} ${esLudo?'ludo-row':''}">
+                    <td>${i.id} ${esLudo?'⚠️':''}</td>
+                    <td>${saldoDisp}€</td>
+                    <td>${i.fecha}</td>
+                    <td>${i.displayUltimoMov}</td>
+                    <td>${isBan?'🚫 BAN':'✅ OK'}</td>
+                </tr>`;
             });
         });
     }
