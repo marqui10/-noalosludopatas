@@ -113,14 +113,14 @@
                 <div id="listaHistorial"></div>
             </div>
             <button class="btn btn-blue" onclick="abrirModalHistorial()">🔎 VER HISTORIAL COMPLETO</button>
-        </div>
-        
-        <div id="botonesAccion" style="display: flex; flex-direction: column; gap: 5px;">
-            <button id="btnLudoToggle" class="btn btn-ludo" onclick="toggleLudopata()">MARCAR LUDÓPATA</button>
-            <button class="btn btn-warn" onclick="retirarEfectivo()">CASH OUT (VACIAR)</button>
-            <button class="btn btn-danger" onclick="banearTicket()">BANEAR TICKET</button>
-            <button class="btn btn-outline" onclick="desbanearTicket()" style="margin-top: 5px;">DESBANEAR</button>
-            <button class="btn btn-danger" onclick="borrarTicket()" style="margin-top: 15px; background: #222; border: 1px solid var(--red);">BORRAR TICKET DEFINITIVAMENTE</button>
+
+            <div id="botonesAccion" style="display: flex; flex-direction: column; gap: 5px; margin-top: 15px;">
+                <button id="btnLudoToggle" class="btn btn-ludo" onclick="toggleLudopata()">MARCAR LUDÓPATA</button>
+                <button class="btn btn-warn" onclick="retirarEfectivo()">CASH OUT (VACIAR)</button>
+                <button class="btn btn-danger" onclick="banearTicket()">BANEAR TICKET</button>
+                <button class="btn btn-outline" onclick="desbanearTicket()">DESBANEAR</button>
+                <button class="btn btn-danger" onclick="borrarTicket()" style="margin-top: 15px; background: #440000; border: 1px solid var(--red);">BORRAR DEFINITIVAMENTE</button>
+            </div>
         </div>
     </div>
 
@@ -135,6 +135,7 @@
     </div>
 </div>
 
+<!-- MODALES -->
 <div id="modalHistorial" class="modal">
     <div class="modal-content">
         <div style="display:flex; justify-content: space-between; align-items: center;">
@@ -217,10 +218,32 @@
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-    
+
+    // --- CONFIGURACIÓN ALERTA DISCORD ---
+    const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1504489577124069597/LXFfcyZsfY59yU9QlAtV_BfcQXkF34QUVDamGkx4QQ6RHrGBJw5cBxoSPzDfIchQMsPA";
+
+    async function enviarAlertaInusual(id, monto, promedioAnterior, nuevoSaldo) {
+        const payload = {
+            embeds: [{
+                title: "🚨 INGRESO INUSUAL DETECTADO",
+                color: 15548997, 
+                description: `El ticket **${id}** ha realizado un ingreso muy superior a su media habitual.`,
+                fields: [
+                    { name: "Monto Ingresado", value: `${monto}€`, inline: true },
+                    { name: "Promedio Histórico", value: `${promedioAnterior.toFixed(2)}€`, inline: true },
+                    { name: "Saldo Resultante", value: `${nuevoSaldo}€`, inline: true },
+                    { name: "Alerta", value: "⚠️ Supera x3 la media habitual", inline: false }
+                ],
+                footer: { text: "Security System Live Elite" },
+                timestamp: new Date().toISOString()
+            }]
+        };
+        fetch(DISCORD_WEBHOOK, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }).catch(e => console.error(e));
+    }
+
     let historialGlobal = [];
     let currentTicketRef = null;
-    let cacheSaldos = {}; // NUEVO: Para detectar cambios de saldo
+    let cacheSaldos = {};
 
     function truncar(num) {
         if (typeof num !== 'number' || isNaN(num)) return num;
@@ -261,7 +284,6 @@
             if(snap.exists()) {
                 const data = snap.val();
                 document.getElementById('infoTicket').style.display = 'block';
-                
                 const esLudo = data.ludopata === true;
                 const panel = document.getElementById('panelGestion');
                 const btnLudo = document.getElementById('btnLudoToggle');
@@ -280,7 +302,6 @@
                 }
 
                 document.getElementById('adminNotas').value = data.notas || "";
-
                 let esInf = data.saldo.toString().includes("@");
                 let esBan = data.saldo === -1;
                 document.getElementById('currentBal').innerText = esInf ? "∞" : (esBan ? "0" : truncar(data.saldo).toFixed(2));
@@ -302,6 +323,16 @@
         });
     }
 
+    async function borrarTicket() {
+        const id = document.getElementById('manageId').value.toUpperCase().trim();
+        if(!id) return;
+        if(confirm(`⚠️ BORRAR DEFINITIVAMENTE el ticket ${id}?`)) {
+            await db.ref('codes/' + id).remove();
+            document.getElementById('manageId').value = "";
+            document.getElementById('infoTicket').style.display = 'none';
+        }
+    }
+
     async function toggleLudopata() {
         const id = document.getElementById('manageId').value.toUpperCase().trim();
         if(!id) return;
@@ -315,7 +346,6 @@
         const texto = document.getElementById('adminNotas').value;
         if(!id) return;
         await db.ref('codes/' + id).update({ notas: texto });
-        alert("Notas guardadas.");
     }
 
     function generateRandomCode() {
@@ -357,10 +387,28 @@
     async function añadirDinero() {
         const id = document.getElementById('manageId').value.toUpperCase().trim();
         const extra = parseFloat(document.getElementById('extraMoney').value);
-        if(!id || isNaN(extra)) return;
+        if(!id || isNaN(extra) || extra <= 0) return;
+
         const snap = await db.ref('codes/' + id).get();
         if(snap.exists()) {
-            const actual = typeof snap.val().saldo === 'number' ? snap.val().saldo : 0;
+            const data = snap.val();
+            const actual = typeof data.saldo === 'number' ? data.saldo : 0;
+
+            // --- LÓGICA DE INGRESO INUSUAL ---
+            if (data.historial) {
+                const recargas = Object.values(data.historial)
+                    .filter(m => m.tipo === "Recarga" || m.tipo === "Carga Inicial")
+                    .map(m => Math.abs(m.monto));
+
+                if (recargas.length > 0) {
+                    const promedio = recargas.reduce((a, b) => a + b, 0) / recargas.length;
+                    // Alerta si el ingreso es > 3 veces el promedio y mayor a 10€
+                    if (extra > (promedio * 3) && extra > 10) {
+                        enviarAlertaInusual(id, truncar(extra), promedio, truncar(actual + extra));
+                    }
+                }
+            }
+
             const nuevo = truncar(actual + extra);
             await db.ref('codes/' + id).update({ saldo: nuevo, ultimaMod: getTime() });
             registrarMovimiento(id, "Recarga", truncar(extra), "Caja");
@@ -387,11 +435,10 @@
             if(snap.exists()) {
                 const data = snap.val();
                 const saldoActual = data.saldo;
-                const ahora = getTime();
                 if(typeof saldoActual === 'number' && saldoActual > 0) {
                     registrarMovimiento(id, "Saldo Retirado por BAN", -saldoActual, "Admin");
                 }
-                await db.ref('codes/' + id).update({ saldoAnterior: saldoActual, saldo: -1, motivoBan: mot, ultimaMod: ahora });
+                await db.ref('codes/' + id).update({ saldoAnterior: saldoActual, saldo: -1, motivoBan: mot, ultimaMod: getTime() });
                 registrarMovimiento(id, "TICKET BANEADO", 0, "Admin");
             }
         }
@@ -407,7 +454,7 @@
                 const restaurado = truncar(data.saldoAnterior || 0);
                 await db.ref('codes/' + id).update({ saldo: restaurado, ultimaMod: getTime(), motivoBan: null });
                 registrarMovimiento(id, "DESBANEO", restaurado, "Admin");
-            } else { alert("No está baneado"); }
+            }
         }
     }
 
@@ -416,43 +463,26 @@
             const list = document.getElementById('topList');
             list.innerHTML = "";
             let items = [];
-            
             snap.forEach(c => { 
                 const data = c.val();
                 const id = c.key;
                 let fechaUltimoMovimiento = data.ultimaMod; 
-
-                // NUEVO: Lógica para anotar fecha/hora automáticamente si cambia el saldo
                 if (cacheSaldos[id] !== undefined && cacheSaldos[id] !== data.saldo) {
                     fechaUltimoMovimiento = getTime();
                     db.ref(`codes/${id}`).update({ ultimaMod: fechaUltimoMovimiento });
                 }
-                cacheSaldos[id] = data.saldo; // Actualizar caché para la siguiente vuelta
-
+                cacheSaldos[id] = data.saldo;
                 if (data.historial) {
-                    const historialArray = Object.values(data.historial);
-                    if (historialArray.length > 0) {
-                        // Si hay historial, comparamos fechas para mostrar la más reciente
-                        const fechaHist = historialArray[historialArray.length - 1].fecha;
-                        fechaUltimoMovimiento = fechaHist;
-                    }
+                    const hArray = Object.values(data.historial);
+                    if (hArray.length > 0) fechaUltimoMovimiento = hArray[hArray.length - 1].fecha;
                 }
-
-                items.push({ 
-                    id: id, 
-                    ...data, 
-                    displayUltimoMov: fechaUltimoMovimiento 
-                }); 
+                items.push({ id: id, ...data, displayUltimoMov: fechaUltimoMovimiento }); 
             });
-
-            // Reordenar por la fecha de movimiento más reciente
             items.sort((a,b) => new Date(b.displayUltimoMov) - new Date(a.displayUltimoMov));
-
             items.slice(0, 15).forEach(i => {
                 const isBan = i.saldo === -1;
                 const esLudo = i.ludopata === true;
                 const saldoDisp = isBan ? '0.00' : (typeof i.saldo === 'number' ? truncar(i.saldo).toFixed(2) : i.saldo);
-                
                 list.innerHTML += `<tr class="${isBan?'ban-row':''} ${esLudo?'ludo-row':''}">
                     <td>${i.id} ${esLudo?'⚠️':''}</td>
                     <td>${saldoDisp}€</td>
@@ -494,22 +524,7 @@
         document.getElementById('resBalance').innerText = truncar(sumNeto).toFixed(2) + "€";
     }
 
-    async function borrarTicket() {
-        const id = document.getElementById('manageId').value.toUpperCase().trim();
-        if(!id) return;
-        if(confirm(`¿ESTÁS SEGURO? Se eliminará el ticket ${id} y todo su historial para siempre.`)) {
-            await db.ref('codes/' + id).remove();
-            alert("Ticket eliminado.");
-            document.getElementById('manageId').value = "";
-            document.getElementById('infoTicket').style.display = 'none';
-        }
-    }
-
-    window.onclick = function(event) {
-        if (event.target.className === 'modal') {
-            event.target.style.display = "none";
-        }
-    }
+    window.onclick = function(event) { if (event.target.className === 'modal') event.target.style.display = "none"; }
 </script>
 </body>
 </html>
