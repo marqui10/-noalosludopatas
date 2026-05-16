@@ -26,6 +26,7 @@ input {
   width: 100%; padding: 15px; border-radius: 8px; border: 1px solid #2a2f45;
   background: #070912; color: white; font-size: 1.2rem; text-align: center;
   margin-bottom: 15px; text-transform: uppercase;
+  box-sizing: border-box;
 }
 button {
   padding: 12px 25px; border-radius: 8px; border: none; font-weight: bold;
@@ -51,6 +52,37 @@ button {
 .btn-wait { background: #555; color: white; }
 .btn-paid { background: var(--win); color: white; }
 .btn-wait.active { background: var(--pending); color: black; border: 2px solid black; }
+
+/* Sección de ingreso directo */
+.deposit-section {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 2px dashed #ccc;
+  text-align: left;
+}
+.deposit-section label {
+  font-size: 0.8rem;
+  font-weight: bold;
+  color: #555;
+  display: block;
+  margin-bottom: 5px;
+}
+.deposit-input {
+  background: #f1f3f9 !important;
+  color: #1a1d2e !important;
+  border: 1px solid #cbd5e1 !important;
+  font-size: 1rem !important;
+  padding: 10px !important;
+  margin-bottom: 10px !important;
+  text-align: center !important;
+}
+.btn-deposit {
+  background: #4f46e5;
+  color: white;
+}
+.btn-deposit:hover {
+  background: #4338ca;
+}
 </style>
 </head>
 <body>
@@ -58,7 +90,7 @@ button {
 <div class="wrap">
   <div class="header">
     <h1>📋 Verificador de Premios</h1>
-    <p style="color:var(--muted)">Introduce el código del comprobante para cobrarlo</p>
+    <p style="color:#888">Introduce el código del comprobante para cobrarlo</p>
   </div>
 
   <div class="search-box">
@@ -76,6 +108,12 @@ button {
         <div class="actions">
             <button id="waitBtn" class="btn-wait">EN ESPERA</button>
             <button id="paidBtn" class="btn-paid">COBRADO (Borrar)</button>
+        </div>
+
+        <div class="deposit-section">
+            <label for="userCodeInput">⚡ INGRESAR DIRECTAMENTE A USUARIO:</label>
+            <input type="text" id="userCodeInput" class="deposit-input" placeholder="EJ: 6VM48X">
+            <button id="depositBtn" class="btn-deposit">AÑADIR AL SALDO DE USUARIO</button>
         </div>
     </div>
   </div>
@@ -97,6 +135,7 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
 let currentTicket = null;
+let prizeValue = 0; // Guardará el valor numérico limpio del premio
 
 // 1. BUSCAR CÓDIGO
 document.getElementById('searchBtn').addEventListener('click', async () => {
@@ -108,6 +147,13 @@ document.getElementById('searchBtn').addEventListener('click', async () => {
     if(snapshot.exists()) {
         const data = snapshot.val();
         currentTicket = code;
+        
+        // Limpiamos el valor por si viene con texto o "€" para poder operar matemáticamente
+        if (typeof data.amount === 'string') {
+            prizeValue = parseFloat(data.amount.replace(/[^0-9.]/g, '')) || 0;
+        } else {
+            prizeValue = Number(data.amount) || 0;
+        }
         
         document.getElementById('resultArea').style.display = 'block';
         document.getElementById('prizeAmount').textContent = data.amount;
@@ -125,6 +171,7 @@ document.getElementById('searchBtn').addEventListener('click', async () => {
             label.textContent = "PENDIENTE DE COBRO";
             label.className = "status-badge";
             label.style.background = "#eee";
+            label.style.color = "#000";
             waitBtn.classList.remove('active');
             waitBtn.textContent = "PONER EN ESPERA";
         }
@@ -153,10 +200,63 @@ document.getElementById('paidBtn').addEventListener('click', async () => {
     if(confirm("¿Confirmas que el premio ha sido entregado? El código se borrará permanentemente.")) {
         await db.ref('prizes/' + currentTicket).remove();
         alert("Premio registrado como cobrado. Código eliminado.");
-        document.getElementById('resultArea').style.display = 'none';
-        document.getElementById('ticketInput').value = '';
+        resetForm();
     }
 });
+
+// 4. NUEVO: INGRESAR DIRECTO A LA CUENTA DEL USUARIO
+document.getElementById('depositBtn').addEventListener('click', async () => {
+    if(!currentTicket || prizeValue <= 0) {
+        alert("No hay un premio válido cargado.");
+        return;
+    }
+
+    const userCode = document.getElementById('userCodeInput').value.trim().toUpperCase();
+    if(!userCode) {
+        alert("Por favor, introduce el código del usuario (Ej: 6VM48X).");
+        return;
+    }
+
+    // Buscamos el código del usuario dentro del nodo 'codes'
+    const userSnapshot = await db.ref('codes/' + userCode).get();
+
+    if(userSnapshot.exists()) {
+        const userData = userSnapshot.val();
+        
+        const saldoActual = Number(userData.saldo) || 0;
+        const nuevoSaldo = saldoActual + prizeValue;
+
+        // Formatear la fecha tal y como la tienes guardada ("DÍA/MES, HH:MM:SS")
+        const ahora = new Date();
+        const dia = ahora.getDate();
+        const mes = ahora.getMonth() + 1;
+        const horaFormateada = ahora.toLocaleTimeString('es-ES', { hour12: false });
+        const ultimaModStr = `${dia}/${mes}, ${horaFormateada}`;
+
+        // Actualizamos el saldo anterior, el nuevo y la última modificación del usuario
+        await db.ref('codes/' + userCode).update({
+            saldoAnterior: saldoActual,
+            saldo: nuevoSaldo,
+            ultimaMod: ultimaModStr
+        });
+
+        // Una vez ingresado a su saldo, destruimos el comprobante de la lista de premios
+        await db.ref('prizes/' + currentTicket).remove();
+
+        alert(`¡Saldo actualizado con éxito!\n\nUsuario: ${userCode}\nSaldo anterior: ${saldoActual}\nNuevo Saldo: ${nuevoSaldo}\n\nEl ticket de premio ha sido eliminado.`);
+        resetForm();
+    } else {
+        alert("El código de usuario ingresado no existe en la base de datos.");
+    }
+});
+
+function resetForm() {
+    document.getElementById('resultArea').style.display = 'none';
+    document.getElementById('ticketInput').value = '';
+    document.getElementById('userCodeInput').value = '';
+    currentTicket = null;
+    prizeValue = 0;
+}
 </script>
 </body>
 </html>
